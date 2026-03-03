@@ -30,6 +30,7 @@
   },
   "overrides": {
     "next": "$next",
+    "react": "$react",
     "react-dom": "$react-dom"
   }
 }
