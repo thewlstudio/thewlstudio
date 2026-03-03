@@ -9,11 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sanity/image-url": "^2.0.3",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.575.0",
     "next": "14.2.35",
+    "next-sanity": "^12.1.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "sanity": "^5.12.0"
   },
   "devDependencies": {
     "@types/node": "^20",
