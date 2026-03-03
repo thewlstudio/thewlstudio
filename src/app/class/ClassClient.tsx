@@ -244,7 +244,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
 
                                         {/* About */}
                                         <div className="mb-10 sm:mb-12">
-                                            <h3 className="text-xs sm:text-sm font-black tracking-widest uppercase text-neutral-800 mb-4 sm:mb-5 border-l-2 border-neutral-300 pl-3 flex items-center h-4">
+                                            <h3 className="text-xs sm:text-sm font-black tracking-widest uppercase text-black mb-4 sm:mb-5 border-l-[3px] border-black pl-3 flex items-center h-4">
                                                 ABOUT LESSON
                                             </h3>
                                             <div className="space-y-4">
@@ -258,7 +258,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
 
                                         {/* Process */}
                                         <div className="mb-8 lg:mb-0">
-                                            <h3 className="text-xs sm:text-sm font-black tracking-widest uppercase text-neutral-800 mb-4 sm:mb-5 border-l-2 border-neutral-300 pl-3 flex items-center h-4">
+                                            <h3 className="text-xs sm:text-sm font-black tracking-widest uppercase text-black mb-4 sm:mb-5 border-l-[3px] border-black pl-3 flex items-center h-4">
                                                 PROCESS
                                             </h3>
                                             <div className="space-y-5 sm:space-y-6">
