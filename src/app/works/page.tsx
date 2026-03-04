@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
-// Mock data to demonstrate scalability of the Works page
 const ALBUMS = [
     {
         id: "letter",
@@ -191,10 +191,12 @@ export default function WorksIndexPage() {
                         >
                             {/* Album Cover Link */}
                             <Link href={album.link} className="relative block w-full aspect-square overflow-hidden mb-5 bg-white border border-neutral-200/60">
-                                <img
+                                <Image
                                     src={album.image}
                                     alt={album.title}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                 />
                                 {/* Hover Overlay with + */}
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

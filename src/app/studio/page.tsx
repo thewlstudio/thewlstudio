@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -137,16 +138,22 @@ function ImageSlider({ images }: { images: string[] }) {
     return (
         <div className="relative aspect-[4/3] md:aspect-auto md:h-full w-full overflow-hidden bg-neutral-900 group">
             <AnimatePresence mode="wait">
-                <motion.img
+                <motion.div
                     key={currentIndex}
-                    src={images[currentIndex]}
-                    alt="Room"
-                    className="w-full h-full object-cover absolute inset-0"
+                    className="absolute inset-0"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                />
+                >
+                    <Image
+                        src={images[currentIndex]}
+                        alt="Room"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                </motion.div>
             </AnimatePresence>
             {images.length > 1 && (
                 <>
@@ -180,10 +187,13 @@ export default function StudioPage() {
             {/* Hero Image Section */}
             <section className="relative h-[80vh] w-full flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 opacity-40">
-                    <img
+                    <Image
                         src="/images/lobby_1.jpg"
                         alt="Studio Space"
-                        className="w-full h-full object-cover grayscale"
+                        fill
+                        className="object-cover grayscale"
+                        sizes="100vw"
+                        priority
                     />
                 </div>
                 <motion.div

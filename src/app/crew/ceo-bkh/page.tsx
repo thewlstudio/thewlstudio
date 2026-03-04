@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -18,10 +19,12 @@ export default function BaekKwangHeumDetailPage() {
                     className="flex flex-col items-center max-w-4xl text-center"
                 >
                     <div className="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden shadow-2xl mb-8 border-4 border-neutral-800 relative group">
-                        <img
+                        <Image
                             src="/images/artist.jpg"
                             alt="Baek Kwang-heum Profile"
-                            className="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-110 group-hover:grayscale-0"
+                            fill
+                            className="object-cover grayscale transition-transform duration-700 group-hover:scale-110 group-hover:grayscale-0"
+                            sizes="224px"
                         />
                     </div>
 
@@ -33,10 +36,10 @@ export default function BaekKwangHeumDetailPage() {
 
                     <div className="flex items-center space-x-6 mt-4">
                         <a href="https://instagram.com/lifelikemovie.bkh" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                            <img src="/images/insta_favi_dark.png" alt="Instagram" className="w-8 h-8 object-contain" />
+                            <Image src="/images/insta_favi_dark.png" alt="Instagram" width={32} height={32} className="object-contain" />
                         </a>
                         <a href="https://www.youtube.com/@bkh__official" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                            <img src="/images/youtube_favi_light.png" alt="YouTube" className="w-8 h-8 object-contain invert" />
+                            <Image src="/images/youtube_favi_light.png" alt="YouTube" width={32} height={32} className="object-contain invert" />
                         </a>
                     </div>
                 </motion.div>

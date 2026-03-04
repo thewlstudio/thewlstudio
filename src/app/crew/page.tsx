@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -79,10 +80,12 @@ export default function CrewPage() {
                                 <Link href={`/crew/${member.id}`} className="absolute inset-0 z-10" />
 
                                 {/* Default cover */}
-                                <img
+                                <Image
                                     src={member.image}
                                     alt={member.name}
-                                    className="w-full h-full object-cover transition-transform duration-700"
+                                    fill
+                                    className="object-cover transition-transform duration-700"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                 />
 
                                 {/* JYP Style Hover Overlay */}
@@ -109,9 +112,9 @@ export default function CrewPage() {
                                                 className="text-white hover:scale-110 transition-transform flex items-center justify-center w-8 h-8"
                                             >
                                                 {link.type === 'instagram' ? (
-                                                    <img src="/images/insta_favi_light.png" alt="Instagram" className="w-full h-full object-contain" />
+                                                    <Image src="/images/insta_favi_light.png" alt="Instagram" width={32} height={32} className="object-contain" />
                                                 ) : link.type === 'youtube' ? (
-                                                    <img src="/images/youtube_favi_light.png" alt="YouTube" className="w-full h-full object-contain" />
+                                                    <Image src="/images/youtube_favi_light.png" alt="YouTube" width={32} height={32} className="object-contain" />
                                                 ) : (
                                                     <span className="text-2xl">{link.icon}</span>
                                                 )}

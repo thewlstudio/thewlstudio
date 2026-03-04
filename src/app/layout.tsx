@@ -5,11 +5,30 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "WHITE LIGHT STUDIO",
-  description: "Recording Music Studio - 7호선 중곡역 exit 3",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com"),
+  title: {
+    default: "WHITE LIGHT STUDIO",
+    template: "%s | WHITE LIGHT STUDIO",
+  },
+  description: "서울 광진구 중곡동의 보컬 연습 스튜디오 - 화이트라이트 스튜디오. 7호선 중곡역 3번 출구.",
   icons: {
     icon: "/images/studio_logo.jpg",
-  }
+  },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: "/",
+    siteName: "WHITE LIGHT STUDIO",
+    title: "WHITE LIGHT STUDIO",
+    description: "서울 광진구 중곡동의 보컬 연습 스튜디오 - 화이트라이트 스튜디오. 7호선 중곡역 3번 출구.",
+    images: [{ url: "/images/studio_logo.jpg", width: 1200, height: 630, alt: "WHITE LIGHT STUDIO" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WHITE LIGHT STUDIO",
+    description: "서울 광진구 중곡동의 보컬 연습 스튜디오 - 화이트라이트 스튜디오. 7호선 중곡역 3번 출구.",
+    images: ["/images/studio_logo.jpg"],
+  },
 };
 
 export default function RootLayout({

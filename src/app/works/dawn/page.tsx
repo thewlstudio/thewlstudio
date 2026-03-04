@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -54,10 +55,12 @@ export default function DawnPage() {
                     transition={{ duration: 1, delay: 0.2 }}
                     className="group relative block w-full max-w-sm aspect-square shadow-2xl overflow-hidden mb-6"
                 >
-                    <img
+                    <Image
                         src="/images/dawn_seul.png"
                         alt="새벽의 틈"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, 384px"
                     />
                     {/* Hover Overlay - JYP Style */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
