@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NAVER_MAP_PLACE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
-    title: "CONTACT | WHITE LIGHT STUDIO",
+    title: "CONTACT",
     description: "화이트라이트 스튜디오 위치 안내 - 서울특별시 광진구 능동로 413-1 지하1층, 7호선 중곡역 3번 출구",
 };
 
@@ -59,12 +60,13 @@ export default function ContactPage() {
                         className="w-full h-full border-0 absolute top-0 left-0 grayscale opacity-90 transition-opacity duration-300 group-hover:opacity-100"
                         title="White Light Studio Location Map"
                         allowFullScreen
+                        loading="lazy"
                     ></iframe>
 
                     {/* External Link Buttons */}
                     <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-10">
                         <a
-                            href="https://map.naver.com/p/entry/place/1935361517?lng=127.0841546&lat=37.5660654&placePath=%2Fhome&entry=plt&searchType=place"
+                            href={NAVER_MAP_PLACE_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="bg-white text-black px-5 py-3 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg hover:bg-black hover:text-white transition-colors border border-black/10 flex items-center gap-2"

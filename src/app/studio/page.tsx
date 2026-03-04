@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { NAVER_MAP_URL } from "@/lib/constants";
 
 const ROOM_A = {
     name: "W.L Studio [A Room]",
@@ -128,6 +129,71 @@ const LOBBY = {
         "/images/lobby_2.jpg"
     ]
 };
+
+type RoomData = {
+    name: string;
+    prices: { label: string; value: string; unit: string }[];
+    features: string[];
+    notes?: string[];
+    images: string[];
+};
+
+const ROOMS: RoomData[] = [ROOM_A, ROOM_B, ROOM_C, ROOM_D];
+
+function RoomBlock({ room }: { room: RoomData }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7 }}
+            className="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
+        >
+            <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-200">
+                <ImageSlider images={room.images} />
+            </div>
+
+            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-6 flex items-center justify-between border-b-2 border-black pb-4">
+                    {room.name}
+                </h3>
+
+                <div className="mb-8 space-y-3">
+                    {room.prices.map((p, i) => (
+                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
+                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
+                            <div className="flex items-baseline space-x-1.5">
+                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
+                                <span className="text-sm font-semibold tracking-wide text-neutral-500">{p.unit}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex-1">
+                    <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Equipment & Features</h4>
+                    <ul className="space-y-3">
+                        {room.features.map((feature, i) => (
+                            <li key={i} className="text-neutral-700 font-medium flex items-start text-sm md:text-base leading-relaxed break-keep">
+                                <span className="mr-3 text-black">✓</span> {feature}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {room.notes && room.notes.length > 0 && (
+                    <div className="mt-8 pt-6 border-t border-neutral-100">
+                        {room.notes.map((note, i) => (
+                            <p key={i} className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep">
+                                {note}
+                            </p>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+}
 
 function ImageSlider({ images }: { images: string[] }) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -372,7 +438,7 @@ export default function StudioPage() {
                             쿠폰은 구입 후 한 달간 사용 가능하며,<br className="hidden md:block" />
                             네이버에서 구입 후 즉시 회원가로 예약(사용) 가능하십니다.
                         </p>
-                        <a href="https://map.naver.com/p/entry/place/1935361517?placePath=/ticket?selectedReview=6993d71a9654b90f984b4b64&selectedReview=6993d71a9654b90f984b4b64&from=map&fromPanelNum=1&additionalHeight=76&timestamp=202602220831&locale=ko&svcName=map_pcv5&searchType=place&lng=127.0841546&lat=37.5660654&c=15.00,0,0,0,dh" target="_blank" rel="noopener noreferrer" className="inline-block px-10 py-4 bg-white text-black font-bold tracking-[0.2em] uppercase text-xs md:text-sm rounded-full hover:bg-neutral-200 transition-colors">
+                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-10 py-4 bg-white text-black font-bold tracking-[0.2em] uppercase text-xs md:text-sm rounded-full hover:bg-neutral-200 transition-colors">
                             멤버십 가입하기
                         </a>
                     </motion.div>
@@ -389,228 +455,16 @@ export default function StudioPage() {
                         className="mb-16 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8"
                     >
                         <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-center md:text-left">SPACES</h2>
-                        <a href="https://map.naver.com/p/entry/place/1935361517?placePath=/ticket?selectedReview=6993d71a9654b90f984b4b64&selectedReview=6993d71a9654b90f984b4b64&from=map&fromPanelNum=1&additionalHeight=76&timestamp=202602220831&locale=ko&svcName=map_pcv5&searchType=place&lng=127.0841546&lat=37.5660654&c=15.00,0,0,0,dh" target="_blank" rel="noopener noreferrer" className="inline-block px-6 md:px-8 py-3 md:py-4 bg-black text-white font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs rounded-full border border-black hover:bg-transparent hover:text-black transition-colors shrink-0">
+                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-6 md:px-8 py-3 md:py-4 bg-black text-white font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs rounded-full border border-black hover:bg-transparent hover:text-black transition-colors shrink-0">
                             SPACE 공간 예약
                         </a>
                     </motion.div>
 
                     <div className="flex flex-col space-y-24">
 
-                        {/* Room A Block */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.7 }}
-                            className="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
-                        >
-                            {/* Left: Interactive Image Slider */}
-                            <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-200">
-                                <ImageSlider images={ROOM_A.images} />
-                            </div>
-
-                            {/* Right: Info Area */}
-                            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                                <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-6 flex items-center justify-between border-b-2 border-black pb-4">
-                                    {ROOM_A.name}
-                                </h3>
-
-                                <div className="mb-8 space-y-3">
-                                    {ROOM_A.prices.map((p, i) => (
-                                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
-                                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
-                                            <div className="flex items-baseline space-x-1.5">
-                                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
-                                                <span className="text-sm font-semibold tracking-wide text-neutral-500">{p.unit}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex-1">
-                                    <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Equipment & Features</h4>
-                                    <ul className="space-y-3">
-                                        {ROOM_A.features.map((feature, i) => (
-                                            <li key={i} className="text-neutral-700 font-medium flex items-start text-sm md:text-base leading-relaxed break-keep">
-                                                <span className="mr-3 text-black">✓</span> {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {ROOM_A.notes && ROOM_A.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-neutral-100">
-                                        {ROOM_A.notes.map((note, i) => (
-                                            <p key={i} className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep">
-                                                {note}
-                                            </p>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-
-                        {/* Room B Block */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.7 }}
-                            className="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
-                        >
-                            {/* Left: Interactive Image Slider */}
-                            <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-200">
-                                <ImageSlider images={ROOM_B.images} />
-                            </div>
-
-                            {/* Right: Info Area */}
-                            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                                <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-6 flex items-center justify-between border-b-2 border-black pb-4">
-                                    {ROOM_B.name}
-                                </h3>
-
-                                <div className="mb-8 space-y-3">
-                                    {ROOM_B.prices.map((p, i) => (
-                                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
-                                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
-                                            <div className="flex items-baseline space-x-1.5">
-                                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
-                                                <span className="text-sm font-semibold tracking-wide text-neutral-500">{p.unit}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex-1">
-                                    <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Equipment & Features</h4>
-                                    <ul className="space-y-3">
-                                        {ROOM_B.features.map((feature, i) => (
-                                            <li key={i} className="text-neutral-700 font-medium flex items-start text-sm md:text-base leading-relaxed break-keep">
-                                                <span className="mr-3 text-black">✓</span> {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {ROOM_B.notes && ROOM_B.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-neutral-100">
-                                        {ROOM_B.notes.map((note, i) => (
-                                            <p key={i} className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep">
-                                                {note}
-                                            </p>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-
-                        {/* Room C Block */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.7 }}
-                            className="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
-                        >
-                            {/* Left: Interactive Image Slider */}
-                            <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-200">
-                                <ImageSlider images={ROOM_C.images} />
-                            </div>
-
-                            {/* Right: Info Area */}
-                            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                                <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-6 flex items-center justify-between border-b-2 border-black pb-4">
-                                    {ROOM_C.name}
-                                </h3>
-
-                                <div className="mb-8 space-y-3">
-                                    {ROOM_C.prices.map((p, i) => (
-                                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
-                                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
-                                            <div className="flex items-baseline space-x-1.5">
-                                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
-                                                <span className="text-sm font-semibold tracking-wide text-neutral-500">{p.unit}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex-1">
-                                    <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Equipment & Features</h4>
-                                    <ul className="space-y-3">
-                                        {ROOM_C.features.map((feature, i) => (
-                                            <li key={i} className="text-neutral-700 font-medium flex items-start text-sm md:text-base leading-relaxed break-keep">
-                                                <span className="mr-3 text-black">✓</span> {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {ROOM_C.notes && ROOM_C.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-neutral-100">
-                                        {ROOM_C.notes.map((note, i) => (
-                                            <p key={i} className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep">
-                                                {note}
-                                            </p>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-
-                        {/* Room D Block */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.7 }}
-                            className="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
-                        >
-                            {/* Left: Interactive Image Slider */}
-                            <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-200">
-                                <ImageSlider images={ROOM_D.images} />
-                            </div>
-
-                            {/* Right: Info Area */}
-                            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                                <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-6 flex items-center justify-between border-b-2 border-black pb-4">
-                                    {ROOM_D.name}
-                                </h3>
-
-                                <div className="mb-8 space-y-3">
-                                    {ROOM_D.prices.map((p, i) => (
-                                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
-                                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
-                                            <div className="flex items-baseline space-x-1.5">
-                                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
-                                                <span className="text-sm font-semibold tracking-wide text-neutral-500">{p.unit}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="flex-1">
-                                    <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Equipment & Features</h4>
-                                    <ul className="space-y-3">
-                                        {ROOM_D.features.map((feature, i) => (
-                                            <li key={i} className="text-neutral-700 font-medium flex items-start text-sm md:text-base leading-relaxed break-keep">
-                                                <span className="mr-3 text-black">✓</span> {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {ROOM_D.notes && ROOM_D.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-neutral-100">
-                                        {ROOM_D.notes.map((note, i) => (
-                                            <p key={i} className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep">
-                                                {note}
-                                            </p>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
+                        {ROOMS.map((room) => (
+                            <RoomBlock key={room.name} room={room} />
+                        ))}
 
                         {/* Lobby Block */}
                         <motion.div

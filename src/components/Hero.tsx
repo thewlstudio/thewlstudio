@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Hero() {
     return (
@@ -8,10 +9,16 @@ export default function Hero() {
             {/* Section 1: Logo only */}
             <section className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black">
                 {/* Background Image / Logo */}
-                <div
-                    className="absolute inset-0 z-0 opacity-100 bg-contain bg-center bg-no-repeat scale-150 md:scale-125"
-                    style={{ backgroundImage: "url('/images/studio_logo_2.png')" }}
-                />
+                <div className="absolute inset-0 z-0 scale-150 md:scale-125">
+                    <Image
+                        src="/images/studio_logo_2.png"
+                        alt="White Light Studio Logo"
+                        fill
+                        className="object-contain"
+                        sizes="100vw"
+                        priority
+                    />
+                </div>
 
                 <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/20 to-transparent" />
 

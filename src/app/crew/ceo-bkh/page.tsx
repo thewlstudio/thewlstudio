@@ -35,10 +35,10 @@ export default function BaekKwangHeumDetailPage() {
                     </h1>
 
                     <div className="flex items-center space-x-6 mt-4">
-                        <a href="https://instagram.com/lifelikemovie.bkh" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                        <a href="https://instagram.com/lifelikemovie.bkh" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" aria-label="Instagram">
                             <Image src="/images/insta_favi_dark.png" alt="Instagram" width={32} height={32} className="object-contain" />
                         </a>
-                        <a href="https://www.youtube.com/@bkh__official" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                        <a href="https://www.youtube.com/@bkh__official" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" aria-label="YouTube">
                             <Image src="/images/youtube_favi_light.png" alt="YouTube" width={32} height={32} className="object-contain invert" />
                         </a>
                     </div>

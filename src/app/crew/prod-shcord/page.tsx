@@ -35,7 +35,7 @@ export default function OhSeungHwanDetailPage() {
                     </h1>
 
                     <div className="flex items-center space-x-6 mt-4">
-                        <a href="https://www.instagram.com/shcord_re/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                        <a href="https://www.instagram.com/shcord_re/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform" aria-label="Instagram">
                             <Image src="/images/insta_favi_dark.png" alt="Instagram" width={32} height={32} className="object-contain" />
                         </a>
                     </div>
