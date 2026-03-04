@@ -196,7 +196,7 @@ export default function WorksIndexPage() {
                                     alt={album.title}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
-                                {/* JYP Hover Overlay with + */}
+                                {/* Hover Overlay with + */}
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                     <div className="relative w-10 h-10">
                                         <div className="absolute inset-y-0 left-1/2 w-[1.5px] bg-white -translate-x-1/2"></div>
@@ -223,7 +223,7 @@ export default function WorksIndexPage() {
             {/* Scroll To Top Fixed Button */}
             <button
                 onClick={scrollToTop}
-                className="fixed bottom-10 right-10 flex flex-col items-center justify-center text-neutral-400 hover:text-black transition-colors z-50 text-[11px] font-bold tracking-widest hidden md:flex"
+                className="fixed bottom-10 right-10 hidden md:flex flex-col items-center justify-center text-neutral-400 hover:text-black transition-colors z-50 text-[11px] font-bold tracking-widest"
             >
                 <ChevronUp size={24} strokeWidth={1.5} className="mb-1" />
                 TOP
