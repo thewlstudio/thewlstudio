@@ -6,15 +6,17 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { urlFor } from "@/sanity/lib/image";
 
+const NAVER_MAP_URL = "https://map.naver.com/p/entry/place/1935361517?placePath=/ticket?selectedReview=6993d71a9654b90f984b4b64&selectedReview=6993d71a9654b90f984b4b64&from=map&fromPanelNum=1&additionalHeight=76&timestamp=202602220831&locale=ko&svcName=map_pcv5&searchType=place&lng=127.0841546&lat=37.5660654&c=15.00,0,0,0,dh";
+
 type Instructor = {
     _id: string;
     id: string;
     category: string;
     instructorName: string;
-    image: any;
+    image: Record<string, unknown>;
     imagePosition?: string;
-    modalImage?: any;
-    bgImage: any;
+    modalImage?: Record<string, unknown>;
+    bgImage: Record<string, unknown>;
     bgScale?: string;
     bgPosition?: string;
     subtitle: string;
@@ -87,7 +89,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
 
                         {/* Group Classes */}
                         <div className="md:pl-16">
-                            <h4 className="flex items-center text-black font-bold mb-6 tracking-[0.2em] text-base uppercase inline-flex">
+                            <h4 className="inline-flex items-center text-black font-bold mb-6 tracking-[0.2em] text-base uppercase">
                                 Group Class
                                 <span className="font-sans text-neutral-400 normal-case tracking-normal ml-3 font-medium text-xs">(2-5인)</span>
                             </h4>
@@ -106,7 +108,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                 </div>
 
                 {/* Editorial List Layout for Classes */}
-                <div className="flex flex-col">
+                <ul className="flex flex-col">
                     {initialInstructors.length === 0 ? (
                         <div className="py-20 text-center text-neutral-400">
                             등록된 클래스 강사가 없습니다. (Sanity 관리자 페이지에서 추가해주세요)
@@ -169,7 +171,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                             </motion.li>
                         ))
                     )}
-                </div>
+                </ul>
 
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -177,7 +179,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                     transition={{ duration: 1, delay: 0.8 }}
                     className="mt-32 text-center"
                 >
-                    <a href="https://map.naver.com/p/entry/place/1935361517?placePath=/ticket?selectedReview=6993d71a9654b90f984b4b64&selectedReview=6993d71a9654b90f984b4b64&from=map&fromPanelNum=1&additionalHeight=76&timestamp=202602220831&locale=ko&svcName=map_pcv5&searchType=place&lng=127.0841546&lat=37.5660654&c=15.00,0,0,0,dh" target="_blank" rel="noopener noreferrer" className="inline-block px-12 py-4 bg-black text-white font-bold tracking-widest text-sm hover:bg-neutral-800 transition-colors uppercase">
+                    <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-12 py-4 bg-black text-white font-bold tracking-widest text-sm hover:bg-neutral-800 transition-colors uppercase">
                         레슨 문의 ↗
                     </a>
                 </motion.div>
@@ -264,7 +266,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                             <div className="space-y-5 sm:space-y-6">
                                                 {selectedInstructor.process?.map((step, i) => (
                                                     <div key={i} className="flex gap-3 sm:gap-5">
-                                                        <div className="text-[10px] font-bold tracking-[0.2em] text-neutral-400 mt-1 shrink-0">0{i + 1}</div>
+                                                        <div className="text-[10px] font-bold tracking-[0.2em] text-neutral-400 mt-1 shrink-0">{String(i + 1).padStart(2, '0')}</div>
                                                         <p className="text-sm sm:text-[15px] md:text-base text-neutral-700 font-light leading-relaxed font-pretendard break-keep">
                                                             {step}
                                                         </p>
@@ -313,7 +315,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     {/* CTA Bottom Button */}
                                     <div className="w-full pt-6 sm:pt-8 border-t border-black/10 mt-auto">
                                         <a
-                                            href="https://map.naver.com/p/entry/place/1935361517?placePath=/ticket?selectedReview=6993d71a9654b90f984b4b64&selectedReview=6993d71a9654b90f984b4b64&from=map&fromPanelNum=1&additionalHeight=76&timestamp=202602220831&locale=ko&svcName=map_pcv5&searchType=place&lng=127.0841546&lat=37.5660654&c=15.00,0,0,0,dh"
+                                            href={NAVER_MAP_URL}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="block w-full px-6 sm:px-8 py-4 sm:py-5 bg-black text-white font-bold tracking-[0.2em] text-[10px] sm:text-xs hover:bg-neutral-800 transition-colors uppercase text-center"
