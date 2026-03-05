@@ -35,6 +35,9 @@ export const metadata: Metadata = {
   },
 };
 
+import Preloader from "@/components/Preloader";
+import SmoothScroll from "@/components/SmoothScroll";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,7 +46,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${inter.className} min-h-screen bg-black text-white selection:bg-white selection:text-black`}>
-        {children}
+        <Preloader />
+        <SmoothScroll>
+          {children}
+        </SmoothScroll>
       </body>
     </html>
   );
