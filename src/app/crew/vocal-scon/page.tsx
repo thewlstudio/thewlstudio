@@ -115,7 +115,7 @@ const SCON_DISCOGRAPHY = [
     }
 ];
 
-export default function SconDetailPage() {
+export default function VocalSconPage() {
     return (
         <main className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
             <Header />

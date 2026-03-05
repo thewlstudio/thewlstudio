@@ -99,7 +99,6 @@ export default function FolkfolioPage() {
             </section>
 
             {/* Credits Section */}
-            {/* Credits Section */}
             <section className="bg-white pb-24 pt-8 md:pt-16 border-t-0">
                 <motion.div
                     variants={containerVariants}

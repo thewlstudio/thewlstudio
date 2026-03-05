@@ -150,7 +150,7 @@ function RoomBlock({ room }: { room: RoomData }) {
             className="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
         >
             <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-200">
-                <ImageSlider images={room.images} />
+                <ImageSlider images={room.images} roomName={room.name} />
             </div>
 
             <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
@@ -195,7 +195,7 @@ function RoomBlock({ room }: { room: RoomData }) {
     );
 }
 
-function ImageSlider({ images }: { images: string[] }) {
+function ImageSlider({ images, roomName }: { images: string[]; roomName: string }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const next = () => setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -214,7 +214,7 @@ function ImageSlider({ images }: { images: string[] }) {
                 >
                     <Image
                         src={images[currentIndex]}
-                        alt="Room"
+                        alt={`${roomName} - 사진 ${currentIndex + 1}`}
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, 50vw"
@@ -476,7 +476,7 @@ export default function StudioPage() {
                         >
                             {/* Left: Interactive Image Slider */}
                             <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-800">
-                                <ImageSlider images={LOBBY.images} />
+                                <ImageSlider images={LOBBY.images} roomName="Lobby" />
                             </div>
 
                             {/* Right: Info Area */}

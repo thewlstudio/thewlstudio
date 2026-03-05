@@ -75,8 +75,16 @@ const ALBUMS = [
     }
 ];
 
+// Parse "YYYY. MM. DD." format into a Date for reliable sorting
+const parseAlbumDate = (dateStr: string): Date => {
+    const parts = dateStr.replace(/\./g, "").trim().split(/\s+/);
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+};
+
 // Sort ALBUMS by date descending (latest first)
-const SORTED_ALBUMS = [...ALBUMS].sort((a, b) => b.date.localeCompare(a.date));
+const SORTED_ALBUMS = [...ALBUMS].sort(
+    (a, b) => parseAlbumDate(b.date).getTime() - parseAlbumDate(a.date).getTime()
+);
 
 const ITEMS_PER_PAGE = 12;
 

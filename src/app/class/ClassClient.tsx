@@ -8,15 +8,22 @@ import Footer from "@/components/Footer";
 import { urlFor } from "@/sanity/lib/image";
 import { NAVER_MAP_URL } from "@/lib/constants";
 
+type SanityImage = {
+    _type: "image";
+    asset: { _type: "reference"; _ref: string };
+    hotspot?: object;
+    crop?: object;
+};
+
 type Instructor = {
     _id: string;
     id: string;
     category: string;
     instructorName: string;
-    image: Record<string, unknown>;
+    image: SanityImage;
     imagePosition?: string;
-    modalImage?: Record<string, unknown>;
-    bgImage: Record<string, unknown>;
+    modalImage?: SanityImage;
+    bgImage: SanityImage;
     bgScale?: string;
     bgPosition?: string;
     subtitle: string;
