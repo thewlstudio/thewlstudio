@@ -1081,6 +1081,64 @@
             "type": "object",
             "name": "freeformTextBlock",
             "title": "7. Freeform Text Block (자유 서식)"
+          },
+          {
+            "fields": [
+              {
+                "options": {
+                  "accept": "audio/*"
+                },
+                "validation": [
+                  {
+                    "rules": [
+                      {
+                        "flag": "presence",
+                        "constraint": "required"
+                      }
+                    ],
+                    "level": "error"
+                  }
+                ],
+                "name": "audioFile",
+                "type": "file",
+                "title": "Audio File (MP3, WAV 등)"
+              },
+              {
+                "validation": [
+                  {
+                    "rules": [
+                      {
+                        "flag": "presence",
+                        "constraint": "required"
+                      }
+                    ],
+                    "level": "error"
+                  }
+                ],
+                "name": "title",
+                "type": "string",
+                "title": "Track Title (제목)"
+              },
+              {
+                "validation": [
+                  {
+                    "rules": [
+                      {
+                        "flag": "presence",
+                        "constraint": "required"
+                      }
+                    ],
+                    "level": "error"
+                  }
+                ],
+                "name": "artist",
+                "type": "string",
+                "title": "Artist (아티스트)"
+              }
+            ],
+            "type": "object",
+            "name": "audioBlock",
+            "title": "8. Audio Block (오디오 플레이어)"
           }
         ],
         "name": "contentBlocks",

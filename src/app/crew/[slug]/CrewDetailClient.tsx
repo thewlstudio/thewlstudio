@@ -35,9 +35,9 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                     </div>
 
                     <h2 className="text-xs md:text-sm font-bold tracking-[0.4em] text-neutral-400 uppercase mb-4">{member.role}</h2>
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 flex flex-col items-center">
+                    <h1 className="text-4xl md:text-7xl font-black tracking-tighter mb-6 flex flex-col items-center">
                         {member.name}
-                        <span className="text-xl md:text-2xl font-semibold text-neutral-300 mt-3 tracking-widest">{member.koName}</span>
+                        <span className="text-base md:text-2xl font-semibold text-neutral-300 mt-3 tracking-widest">{member.koName}</span>
                     </h1>
                 </motion.div>
             </section>
@@ -57,7 +57,7 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                                     </h3>
                                 </div>
                                 <div className="w-full lg:w-2/3">
-                                    <p className="text-lg md:text-xl text-neutral-600 font-medium leading-relaxed break-keep whitespace-pre-wrap">
+                                    <p className="text-sm md:text-xl text-neutral-600 font-medium leading-relaxed break-keep whitespace-pre-wrap">
                                         {section.text}
                                     </p>
                                 </div>
@@ -79,14 +79,14 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                                         {section.years?.map((group: any, idx: number) => (
                                             <div key={idx} className="flex flex-col md:flex-row gap-4 md:gap-8 group/yearblock items-start">
                                                 <div className="w-full md:w-28 shrink-0">
-                                                    <h4 className="text-3xl md:text-4xl font-extrabold italic tracking-tight text-neutral-200 group-hover/yearblock:text-black transition-colors duration-500 leading-none -mt-1 md:-mt-1.5">
+                                                    <h4 className="text-2xl md:text-4xl font-extrabold italic tracking-tight text-neutral-200 group-hover/yearblock:text-black transition-colors duration-500 leading-none -mt-1 md:-mt-1.5">
                                                         {group.year}
                                                     </h4>
                                                 </div>
                                                 <div className="w-full flex-grow space-y-2">
                                                     {group.tracks?.map((track: any, i: number) => (
                                                         <div key={i} className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200/60 pb-4 group/track cursor-default overflow-hidden transition-colors duration-300 hover:border-black">
-                                                            <h4 className="text-lg md:text-xl font-bold text-neutral-500 tracking-tight group-hover/track:text-black group-hover/track:translate-x-3 transition-all duration-300 ease-out">{track.title}</h4>
+                                                            <h4 className="text-sm md:text-xl font-bold text-neutral-500 tracking-tight group-hover/track:text-black group-hover/track:translate-x-3 transition-all duration-300 ease-out">{track.title}</h4>
                                                             {track.desc && <span className="text-[10px] md:text-xs font-bold text-neutral-300 uppercase tracking-widest mt-1 md:mt-0 font-mono group-hover/track:text-black transition-colors duration-300 shrink-0">{track.desc}</span>}
                                                         </div>
                                                     ))}
@@ -112,9 +112,9 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                                     {section.items?.map((item: any, idx: number) => (
                                         <div key={idx} className="relative pl-6 md:pl-8 border-l-[1.5px] border-neutral-200 group/career">
                                             <span className="absolute -left-[3.5px] top-1.5 w-[5px] h-[5px] bg-neutral-300 group-hover/career:bg-black transition-colors"></span>
-                                            <h4 className="text-xs md:text-sm font-bold text-neutral-400 tracking-widest mb-2 font-mono group-hover/career:text-black transition-colors duration-300">{item.date}</h4>
-                                            <h5 className="text-lg md:text-xl font-bold text-neutral-600 tracking-tight mb-2 group-hover/career:text-black group-hover/career:translate-x-1.5 transition-all duration-300 ease-out">{item.title}</h5>
-                                            {item.desc && <p className="text-neutral-400 font-medium text-sm md:text-base break-keep group-hover/career:text-neutral-500 transition-colors duration-300">{item.desc}</p>}
+                                            <h4 className="text-[10px] md:text-sm font-bold text-neutral-400 tracking-widest mb-2 font-mono group-hover/career:text-black transition-colors duration-300">{item.date}</h4>
+                                            <h5 className="text-base md:text-xl font-bold text-neutral-600 tracking-tight mb-2 group-hover/career:text-black group-hover/career:translate-x-1.5 transition-all duration-300 ease-out">{item.title}</h5>
+                                            {item.desc && <p className="text-neutral-400 font-medium text-xs md:text-base break-keep group-hover/career:text-neutral-500 transition-colors duration-300">{item.desc}</p>}
                                         </div>
                                     ))}
                                 </div>
@@ -142,7 +142,7 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                                                 {section.awards.map((item: any, idx: number) => (
                                                     <li key={`award-${idx}`} className="flex gap-4 group/list">
                                                         <span className="text-xs font-bold text-neutral-300 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
-                                                        <span className="text-sm md:text-base font-semibold text-neutral-400 break-words group-hover/list:text-black group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
+                                                        <span className="text-xs md:text-base font-semibold text-neutral-400 break-words group-hover/list:text-black group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -159,7 +159,7 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                                                 {section.activities.map((item: any, idx: number) => (
                                                     <li key={`activity-${idx}`} className="flex gap-4 group/list">
                                                         <span className="text-xs font-bold text-neutral-300 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
-                                                        <span className="text-sm md:text-base font-semibold text-neutral-400 break-words group-hover/list:text-black group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
+                                                        <span className="text-xs md:text-base font-semibold text-neutral-400 break-words group-hover/list:text-black group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -180,7 +180,7 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                                     </h3>
                                 </div>
                                 <div className="w-full lg:w-2/3">
-                                    <ul className="space-y-6 text-base md:text-lg text-neutral-400 font-bold tracking-tight">
+                                    <ul className="space-y-6 text-sm md:text-lg text-neutral-400 font-bold tracking-tight">
                                         {section.items?.map((item: string, idx: number) => (
                                             <li key={idx} className="flex items-start group/edu transition-colors duration-300 hover:text-black">
                                                 <span className="mt-[0.4rem] mr-5 flex-shrink-0 w-[1.5px] h-4 bg-neutral-300 group-hover/edu:bg-black transition-colors duration-300"></span>
@@ -204,7 +204,7 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                                 </div>
                                 <div className="w-full lg:w-2/3 space-y-4">
                                     {section.items?.map((item: string, idx: number) => (
-                                        <h4 key={idx} className="flex items-start text-base md:text-lg font-bold text-neutral-400 hover:text-black transition-colors duration-300 tracking-tight group/cert cursor-default">
+                                        <h4 key={idx} className="flex items-start text-sm md:text-lg font-bold text-neutral-400 hover:text-black transition-colors duration-300 tracking-tight group/cert cursor-default">
                                             <span className="mt-[0.4rem] mr-5 flex-shrink-0 w-[1.5px] h-4 bg-neutral-300 group-hover/cert:bg-black transition-colors duration-300"></span>
                                             <span className="group-hover/cert:translate-x-1.5 transition-transform duration-300 ease-out">{item}</span>
                                         </h4>

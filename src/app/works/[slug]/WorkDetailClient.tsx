@@ -138,7 +138,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                     transition={{ duration: 0.8 }}
                     className="text-center mb-8 flex flex-col items-center"
                 >
-                    <h2 className="text-xl md:text-3xl font-black uppercase tracking-widest text-[#222]">
+                    <h2 className="text-sm md:text-3xl font-black uppercase tracking-widest text-[#222]">
                         {artist}
                     </h2>
                     {instagramId && (
@@ -146,7 +146,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                             {instagramId}
                         </a>
                     )}
-                    <h1 className="text-3xl md:text-5xl font-black mt-4 tracking-tighter text-black break-keep">
+                    <h1 className="text-2xl md:text-5xl font-black mt-4 tracking-tighter text-black break-keep">
                         {title}
                     </h1>
                 </motion.div>
@@ -183,7 +183,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 0.4 }}
-                    className="text-center text-xs md:text-sm text-neutral-500 mb-12"
+                    className="text-center text-[10px] md:text-sm text-neutral-500 mb-12 font-bold md:font-normal uppercase tracking-widest"
                 >
                     <p>Release Date</p>
                     <p>{releaseDate}</p>
@@ -202,36 +202,57 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
 
                         case 'descriptionBlock':
                             return (
-                                <div key={block._key} className="flex flex-col items-center w-full max-w-3xl mb-12">
+                                <motion.div
+                                    key={block._key}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: "-100px" }}
+                                    transition={{ duration: 0.8 }}
+                                    className="flex flex-col items-center w-full max-w-3xl mb-12"
+                                >
                                     <div className="w-[1px] h-12 bg-neutral-300 mb-12"></div>
                                     <div className="text-center font-medium leading-relaxed md:leading-loose text-sm md:text-base text-neutral-600 space-y-6 px-4 break-keep w-full">
                                         {block.paragraphs?.map((p: string, i: number) => (
-                                            <p key={i}>{p.split('\\n').map((line, j) => <span key={j}>{line}<br /></span>)}</p>
+                                            <p key={i}>{p.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}</p>
                                         ))}
                                     </div>
                                     <div className="w-[1px] h-12 md:h-16 bg-neutral-300 mt-12"></div>
-                                </div>
+                                </motion.div>
                             );
 
                         case 'tracklistBlock':
                             return (
-                                <div key={block._key} className="flex flex-col items-center justify-center space-y-12 text-sm md:text-base w-full max-w-3xl mb-12 px-4 mt-8">
+                                <motion.div
+                                    key={block._key}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: "-100px" }}
+                                    transition={{ duration: 0.8 }}
+                                    className="flex flex-col items-center justify-center space-y-12 text-sm md:text-base w-full max-w-3xl mb-12 px-4 mt-8"
+                                >
                                     {block.tracks?.map((track: any, i: number) => (
                                         <div key={i} className="flex flex-col items-center">
                                             <span className="block font-bold text-neutral-900 mb-2 border-b border-neutral-200 pb-2 px-4 tracking-widest text-center">{track.title}</span>
                                             {track.description && (
-                                                <p className="text-neutral-500 mt-3 tracking-wide text-center leading-relaxed">
+                                                <p className="text-neutral-500 mt-3 tracking-wide text-center leading-relaxed text-xs md:text-base">
                                                     {track.description.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}
                                                 </p>
                                             )}
                                         </div>
                                     ))}
-                                </div>
+                                </motion.div>
                             );
 
                         case 'signatureMessageBlock':
                             return (
-                                <div key={block._key} className="text-center text-xs md:text-sm text-neutral-500 space-y-8 px-4 break-keep mt-24 pt-16 border-t border-neutral-200 w-full max-w-2xl mb-12">
+                                <motion.div
+                                    key={block._key}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: "-100px" }}
+                                    transition={{ duration: 0.8, delay: 0.2 }}
+                                    className="text-center text-xs md:text-sm text-neutral-500 space-y-8 px-4 break-keep mt-16 md:mt-24 pt-16 border-t border-neutral-200 w-full max-w-2xl mb-12"
+                                >
                                     {block.paragraphs?.map((p: string, i: number) => (
                                         <p key={i} className="leading-relaxed md:leading-loose">
                                             {p.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}
@@ -242,7 +263,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                             {block.signature}
                                         </p>
                                     )}
-                                </div>
+                                </motion.div>
                             );
 
                         case 'creditGridBlock':

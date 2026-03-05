@@ -104,20 +104,20 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
             <Header />
 
             {/* Top Section */}
-            <section className="pt-40 pb-32 px-6 flex flex-col items-center justify-center">
+            <section className="pt-24 pb-16 md:pt-40 md:pb-32 px-6 flex flex-col items-center justify-center">
                 <motion.h1
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="text-3xl md:text-5xl font-black uppercase tracking-widest text-[#111]"
+                    className="text-2xl md:text-5xl font-black uppercase tracking-widest text-[#111]"
                 >
                     WORKS
                 </motion.h1>
             </section>
 
             {/* Grid Album List */}
-            <section className="max-w-7xl mx-auto px-6 pb-24">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-16 lg:gap-x-10 lg:gap-y-20">
+            <section className="max-w-7xl mx-auto px-4 md:px-6 pb-24">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-16 lg:gap-x-10 lg:gap-y-20">
                     {currentItems.length > 0 ? (
                         currentItems.map((album, index) => (
                             <motion.div
@@ -136,7 +136,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                                             alt={album.title}
                                             fill
                                             className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-neutral-100 transition-transform duration-500 group-hover:scale-105" />
@@ -151,10 +151,10 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                                 </Link>
 
                                 {/* Info */}
-                                <div className="text-[12px] text-neutral-500 uppercase tracking-wide mb-1.5 font-semibold">
+                                <div className="text-[9px] md:text-[12px] text-neutral-500 uppercase tracking-widest mb-1 md:mb-1.5 font-bold md:font-semibold">
                                     {album.artist} | {album.releaseDate}
                                 </div>
-                                <h3 className="text-lg md:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors">
+                                <h3 className="text-xs md:text-lg lg:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors">
                                     {album.title}
                                 </h3>
                             </motion.div>
