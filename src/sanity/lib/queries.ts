@@ -1,5 +1,16 @@
 import { groq } from 'next-sanity';
 
+export const worksQuery = groq`
+  *[_type == "work"] | order(releaseDate desc) {
+    title,
+    artist,
+    "slug": slug.current,
+    releaseDate,
+    "imageUrl": coverImage.asset->url,
+    "lqip": coverImage.asset->metadata.lqip
+  }
+`;
+
 export const instructorsQuery = groq`
   *[_type == "instructor"] | order(order asc) {
     _id,

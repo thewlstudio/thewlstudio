@@ -1,9 +1,36 @@
 import type { MetadataRoute } from "next";
+import { client } from "@/sanity/lib/client";
+
+export const revalidate = 60 * 60 * 24; // Revalidate sitemap daily
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-    return [
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+    // Fetch Works from Sanity
+    const works = await client.fetch(
+        `*[_type == "work" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+    );
+
+    // Fetch Crew from Sanity
+    const crew = await client.fetch(
+        `*[_type == "crew" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+    );
+
+    const worksUrls: MetadataRoute.Sitemap = works.map((w: { slug: string; _updatedAt: string }) => ({
+        url: `${BASE_URL}/works/${w.slug}`,
+        lastModified: new Date(w._updatedAt),
+        changeFrequency: "weekly",
+        priority: 0.8,
+    }));
+
+    const crewUrls: MetadataRoute.Sitemap = crew.map((c: { slug: string; _updatedAt: string }) => ({
+        url: `${BASE_URL}/crew/${c.slug}`,
+        lastModified: new Date(c._updatedAt),
+        changeFrequency: "monthly",
+        priority: 0.7,
+    }));
+
+    const staticUrls: MetadataRoute.Sitemap = [
         {
             url: BASE_URL,
             lastModified: new Date(),
@@ -11,94 +38,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 1,
         },
         {
-            url: `${BASE_URL}/studio`,
-            lastModified: new Date(),
-            changeFrequency: "monthly",
-            priority: 0.9,
-        },
-        {
-            url: `${BASE_URL}/class`,
-            lastModified: new Date(),
-            changeFrequency: "weekly",
-            priority: 0.9,
-        },
-        {
             url: `${BASE_URL}/works`,
             lastModified: new Date(),
             changeFrequency: "weekly",
-            priority: 0.8,
-        },
-        {
-            url: `${BASE_URL}/works/letter`,
-            lastModified: new Date("2026-02-25"),
-            changeFrequency: "yearly",
-            priority: 0.6,
-        },
-        {
-            url: `${BASE_URL}/works/firstletter`,
-            lastModified: new Date("2026-02-24"),
-            changeFrequency: "yearly",
-            priority: 0.6,
-        },
-        {
-            url: `${BASE_URL}/works/dawn`,
-            lastModified: new Date("2025-11-20"),
-            changeFrequency: "yearly",
-            priority: 0.6,
-        },
-        {
-            url: `${BASE_URL}/works/mask`,
-            lastModified: new Date("2025-11-14"),
-            changeFrequency: "yearly",
-            priority: 0.6,
-        },
-        {
-            url: `${BASE_URL}/works/folkfolio`,
-            lastModified: new Date("2025-09-19"),
-            changeFrequency: "yearly",
-            priority: 0.6,
-        },
-        {
-            url: `${BASE_URL}/works/never-forgot-you`,
-            lastModified: new Date("2025-08-08"),
-            changeFrequency: "yearly",
-            priority: 0.6,
-        },
-        {
-            url: `${BASE_URL}/works/with-you`,
-            lastModified: new Date("2024-05-21"),
-            changeFrequency: "yearly",
-            priority: 0.6,
-        },
-        {
-            url: `${BASE_URL}/works/haze`,
-            lastModified: new Date("2023-10-06"),
-            changeFrequency: "yearly",
-            priority: 0.6,
+            priority: 0.9,
         },
         {
             url: `${BASE_URL}/crew`,
             lastModified: new Date(),
             changeFrequency: "monthly",
-            priority: 0.7,
+            priority: 0.8,
         },
         {
-            url: `${BASE_URL}/crew/ceo-bkh`,
+            url: `${BASE_URL}/class`,
             lastModified: new Date(),
             changeFrequency: "monthly",
-            priority: 0.5,
+            priority: 0.8,
         },
         {
-            url: `${BASE_URL}/crew/prod-shcord`,
+            url: `${BASE_URL}/studio`,
             lastModified: new Date(),
             changeFrequency: "monthly",
-            priority: 0.5,
-        },
-        {
-            url: `${BASE_URL}/crew/vocal-scon`,
-            lastModified: new Date(),
-            changeFrequency: "monthly",
-            priority: 0.5,
+            priority: 0.8,
         },
         {
             url: `${BASE_URL}/contact`,
@@ -107,4 +68,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.7,
         },
     ];
+
+    return [...staticUrls, ...worksUrls, ...crewUrls];
 }

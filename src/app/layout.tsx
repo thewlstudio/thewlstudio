@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Preloader from "@/components/Preloader";
+import SmoothScroll from "@/components/SmoothScroll";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,7 +41,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${inter.className} min-h-screen bg-black text-white selection:bg-white selection:text-black`}>
-        {children}
+        <Preloader />
+        <SmoothScroll>
+          {children}
+        </SmoothScroll>
       </body>
     </html>
   );
