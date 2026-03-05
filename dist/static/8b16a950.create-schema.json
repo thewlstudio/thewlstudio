@@ -1,0 +1,1095 @@
+[
+  {
+    "fields": [
+      {
+        "options": {
+          "source": "instructorName",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "고유 ID (악기명-강사이름-t 형식 권장, 예: flute-parkig-t)",
+        "name": "id",
+        "type": "slug",
+        "title": "고유 ID"
+      },
+      {
+        "initialValue": 0,
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "리스트에서 보여질 순서 (숫자가 작을수록 먼저 노출됩니다)",
+        "name": "order",
+        "type": "number",
+        "title": "정렬 순서(Order)"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "영문 대문자 클래스명 (예: FLUTE CLASS)",
+        "name": "category",
+        "type": "string",
+        "title": "클래스 카테고리"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "강사명 (통일성을 위해 한글 이름만 작성, 영문 괄호X)",
+        "name": "instructorName",
+        "type": "string",
+        "title": "강사명"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "좌측 박스에 들어갈 이미지 (배경 투명을 위해 svg 권장)",
+        "name": "image",
+        "type": "image",
+        "title": "좌측 썸네일 (리스트 화면용)"
+      },
+      {
+        "initialValue": "object-top",
+        "description": "이미지 위치 및 크기 조정 (예: object-top 또는 object-top scale-[1.5] origin-[center_10%])",
+        "name": "imagePosition",
+        "type": "string",
+        "title": "썸네일 위치/크기 (Tailwind 클래스)"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "description": "팝업창 안의 사각형 프레임에 들어갈 퓨어한 원본 사진 (비워두면 좌측 썸네일이 그대로 들어감)",
+        "name": "modalImage",
+        "type": "image",
+        "title": "원본 사진 (모달 화면용)"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "우측에 크게 나타나는 배경용 흑백/투명 이미지",
+        "name": "bgImage",
+        "type": "image",
+        "title": "우측 배경 은은한 이미지 (리스트 호버용)"
+      },
+      {
+        "initialValue": "h-full",
+        "description": "배경 이미지 상하 크기 조절 (h-[85%] 또는 h-full 등을 입력)",
+        "name": "bgScale",
+        "type": "string",
+        "title": "배경 이미지 상하 크기 (Tailwind)"
+      },
+      {
+        "initialValue": "bottom-0 right-0 md:right-12",
+        "description": "배경 이미지 여백 및 정렬 위치 (예: bottom-0 right-0 md:right-12)",
+        "name": "bgPosition",
+        "type": "string",
+        "title": "배경 이미지 위치 여백 (Tailwind)"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "모달 안 제목 아래 들어갈 캐치프레이즈",
+        "name": "subtitle",
+        "type": "string",
+        "title": "서브타이틀 (캐치프레이즈)"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "예: 1:1 Private & Group Lesson",
+        "name": "lessonInfo",
+        "type": "string",
+        "title": "레슨 형태 정보"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "줄바꿈(문단)별로 항목을 추가해주세요.",
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "about",
+        "type": "array",
+        "title": "레슨 소개"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "줄바꿈(문단)별로 항목을 추가해주세요.",
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "process",
+        "type": "array",
+        "title": "커리큘럼 / 프로세스"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "작업물 외부 링크 주소 (https://...)",
+        "name": "portfolioUrl",
+        "type": "url",
+        "title": "작업물(포트폴리오) 유튜브/링크 URL"
+      },
+      {
+        "description": "버튼 위에 표시되는 설명",
+        "name": "portfolioText",
+        "type": "text",
+        "title": "작업물 설명 텍스트"
+      },
+      {
+        "initialValue": "작업물 보기",
+        "description": "버튼 텍스트 (예: 작업물 듣기, 작업물 보기)",
+        "name": "portfolioBtn",
+        "type": "string",
+        "title": "작업물 버튼 이름"
+      }
+    ],
+    "name": "instructor",
+    "type": "document",
+    "title": "Instructor (클래스 강사)"
+  },
+  {
+    "fields": [
+      {
+        "initialValue": true,
+        "description": "크루 목록에 이 멤버를 공개할지 여부를 결정합니다.",
+        "name": "isActive",
+        "type": "boolean",
+        "title": "Active (Show on Website)"
+      },
+      {
+        "initialValue": 0,
+        "description": "크루 목록에서 보여질 순서를 숫자로 입력하세요. (낮을수록 먼저 렌더링됩니다)",
+        "name": "order",
+        "type": "number",
+        "title": "Display Order"
+      },
+      {
+        "options": {
+          "source": "name",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "예: ceo-bkh, vocal-scon (영문 소문자와 하이픈만 사용)",
+        "name": "slug",
+        "type": "slug",
+        "title": "Slug (URL 경로)"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "name",
+        "type": "string",
+        "title": "English Name (영문 이름)"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "koName",
+        "type": "string",
+        "title": "Korean Name (한글 이름)"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "예: CEO / HEAD PRODUCER",
+        "name": "role",
+        "type": "string",
+        "title": "Role (직책/역할)"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "image",
+        "type": "image",
+        "title": "Profile Image"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "validation": [
+                  {
+                    "rules": [
+                      {
+                        "flag": "uri",
+                        "constraint": {
+                          "options": {
+                            "scheme": [
+                              "/^http$/",
+                              "/^https$/"
+                            ],
+                            "allowRelative": false,
+                            "relativeOnly": false,
+                            "allowCredentials": false
+                          }
+                        }
+                      }
+                    ],
+                    "level": "error"
+                  }
+                ],
+                "name": "url",
+                "type": "url",
+                "title": "URL"
+              },
+              {
+                "name": "iconImage",
+                "type": "image"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "links",
+        "type": "array",
+        "title": "Social Links"
+      },
+      {
+        "description": "원하는 섹션을 추가하고 드래그 앤 드롭으로 순서를 자유롭게 변경할 수 있습니다. 추가하지 않은 섹션은 화면에 나타나지 않습니다.",
+        "of": [
+          {
+            "fields": [
+              {
+                "rows": 5,
+                "name": "text",
+                "type": "text",
+                "title": "소개 내용"
+              }
+            ],
+            "type": "object",
+            "name": "aboutSection",
+            "title": "ABOUT (소개)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "name": "year",
+                        "type": "string",
+                        "title": "Year (연도)"
+                      },
+                      {
+                        "of": [
+                          {
+                            "fields": [
+                              {
+                                "name": "title",
+                                "type": "string",
+                                "title": "Track Title"
+                              },
+                              {
+                                "name": "desc",
+                                "type": "string",
+                                "title": "Description (앨범 종류/역할 등)"
+                              }
+                            ],
+                            "type": "object"
+                          }
+                        ],
+                        "name": "tracks",
+                        "type": "array",
+                        "title": "Tracks (트랙)"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "name": "years",
+                "type": "array",
+                "title": "Years (연도별)"
+              }
+            ],
+            "type": "object",
+            "name": "discographySection",
+            "title": "DISCOGRAPHY (음반 경력)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "name": "date",
+                        "type": "string",
+                        "title": "Date/Period (기간)"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "title": "Title (내용)"
+                      },
+                      {
+                        "name": "desc",
+                        "type": "string",
+                        "title": "Description (상세/선택사항)"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "name": "items",
+                "type": "array",
+                "title": "경력 목록"
+              }
+            ],
+            "type": "object",
+            "name": "careerSection",
+            "title": "CAREER (경력)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "name": "date",
+                        "type": "string",
+                        "title": "Date (연도)"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "title": "Title (수상명)"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "name": "awards",
+                "type": "array",
+                "title": "AWARDS (수상 내역)"
+              },
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "name": "date",
+                        "type": "string",
+                        "title": "Date (연도)"
+                      },
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "title": "Title (활동명)"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "name": "activities",
+                "type": "array",
+                "title": "ACTIVITIES (대외 활동)"
+              }
+            ],
+            "type": "object",
+            "name": "awardsAndActivitiesSection",
+            "title": "AWARDS & ACTIVITIES (수상 및 대외 활동)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "name": "items",
+                "type": "array",
+                "title": "학력 목록"
+              }
+            ],
+            "type": "object",
+            "name": "educationSection",
+            "title": "EDUCATION (학력)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "name": "items",
+                "type": "array",
+                "title": "자격증 목록"
+              }
+            ],
+            "type": "object",
+            "name": "certificationsSection",
+            "title": "CERTIFICATIONS (자격증)"
+          }
+        ],
+        "name": "sections",
+        "type": "array",
+        "title": "Profile Sections (프로필 내용 구성)"
+      }
+    ],
+    "name": "crew",
+    "type": "document",
+    "title": "Crew Member"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "title",
+        "type": "string",
+        "title": "Album Title"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "artist",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "slug",
+        "type": "slug",
+        "title": "URL Slug"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "releaseDate",
+        "type": "string",
+        "title": "Release Date (Format: YYYY. MM. DD.)"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "coverImage",
+        "type": "image"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "youtubeUrl",
+        "type": "url",
+        "title": "YouTube URL (Cover Click)"
+      },
+      {
+        "name": "instagramId",
+        "type": "string",
+        "title": "Instagram Handle (e.g., @warobaru)"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "instagramUrl",
+        "type": "url",
+        "title": "Instagram Profile URL"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "type": "text"
+                  }
+                ],
+                "name": "paragraphs",
+                "type": "array"
+              }
+            ],
+            "type": "object",
+            "name": "descriptionBlock",
+            "title": "1. Description Block (텍스트 모음)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "title": "Section Title (e.g., Track Info)"
+                      },
+                      {
+                        "of": [
+                          {
+                            "fields": [
+                              {
+                                "description": "Left empty for full-width text like Thanks To",
+                                "name": "role",
+                                "type": "string",
+                                "title": "Role (e.g., Composed by)"
+                              },
+                              {
+                                "name": "value",
+                                "type": "text",
+                                "title": "Value (e.g., 백광흠)"
+                              },
+                              {
+                                "name": "linkText",
+                                "type": "string",
+                                "title": "Link Text (e.g., @shcord_re)"
+                              },
+                              {
+                                "validation": [
+                                  {
+                                    "rules": [
+                                      {
+                                        "flag": "uri",
+                                        "constraint": {
+                                          "options": {
+                                            "scheme": [
+                                              "/^http$/",
+                                              "/^https$/"
+                                            ],
+                                            "allowRelative": false,
+                                            "relativeOnly": false,
+                                            "allowCredentials": false
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "level": "error"
+                                  }
+                                ],
+                                "name": "linkUrl",
+                                "type": "url",
+                                "title": "Link URL"
+                              }
+                            ],
+                            "type": "object"
+                          }
+                        ],
+                        "name": "items",
+                        "type": "array",
+                        "title": "Credit Items"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "name": "sections",
+                "type": "array",
+                "title": "Credit Sections"
+              }
+            ],
+            "type": "object",
+            "name": "creditGridBlock",
+            "title": "2. Credit Grid Block (크레딧)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "name": "title",
+                        "type": "string",
+                        "title": "Track Title (e.g., 1. 너와)"
+                      },
+                      {
+                        "name": "description",
+                        "type": "text",
+                        "title": "Track Description / Lyrics"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "name": "tracks",
+                "type": "array"
+              }
+            ],
+            "type": "object",
+            "name": "tracklistBlock",
+            "title": "3. Tracklist Block (트랙리스트 모음)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "type": "text"
+                  }
+                ],
+                "name": "paragraphs",
+                "type": "array"
+              },
+              {
+                "name": "signature",
+                "type": "string",
+                "title": "Signature (e.g., - White Light Studio)"
+              }
+            ],
+            "type": "object",
+            "name": "signatureMessageBlock",
+            "title": "4. Signature Message Block (인사말)"
+          },
+          {
+            "fields": [
+              {
+                "options": {
+                  "hotspot": true
+                },
+                "name": "image",
+                "type": "image"
+              },
+              {
+                "name": "caption",
+                "type": "string"
+              }
+            ],
+            "type": "object",
+            "name": "imageBlock",
+            "title": "5. Image Block (사진 갤러리)"
+          },
+          {
+            "fields": [
+              {
+                "validation": [
+                  {
+                    "rules": [
+                      {
+                        "flag": "uri",
+                        "constraint": {
+                          "options": {
+                            "scheme": [
+                              "/^http$/",
+                              "/^https$/"
+                            ],
+                            "allowRelative": false,
+                            "relativeOnly": false,
+                            "allowCredentials": false
+                          }
+                        }
+                      }
+                    ],
+                    "level": "error"
+                  }
+                ],
+                "name": "url",
+                "type": "url",
+                "title": "YouTube URL"
+              }
+            ],
+            "type": "object",
+            "name": "videoEmbedBlock",
+            "title": "6. Video Embed Block (유튜브 삽입)"
+          },
+          {
+            "fields": [
+              {
+                "of": [
+                  {
+                    "marks": {
+                      "annotations": [
+                        {
+                          "i18nTitleKey": "inputs.portable-text.annotation.link",
+                          "options": {
+                            "modal": {
+                              "type": "popover"
+                            }
+                          },
+                          "fields": [
+                            {
+                              "validation": [
+                                {
+                                  "rules": [
+                                    {
+                                      "flag": "uri",
+                                      "constraint": {
+                                        "options": {
+                                          "scheme": [
+                                            "/^http$/",
+                                            "/^https$/",
+                                            "/^tel$/",
+                                            "/^mailto$/"
+                                          ],
+                                          "allowRelative": true,
+                                          "relativeOnly": false,
+                                          "allowCredentials": false
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "level": "error"
+                                }
+                              ],
+                              "description": "A valid web, email, phone, or relative link.",
+                              "name": "href",
+                              "type": "url",
+                              "title": "Link"
+                            }
+                          ],
+                          "name": "link",
+                          "type": "object"
+                        }
+                      ],
+                      "decorators": [
+                        {
+                          "value": "strong",
+                          "title": "Strong"
+                        },
+                        {
+                          "value": "em",
+                          "title": "Italic"
+                        },
+                        {
+                          "value": "code",
+                          "title": "Code"
+                        },
+                        {
+                          "value": "underline",
+                          "title": "Underline"
+                        },
+                        {
+                          "value": "strike-through",
+                          "title": "Strike"
+                        }
+                      ]
+                    },
+                    "lists": [
+                      {
+                        "value": "bullet",
+                        "title": "Bulleted list"
+                      },
+                      {
+                        "value": "number",
+                        "title": "Numbered list"
+                      }
+                    ],
+                    "styles": [
+                      {
+                        "value": "normal",
+                        "title": "Normal"
+                      },
+                      {
+                        "value": "h1",
+                        "title": "Heading 1"
+                      },
+                      {
+                        "value": "h2",
+                        "title": "Heading 2"
+                      },
+                      {
+                        "value": "h3",
+                        "title": "Heading 3"
+                      },
+                      {
+                        "value": "h4",
+                        "title": "Heading 4"
+                      },
+                      {
+                        "value": "h5",
+                        "title": "Heading 5"
+                      },
+                      {
+                        "value": "h6",
+                        "title": "Heading 6"
+                      },
+                      {
+                        "value": "blockquote",
+                        "title": "Quote"
+                      }
+                    ],
+                    "of": [],
+                    "type": "block"
+                  }
+                ],
+                "name": "content",
+                "type": "array"
+              }
+            ],
+            "type": "object",
+            "name": "freeformTextBlock",
+            "title": "7. Freeform Text Block (자유 서식)"
+          }
+        ],
+        "name": "contentBlocks",
+        "type": "array",
+        "title": "Page Builder (Content Blocks)"
+      }
+    ],
+    "name": "work",
+    "type": "document",
+    "title": "Work / Project"
+  }
+]

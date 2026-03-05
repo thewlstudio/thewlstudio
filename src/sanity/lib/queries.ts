@@ -21,3 +21,60 @@ export const instructorsQuery = groq`
     portfolioBtn
   }
 `;
+
+export const crewsQuery = groq`
+  *[_type == "crew" && isActive == true] | order(order asc) {
+    name,
+    koName,
+    role,
+    "slug": slug.current,
+    "imageUrl": image.asset->url,
+    links[] {
+      url,
+      "iconUrl": iconImage.asset->url
+    }
+  }
+`;
+
+export const crewBySlugQuery = groq`
+  *[_type == "crew" && slug.current == $slug][0] {
+    name,
+    koName,
+    role,
+    "imageUrl": image.asset->url,
+    links[] {
+      url,
+      "iconUrl": iconImage.asset->url
+    },
+    sections
+  }
+`;
+
+export const worksQuery = groq`
+  *[_type == "work"] | order(releaseDate desc) {
+    title,
+    artist,
+    "slug": slug.current,
+    releaseDate,
+    "imageUrl": coverImage.asset->url
+  }
+`;
+
+export const workBySlugQuery = groq`
+  *[_type == "work" && slug.current == $slug][0] {
+    title,
+    artist,
+    releaseDate,
+    "imageUrl": coverImage.asset->url,
+    youtubeUrl,
+    instagramId,
+    instagramUrl,
+    contentBlocks[] {
+      ...,
+      _type == "imageBlock" => {
+        ...,
+        "imageUrl": image.asset->url
+      }
+    }
+  }
+`;
