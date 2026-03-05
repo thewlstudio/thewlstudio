@@ -14,7 +14,8 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const member = await client.fetch(crewBySlugQuery, { slug: params.slug });
+    const decodedSlug = decodeURIComponent(params.slug);
+    const member = await client.fetch(crewBySlugQuery, { slug: decodedSlug });
 
     if (!member) {
         return { title: "Crew Not Found | WHITE LIGHT STUDIO" };
@@ -38,7 +39,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CrewDetailPage({ params }: Props) {
-    const member = await client.fetch(crewBySlugQuery, { slug: params.slug });
+    const decodedSlug = decodeURIComponent(params.slug);
+    const member = await client.fetch(crewBySlugQuery, { slug: decodedSlug });
 
     if (!member) {
         notFound();

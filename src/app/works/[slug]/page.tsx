@@ -7,7 +7,8 @@ import { notFound } from "next/navigation";
 export const revalidate = 10; // ISR validation
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-    const work = await client.fetch(workBySlugQuery, { slug: params.slug });
+    const decodedSlug = decodeURIComponent(params.slug);
+    const work = await client.fetch(workBySlugQuery, { slug: decodedSlug });
 
     if (!work) {
         return { title: "Work Not Found | WHITE LIGHT STUDIO" };
@@ -38,7 +39,8 @@ export async function generateStaticParams() {
 }
 
 export default async function WorkPage({ params }: { params: { slug: string } }) {
-    const work = await client.fetch(workBySlugQuery, { slug: params.slug });
+    const decodedSlug = decodeURIComponent(params.slug);
+    const work = await client.fetch(workBySlugQuery, { slug: decodedSlug });
 
     if (!work) {
         return notFound();

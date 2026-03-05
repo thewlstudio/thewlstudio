@@ -10,6 +10,15 @@ export default function Preloader() {
 
     useEffect(() => {
         setIsMounted(true);
+        const hasSeenPreloader = sessionStorage.getItem("wls_preloader_seen");
+
+        if (hasSeenPreloader) {
+            setStep(2); // Skip preloader completely
+            return;
+        }
+
+        sessionStorage.setItem("wls_preloader_seen", "true");
+
         // Lock scroll while preloading
         document.body.style.overflow = 'hidden';
 
