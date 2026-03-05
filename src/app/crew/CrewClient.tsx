@@ -59,15 +59,15 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
                             />
 
                             {/* JYP Style Hover Overlay */}
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-start justify-between p-4 md:p-6 pointer-events-none text-left">
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-between p-4 md:p-6 pointer-events-none text-center">
                                 {/* Top Text */}
-                                <div className="w-full text-left h-6 md:h-8 flex items-start justify-start">
-                                    <span className="text-[8px] md:text-[10px] text-white/50 tracking-widest font-bold uppercase w-full truncate text-left">{member.role}</span>
+                                <div className="w-full text-right h-6 md:h-8 flex items-start justify-end">
+                                    <span className="text-[8px] md:text-[10px] text-white/50 tracking-widest font-bold uppercase w-full truncate text-right">{member.role}</span>
                                 </div>
 
                                 {/* Center Text (Hover State Name) */}
-                                <div className="w-full flex flex-col items-start justify-center px-0 md:px-2">
-                                    <h3 className="text-white text-xs md:text-lg lg:text-2xl font-black tracking-tighter uppercase whitespace-nowrap drop-shadow-lg italic text-left">
+                                <div className="w-full flex flex-col items-center justify-center px-1 md:px-2">
+                                    <h3 className="text-white text-xs md:text-lg lg:text-2xl font-black tracking-tighter uppercase whitespace-nowrap drop-shadow-lg italic text-center w-full">
                                         <u className="underline-offset-[4px] md:underline-offset-[6px] decoration-[1.5px] md:decoration-2">{member.name}</u>
                                     </h3>
                                 </div>
