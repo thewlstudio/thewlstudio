@@ -1,5 +1,6 @@
 import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
+import { presentationTool } from 'sanity/presentation';
 import { schema } from './src/sanity/schemaTypes';
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
@@ -13,5 +14,12 @@ export default defineConfig({
     schema,
     plugins: [
         structureTool(),
+        presentationTool({
+            previewUrl: {
+                draftMode: {
+                    enable: '/api/draft',
+                },
+            },
+        }),
     ],
 });

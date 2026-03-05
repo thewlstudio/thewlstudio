@@ -56,6 +56,43 @@ function AudioPlayerBlock({ block }: { block: any }) {
         };
     }, []);
 
+    useEffect(() => {
+        let faviconInterval: NodeJS.Timeout;
+        const originalTitle = document.title;
+        let originalFavicon: HTMLLinkElement | null = document.querySelector('link[rel="icon"]');
+        let iconHrefBackup = originalFavicon ? originalFavicon.href : '';
+
+        if (isPlaying) {
+            document.title = `▶ Playing: ${block.title}`;
+
+            if (originalFavicon) {
+                const frames = [
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='0' y='0' width='16' height='16' rx='3' fill='%23000'/%3E%3Crect x='3' y='10' width='2' height='4' fill='%23fff'/%3E%3Crect x='7' y='6' width='2' height='8' fill='%23fff'/%3E%3Crect x='11' y='2' width='2' height='12' fill='%23fff'/%3E%3C/svg%3E",
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='0' y='0' width='16' height='16' rx='3' fill='%23000'/%3E%3Crect x='3' y='6' width='2' height='8' fill='%23fff'/%3E%3Crect x='7' y='2' width='2' height='12' fill='%23fff'/%3E%3Crect x='11' y='10' width='2' height='4' fill='%23fff'/%3E%3C/svg%3E",
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='0' y='0' width='16' height='16' rx='3' fill='%23000'/%3E%3Crect x='3' y='2' width='2' height='12' fill='%23fff'/%3E%3Crect x='7' y='10' width='2' height='4' fill='%23fff'/%3E%3Crect x='11' y='6' width='2' height='8' fill='%23fff'/%3E%3C/svg%3E",
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='0' y='0' width='16' height='16' rx='3' fill='%23000'/%3E%3Crect x='3' y='6' width='2' height='8' fill='%23fff'/%3E%3Crect x='7' y='10' width='2' height='4' fill='%23fff'/%3E%3Crect x='11' y='2' width='2' height='12' fill='%23fff'/%3E%3C/svg%3E"
+                ];
+                let frameIdx = 0;
+
+                originalFavicon.href = frames[frameIdx];
+                faviconInterval = setInterval(() => {
+                    frameIdx = (frameIdx + 1) % frames.length;
+                    if (originalFavicon) {
+                        originalFavicon.href = frames[frameIdx];
+                    }
+                }, 300);
+            }
+        }
+
+        return () => {
+            clearInterval(faviconInterval);
+            document.title = originalTitle;
+            if (originalFavicon && iconHrefBackup) {
+                originalFavicon.href = iconHrefBackup;
+            }
+        };
+    }, [isPlaying, block.title]);
+
     const togglePlay = () => {
         if (!audioRef.current) return;
         if (isPlaying) {
