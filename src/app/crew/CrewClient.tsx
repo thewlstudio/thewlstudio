@@ -30,7 +30,7 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
             </motion.div>
 
             {/* Grid Layout for Crew */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-y-10 gap-x-4 md:gap-y-16 md:gap-x-6 mt-8 px-2 md:px-0">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-10 gap-x-4 lg:gap-y-16 lg:gap-x-6 mt-8 px-2 md:px-0">
                 {members.map((member, index) => (
                     <motion.div
                         key={member.slug}
