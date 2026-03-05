@@ -137,6 +137,7 @@ export default function WorksIndexPage() {
                 <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
+                    aria-label="첫 페이지"
                     className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronsLeft size={18} strokeWidth={1.5} />
@@ -144,6 +145,7 @@ export default function WorksIndexPage() {
                 <button
                     onClick={() => setCurrentPage((prev: number) => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
+                    aria-label="이전 페이지"
                     className="hover:text-black transition-colors p-1 md:mr-4 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronLeft size={18} strokeWidth={1.5} />
@@ -154,6 +156,7 @@ export default function WorksIndexPage() {
                 <button
                     onClick={() => setCurrentPage((prev: number) => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
+                    aria-label="다음 페이지"
                     className="hover:text-black transition-colors p-1 md:ml-4 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronRight size={18} strokeWidth={1.5} />
@@ -161,6 +164,7 @@ export default function WorksIndexPage() {
                 <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
+                    aria-label="마지막 페이지"
                     className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronsRight size={18} strokeWidth={1.5} />
@@ -216,10 +220,10 @@ export default function WorksIndexPage() {
                             </Link>
 
                             {/* Info */}
-                            <div className="text-[12px] text-neutral-500 uppercase tracking-wide mb-1.5 font-semibold">
+                            <div className="w-full text-center text-[12px] text-neutral-500 uppercase tracking-wide mb-1.5 font-semibold">
                                 {album.artist} | {album.date}
                             </div>
-                            <h3 className="text-lg md:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors">
+                            <h3 className="w-full text-center text-lg md:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors">
                                 {album.title}
                             </h3>
                         </motion.div>
