@@ -215,7 +215,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                     <div className="w-[1px] h-12 bg-neutral-300 mb-12"></div>
                                     <div className="text-center font-medium leading-relaxed md:leading-loose text-sm md:text-base text-neutral-600 space-y-6 px-4 break-keep w-full">
                                         {block.paragraphs?.map((p: string, i: number) => (
-                                            <p key={i}>{p.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}</p>
+                                            <p key={i}>{p.split(/\n|\\n|\/n/).map((line: string, j: number) => <span key={j}>{line}<br /></span>)}</p>
                                         ))}
                                     </div>
                                     <div className="w-[1px] h-12 md:h-16 bg-neutral-300 mt-12"></div>
@@ -237,7 +237,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                             <span className="block font-bold text-neutral-900 mb-2 border-b border-neutral-200 pb-2 px-4 tracking-widest text-center">{track.title}</span>
                                             {track.description && (
                                                 <p className="text-neutral-500 mt-3 tracking-wide text-center leading-relaxed text-xs md:text-base">
-                                                    {track.description.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}
+                                                    {track.description.split(/\n|\\n|\/n/).map((line: string, j: number) => <span key={j}>{line}<br /></span>)}
                                                 </p>
                                             )}
                                         </div>
@@ -257,7 +257,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                 >
                                     {block.paragraphs?.map((p: string, i: number) => (
                                         <p key={i} className="leading-relaxed md:leading-loose">
-                                            {p.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}
+                                            {p.split(/\n|\\n|\/n/).map((line: string, j: number) => <span key={j}>{line}<br /></span>)}
                                         </p>
                                     ))}
                                     {block.signature && (
