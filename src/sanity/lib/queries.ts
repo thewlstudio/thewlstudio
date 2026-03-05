@@ -56,7 +56,8 @@ export const worksQuery = groq`
     artist,
     "slug": slug.current,
     releaseDate,
-    "imageUrl": coverImage.asset->url
+    "imageUrl": coverImage.asset->url,
+    "lqip": coverImage.asset->metadata.lqip
   }
 `;
 
@@ -66,6 +67,7 @@ export const workBySlugQuery = groq`
     artist,
     releaseDate,
     "imageUrl": coverImage.asset->url,
+    "lqip": coverImage.asset->metadata.lqip,
     youtubeUrl,
     instagramId,
     instagramUrl,

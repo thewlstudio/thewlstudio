@@ -14,6 +14,7 @@ type Work = {
     slug: string;
     releaseDate: string;
     imageUrl: string;
+    lqip?: string;
 };
 
 const ITEMS_PER_PAGE = 12;
@@ -135,6 +136,8 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                                             src={album.imageUrl}
                                             alt={album.title}
                                             fill
+                                            placeholder={album.lqip ? "blur" : "empty"}
+                                            blurDataURL={album.lqip || undefined}
                                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                                         />

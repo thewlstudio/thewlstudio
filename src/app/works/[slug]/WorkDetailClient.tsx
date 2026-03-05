@@ -165,6 +165,8 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                         src={imageUrl}
                         alt={title}
                         fill
+                        placeholder={initialWork.lqip ? "blur" : "empty"}
+                        blurDataURL={initialWork.lqip || undefined}
                         sizes="(max-width: 768px) 100vw, 400px"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -210,11 +212,13 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                     transition={{ duration: 0.8 }}
                                     className="flex flex-col items-center w-full max-w-3xl mb-12 mt-8"
                                 >
+                                    <div className="w-[1px] h-12 bg-neutral-300 mb-12"></div>
                                     <div className="text-center font-medium leading-relaxed md:leading-loose text-sm md:text-base text-neutral-600 space-y-6 px-4 break-keep w-full">
                                         {block.paragraphs?.map((p: string, i: number) => (
                                             <p key={i}>{p.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}</p>
                                         ))}
                                     </div>
+                                    <div className="w-[1px] h-12 md:h-16 bg-neutral-300 mt-12"></div>
                                 </motion.div>
                             );
 
