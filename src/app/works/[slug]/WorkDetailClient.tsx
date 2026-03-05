@@ -208,15 +208,13 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: "-100px" }}
                                     transition={{ duration: 0.8 }}
-                                    className="flex flex-col items-center w-full max-w-3xl mb-12"
+                                    className="flex flex-col items-center w-full max-w-3xl mb-12 mt-8"
                                 >
-                                    <div className="w-[1px] h-12 bg-neutral-300 mb-12"></div>
                                     <div className="text-center font-medium leading-relaxed md:leading-loose text-sm md:text-base text-neutral-600 space-y-6 px-4 break-keep w-full">
                                         {block.paragraphs?.map((p: string, i: number) => (
                                             <p key={i}>{p.split('\\n').map((line: string, j: number) => <span key={j}>{line}<br /></span>)}</p>
                                         ))}
                                     </div>
-                                    <div className="w-[1px] h-12 md:h-16 bg-neutral-300 mt-12"></div>
                                 </motion.div>
                             );
 
@@ -347,7 +345,8 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                     }
                 })}
 
-                <div className="w-[1px] h-20 md:h-28 bg-neutral-300 mt-12 mb-12"></div>
+                {/* Optional Bottom Spacer */}
+                <div className="h-16 md:h-24 w-full"></div>
             </motion.div>
 
             <Footer />
