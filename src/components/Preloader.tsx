@@ -51,7 +51,7 @@ export default function Preloader() {
                                 animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
                                 exit={{ opacity: 0, scale: 1.1, filter: 'blur(5px)' }}
                                 transition={{ duration: 1.5, ease: "easeOut" }}
-                                className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 mix-blend-screen"
+                                className="relative w-64 h-64 sm:w-96 sm:h-96 md:w-[36rem] md:h-[36rem] lg:w-[48rem] lg:h-[48rem] mix-blend-screen"
                             >
                                 <Image
                                     src="/images/studio_logo_2.png"
@@ -69,7 +69,7 @@ export default function Preloader() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.1 }}
-                                className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-[60vh] md:h-[60vh] flex items-center justify-center mix-blend-difference"
+                                className="relative w-64 h-64 sm:w-96 sm:h-96 md:w-[80vw] md:h-[80vh] flex items-center justify-center mix-blend-difference"
                             >
                                 <Image
                                     src="/images/studio_logo.jpg"
