@@ -74,6 +74,10 @@ export const workBySlugQuery = groq`
       _type == "imageBlock" => {
         ...,
         "imageUrl": image.asset->url
+      },
+      _type == "audioBlock" => {
+        ...,
+        "audioUrl": audioFile.asset->url
       }
     }
   }

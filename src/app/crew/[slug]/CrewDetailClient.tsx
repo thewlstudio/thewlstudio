@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { urlFor } from "@/sanity/lib/image";
+import Image from "next/image";
 
 type CrewMember = {
     name: string;
@@ -24,10 +25,12 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                     className="flex flex-col items-center max-w-4xl text-center relative z-10 w-full"
                 >
                     <div className="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden shadow-2xl mb-8 border border-neutral-800 relative group">
-                        <img
+                        <Image
                             src={member.imageUrl ? urlFor(member.imageUrl).url() : '/images/placeholder.jpg'}
                             alt={`${member.name} Profile`}
-                            className="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-110 group-hover:grayscale-0"
+                            fill
+                            sizes="(max-width: 768px) 128px, 192px"
+                            className="object-cover grayscale transition-transform duration-700 group-hover:scale-110 group-hover:grayscale-0"
                         />
                     </div>
 

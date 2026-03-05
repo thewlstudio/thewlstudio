@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { urlFor } from "@/sanity/lib/image";
+import Image from "next/image";
 
 type CrewMember = {
     name: string;
@@ -49,10 +50,12 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
                             <Link href={`/crew/${member.slug}`} className="absolute inset-0 z-10" />
 
                             {/* Default cover */}
-                            <img
+                            <Image
                                 src={member.imageUrl ? urlFor(member.imageUrl).url() : '/images/placeholder.jpg'}
                                 alt={member.name}
-                                className="w-full h-full object-cover transition-transform duration-700"
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                                className="object-cover transition-transform duration-700"
                             />
 
                             {/* JYP Style Hover Overlay */}
@@ -77,9 +80,9 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
                                             href={link.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-white hover:scale-110 transition-transform flex items-center justify-center w-8 h-8"
+                                            className="relative text-white hover:scale-110 transition-transform flex items-center justify-center w-8 h-8"
                                         >
-                                            <img src={urlFor(link.iconUrl).url()} alt={`SNS Link ${i}`} className="w-full h-full object-contain" />
+                                            <Image src={urlFor(link.iconUrl).url()} alt={`SNS Link ${i}`} fill sizes="32px" className="object-contain" />
                                         </a>
                                     ))}
                                 </div>

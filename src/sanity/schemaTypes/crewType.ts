@@ -99,6 +99,7 @@ export default defineType({
                             rows: 5,
                         },
                     ],
+                    preview: { prepare() { return { title: 'ABOUT Section' } } }
                 },
                 // 2. DISCOGRAPHY
                 {
@@ -134,6 +135,7 @@ export default defineType({
                             ],
                         },
                     ],
+                    preview: { prepare() { return { title: 'DISCOGRAPHY Section' } } }
                 },
                 // 3. CAREER
                 {
@@ -157,6 +159,7 @@ export default defineType({
                             ],
                         },
                     ],
+                    preview: { prepare() { return { title: 'CAREER Section' } } }
                 },
                 // 4. AWARDS & ACTIVITIES
                 {
@@ -193,6 +196,7 @@ export default defineType({
                             ],
                         },
                     ],
+                    preview: { prepare() { return { title: 'AWARDS & ACTIVITIES Section' } } }
                 },
                 // 6. EDUCATION
                 {
@@ -207,6 +211,7 @@ export default defineType({
                             of: [{ type: 'string' }],
                         },
                     ],
+                    preview: { prepare() { return { title: 'EDUCATION Section' } } }
                 },
                 // 7. CERTIFICATIONS
                 {
@@ -221,6 +226,7 @@ export default defineType({
                             of: [{ type: 'string' }],
                         },
                     ],
+                    preview: { prepare() { return { title: 'CERTIFICATIONS Section' } } }
                 },
             ],
         }),

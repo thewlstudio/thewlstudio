@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
@@ -130,10 +131,12 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                                 {/* Album Cover Link */}
                                 <Link href={`/works/${album.slug}`} className="relative block w-full aspect-square overflow-hidden mb-5 bg-white border border-neutral-200/60">
                                     {album.imageUrl ? (
-                                        <img
+                                        <Image
                                             src={album.imageUrl}
                                             alt={album.title}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-neutral-100 transition-transform duration-500 group-hover:scale-105" />

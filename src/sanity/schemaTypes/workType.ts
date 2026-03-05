@@ -59,7 +59,11 @@ export const workType = defineType({
                             type: 'array',
                             of: [{ type: 'text' }]
                         })
-                    ]
+                    ],
+                    preview: {
+                        select: { p: 'paragraphs.0' },
+                        prepare({ p }) { return { title: 'Description Block', subtitle: p ? String(p).substring(0, 30) + '...' : 'Empty' } }
+                    }
                 }),
                 // 2. Credit Grid Block
                 defineArrayMember({
@@ -96,7 +100,11 @@ export const workType = defineType({
                                 })
                             ]
                         })
-                    ]
+                    ],
+                    preview: {
+                        select: { t: 'sections.0.title' },
+                        prepare({ t }) { return { title: 'Credit Grid', subtitle: t ? 'Starts with: ' + t : 'Empty' } }
+                    }
                 }),
                 // 3. Tracklist Block
                 defineArrayMember({
@@ -118,7 +126,11 @@ export const workType = defineType({
                                 })
                             ]
                         })
-                    ]
+                    ],
+                    preview: {
+                        select: { t: 'tracks.0.title' },
+                        prepare({ t }) { return { title: 'Tracklist', subtitle: t ? '1. ' + t : 'Empty' } }
+                    }
                 }),
                 // 4. Signature Message Block
                 defineArrayMember({
@@ -133,7 +145,11 @@ export const workType = defineType({
                             of: [{ type: 'text' }]
                         }),
                         defineField({ name: 'signature', title: 'Signature (e.g., - White Light Studio)', type: 'string' })
-                    ]
+                    ],
+                    preview: {
+                        select: { s: 'signature' },
+                        prepare({ s }) { return { title: 'Signature Message', subtitle: s || 'Empty' } }
+                    }
                 }),
                 // 5. Image Block
                 defineArrayMember({
@@ -143,7 +159,11 @@ export const workType = defineType({
                     fields: [
                         defineField({ name: 'image', title: 'Image', type: 'image', options: { hotspot: true } }),
                         defineField({ name: 'caption', title: 'Caption', type: 'string' })
-                    ]
+                    ],
+                    preview: {
+                        select: { media: 'image', c: 'caption' },
+                        prepare({ media, c }) { return { title: 'Image', subtitle: c || 'No caption', media: media as any } }
+                    }
                 }),
                 // 6. Video Embed Block
                 defineArrayMember({
@@ -152,7 +172,11 @@ export const workType = defineType({
                     type: 'object',
                     fields: [
                         defineField({ name: 'url', title: 'YouTube URL', type: 'url' })
-                    ]
+                    ],
+                    preview: {
+                        select: { u: 'url' },
+                        prepare({ u }) { return { title: 'YouTube Video', subtitle: u || 'Empty' } }
+                    }
                 }),
                 // 7. Freeform Text Block
                 defineArrayMember({
@@ -161,7 +185,41 @@ export const workType = defineType({
                     type: 'object',
                     fields: [
                         defineField({ name: 'content', title: 'Content', type: 'array', of: [{ type: 'block' }] })
-                    ]
+                    ],
+                    preview: {
+                        prepare() { return { title: 'Freeform Text' } }
+                    }
+                }),
+                // 8. Audio Block
+                defineArrayMember({
+                    name: 'audioBlock',
+                    title: '8. Audio Block (오디오 플레이어)',
+                    type: 'object',
+                    fields: [
+                        defineField({
+                            name: 'audioFile',
+                            title: 'Audio File (MP3, WAV 등)',
+                            type: 'file',
+                            options: { accept: 'audio/*' },
+                            validation: (rule) => rule.required()
+                        }),
+                        defineField({
+                            name: 'title',
+                            title: 'Track Title (제목)',
+                            type: 'string',
+                            validation: (rule) => rule.required()
+                        }),
+                        defineField({
+                            name: 'artist',
+                            title: 'Artist (아티스트)',
+                            type: 'string',
+                            validation: (rule) => rule.required()
+                        })
+                    ],
+                    preview: {
+                        select: { t: 'title', a: 'artist' },
+                        prepare({ t, a }) { return { title: 'Audio Player', subtitle: t ? `${t} - ${a || 'Unknown'}` : 'Empty' } }
+                    }
                 })
             ]
         })

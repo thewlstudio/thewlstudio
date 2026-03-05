@@ -1,9 +1,12 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PortableText } from "next-sanity";
+import Image from "next/image";
+import { Play, Pause } from "lucide-react";
 
 const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -13,6 +16,104 @@ const itemVariants: Variants = {
         transition: { duration: 0.8 }
     }
 };
+
+function AudioPlayerBlock({ block }: { block: any }) {
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleTimeUpdate = () => {
+            if (!audio.duration) return;
+            const currentProgress = (audio.currentTime / audio.duration) * 100;
+            setProgress(currentProgress);
+
+            const timeLeft = audio.duration - audio.currentTime;
+            if (timeLeft <= 5 && timeLeft > 0) {
+                audio.volume = Math.max(0, timeLeft / 5);
+            } else if (timeLeft > 5) {
+                audio.volume = 1;
+            }
+        };
+
+        const handleEnded = () => {
+            setIsPlaying(false);
+            setProgress(0);
+            if (audio) {
+                audio.currentTime = 0;
+                audio.volume = 1;
+            }
+        };
+
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+        audio.addEventListener('ended', handleEnded);
+        return () => {
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('ended', handleEnded);
+        };
+    }, []);
+
+    const togglePlay = () => {
+        if (!audioRef.current) return;
+        if (isPlaying) {
+            audioRef.current.pause();
+        } else {
+            audioRef.current.play();
+        }
+        setIsPlaying(!isPlaying);
+    };
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!audioRef.current) return;
+        const newTime = (Number(e.target.value) / 100) * (audioRef.current.duration || 0);
+        audioRef.current.currentTime = newTime;
+        setProgress(Number(e.target.value));
+    };
+
+    if (!block.audioUrl) return null;
+
+    return (
+        <div className="w-full max-w-sm mx-auto my-16 px-6 flex flex-col items-center justify-center space-y-4">
+            <audio ref={audioRef} src={block.audioUrl} preload="metadata" />
+
+            <div className="w-full flex items-center justify-between space-x-5">
+                <button
+                    onClick={togglePlay}
+                    className="w-12 h-12 flex shrink-0 items-center justify-center bg-black text-white hover:bg-neutral-800 transition-colors"
+                >
+                    {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
+                </button>
+
+                <div className="flex-grow flex flex-col overflow-hidden">
+                    <span className="text-sm font-bold tracking-widest text-[#222] truncate uppercase">
+                        {block.title}
+                    </span>
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1 truncate">
+                        {block.artist}
+                    </span>
+                </div>
+            </div>
+
+            <div className="w-full relative h-[2px] bg-neutral-200 mt-2">
+                <div
+                    className="absolute top-0 left-0 h-full bg-black transition-all duration-100 ease-linear"
+                    style={{ width: `${progress}%` }}
+                />
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={progress}
+                    onChange={handleSeek}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                />
+            </div>
+        </div>
+    );
+}
 
 export default function WorkDetailClient({ initialWork }: { initialWork: any }) {
     const { title, artist, releaseDate, imageUrl, youtubeUrl, instagramId, instagramUrl, contentBlocks } = initialWork;
@@ -60,10 +161,12 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                     transition={{ duration: 1, delay: 0.2 }}
                     className={`group relative block w-full max-w-sm aspect-square shadow-2xl overflow-hidden mb-6 ${!youtubeUrl ? 'cursor-default' : ''}`}
                 >
-                    <img
+                    <Image
                         src={imageUrl}
                         alt={title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     {youtubeUrl && (
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -182,7 +285,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                             return (
                                 <div key={block._key} className="w-full max-w-4xl mx-auto px-6 mb-16 mt-8 flex flex-col items-center">
                                     {block.imageUrl && (
-                                        <img src={block.imageUrl} alt={block.caption || "Works Image"} className="w-full h-auto object-cover rounded-sm shadow-sm" />
+                                        <Image src={block.imageUrl} alt={block.caption || "Works Image"} width={1200} height={800} style={{ width: '100%', height: 'auto' }} className="rounded-sm shadow-sm" />
                                     )}
                                     {block.caption && (
                                         <p className="mt-4 text-xs tracking-widest text-neutral-400 text-center">{block.caption}</p>
@@ -214,6 +317,9 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                     <PortableText value={block.content} />
                                 </div>
                             );
+
+                        case 'audioBlock':
+                            return <AudioPlayerBlock key={block._key} block={block} />;
 
                         default:
                             return null;
