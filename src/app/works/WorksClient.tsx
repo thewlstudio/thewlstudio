@@ -116,8 +116,8 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
             </section>
 
             {/* Grid Album List */}
-            <section className="max-w-7xl mx-auto px-2 md:px-6 pb-24">
-                <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-8 md:gap-x-6 md:gap-y-16 lg:gap-x-10 lg:gap-y-20">
+            <section className="max-w-7xl mx-auto px-4 md:px-6 pb-24">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-16 lg:gap-x-10 lg:gap-y-20">
                     {currentItems.length > 0 ? (
                         currentItems.map((album, index) => (
                             <motion.div
@@ -136,7 +136,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                                             alt={album.title}
                                             fill
                                             className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 33vw, 25vw"
+                                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-neutral-100 transition-transform duration-500 group-hover:scale-105" />
@@ -151,10 +151,10 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                                 </Link>
 
                                 {/* Info */}
-                                <div className="text-[7px] md:text-[12px] text-neutral-500 uppercase tracking-widest mb-1 md:mb-1.5 font-bold md:font-semibold w-full truncate">
+                                <div className="text-[9px] md:text-[12px] text-neutral-500 uppercase tracking-widest mb-1 md:mb-1.5 font-bold md:font-semibold w-full truncate text-left">
                                     {album.artist} | {album.releaseDate}
                                 </div>
-                                <h3 className="text-[10px] md:text-lg lg:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors w-full truncate break-keep">
+                                <h3 className="text-xs md:text-lg lg:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors w-full truncate break-keep text-left">
                                     {album.title}
                                 </h3>
                             </motion.div>

@@ -67,9 +67,9 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="mb-32 md:mb-48 relative text-black"
                 >
-                    <div className="mb-12 border-b border-black/10 pb-6 px-4 md:px-8 flex flex-col md:flex-row md:items-end md:justify-between">
-                        <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-black break-keep">CURRICULUM</h2>
-                        <p className="mt-4 md:mt-0 text-neutral-600 font-bold text-[11px] md:text-xs tracking-[0.2em] uppercase">Contact for Info</p>
+                    <div className="mb-10 lg:mb-12 border-b border-black/10 pb-6 px-4 md:px-8 flex flex-col md:flex-row md:items-end md:justify-between">
+                        <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tighter text-black break-keep">CURRICULUM</h2>
+                        <p className="mt-4 md:mt-0 text-neutral-600 font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase">Contact for Info</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-0 px-4 md:px-8 mt-8 pb-4">
@@ -103,8 +103,8 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                 </motion.div>
 
                 {/* Instructors List Header */}
-                <div className="mb-0 border-b border-black/10 pb-6 px-4 md:px-8">
-                    <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-black">Instructors</h2>
+                <div className="mb-0 border-b border-black/10 pb-4 md:pb-6 px-4 md:px-8">
+                    <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tighter text-black">Instructors</h2>
                 </div>
 
                 {/* Editorial List Layout for Classes */}
@@ -134,12 +134,12 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     )}
                                 </div>
 
-                                <div className="py-8 md:py-12 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between relative z-10 w-full">
+                                <div className="py-6 md:py-12 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between relative z-10 w-full">
 
                                     {/* Left Content */}
-                                    <div className="flex flex-col md:flex-row items-center md:items-center w-full relative text-center md:text-left">
+                                    <div className="flex flex-row md:flex-row items-center md:items-center w-full relative text-left">
                                         <div
-                                            className="w-32 sm:w-40 md:w-28 aspect-[3/4] rounded-sm overflow-hidden bg-neutral-100 flex-shrink-0 relative group cursor-pointer border-[3px] border-white shadow-md z-20 mb-6 md:mb-0 md:mr-10"
+                                            className="w-20 sm:w-28 md:w-28 aspect-[3/4] rounded-sm overflow-hidden bg-neutral-100 flex-shrink-0 relative group cursor-pointer border-[3px] border-white shadow-md z-20 mr-6 md:mr-10"
                                         >
                                             {cls.image && (
                                                 <img
@@ -151,13 +151,13 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                         </div>
 
                                         {/* Info */}
-                                        <div className="flex flex-col flex-grow z-10 relative md:ml-0 md:items-start items-center">
-                                            <div className="flex flex-col md:flex-row md:items-baseline mb-2">
-                                                <h3 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-black tracking-tighter md:mr-6 group-hover:text-black text-neutral-800 transition-colors uppercase">
+                                        <div className="flex flex-col flex-grow z-10 relative md:ml-0 items-start">
+                                            <div className="flex flex-col md:flex-row md:items-baseline mb-1 md:mb-2">
+                                                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter md:mr-6 group-hover:text-black text-neutral-800 transition-colors uppercase">
                                                     {cls.category}
                                                 </h3>
                                             </div>
-                                            <p className="text-neutral-600 font-semibold text-base md:text-lg tracking-wide">
+                                            <p className="text-neutral-600 font-semibold text-sm md:text-lg tracking-wide">
                                                 Inst. {cls.instructorName}
                                             </p>
                                         </div>
