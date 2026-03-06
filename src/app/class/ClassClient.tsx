@@ -140,7 +140,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                         <img
                                             src={urlFor(cls.bgImage).url()}
                                             alt=""
-                                            className="absolute bottom-0 right-0 h-full w-auto max-w-none filter grayscale mix-blend-multiply"
+                                            className="absolute bottom-0 right-0 md:right-16 h-full w-auto max-w-none filter grayscale mix-blend-multiply"
                                         />
                                     )}
                                 </div>
