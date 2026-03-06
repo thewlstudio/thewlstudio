@@ -1,11 +1,9 @@
-import { client } from "@/sanity/lib/client";
+import { sanityFetch } from "@/sanity/lib/client";
 import { instructorsQuery } from "@/sanity/lib/queries";
 import ClassClient from "./ClassClient";
 
-export const revalidate = 10; // Refresh data every 10 seconds (ISR)
-
 export default async function ClassIndexPage() {
-    const instructors = await client.fetch(instructorsQuery);
+    const instructors = await sanityFetch<any[]>({ query: instructorsQuery, tags: ['instructor'] });
 
     return <ClassClient initialInstructors={instructors} />;
 }

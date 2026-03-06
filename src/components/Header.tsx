@@ -179,9 +179,9 @@ export default function Header() {
                                 </div>
                             </div>
 
-                            <div className="relative z-10 text-right md:-mr-8">
-                                <div className="bg-black pl-10 lg:pl-14 w-max ml-auto text-right">
-                                    <Link href="/class" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-end group cursor-pointer">
+                            <div className="relative z-10 md:text-right md:-mr-8">
+                                <div className="bg-black pr-10 md:pr-0 md:pl-10 lg:pl-14 w-max md:ml-auto md:text-right">
+                                    <Link href="/class" onClick={() => setIsMenuOpen(false)} className="flex items-center md:justify-end group cursor-pointer">
                                         <span className="text-xl md:text-2xl font-bold text-white group-hover:text-neutral-400 transition-colors uppercase tracking-widest whitespace-nowrap">CLASS</span>
                                     </Link>
                                 </div>

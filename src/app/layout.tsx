@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   description: "서울 광진구 중곡동의 보컬 연습 스튜디오 - 화이트라이트 스튜디오. 7호선 중곡역 3번 출구.",
   icons: {
     icon: "/images/studio_logo.jpg",
+    apple: "/images/studio_logo.jpg",
   },
   openGraph: {
     type: "website",
