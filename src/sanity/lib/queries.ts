@@ -1,5 +1,30 @@
 import { groq } from 'next-sanity';
 
+export const worksQuery = groq`
+  *[_type == "work"] | order(releaseDate desc) {
+    title,
+    artist,
+    "slug": slug.current,
+    releaseDate,
+    "imageUrl": coverImage.asset->url,
+    "lqip": coverImage.asset->metadata.lqip
+  }
+`;
+
+export const crewsQuery = groq`
+  *[_type == "crew" && isActive == true] | order(order asc) {
+    name,
+    koName,
+    role,
+    "slug": slug.current,
+    "imageUrl": image.asset->url,
+    links[] {
+      url,
+      "iconUrl": iconImage.asset->url
+    }
+  }
+`;
+
 export const instructorsQuery = groq`
   *[_type == "instructor"] | order(order asc) {
     _id,
@@ -22,20 +47,6 @@ export const instructorsQuery = groq`
   }
 `;
 
-export const crewsQuery = groq`
-  *[_type == "crew" && isActive == true] | order(order asc) {
-    name,
-    koName,
-    role,
-    "slug": slug.current,
-    "imageUrl": image.asset->url,
-    links[] {
-      url,
-      "iconUrl": iconImage.asset->url
-    }
-  }
-`;
-
 export const crewBySlugQuery = groq`
   *[_type == "crew" && slug.current == $slug][0] {
     name,
@@ -47,17 +58,6 @@ export const crewBySlugQuery = groq`
       "iconUrl": iconImage.asset->url
     },
     sections
-  }
-`;
-
-export const worksQuery = groq`
-  *[_type == "work"] | order(releaseDate desc) {
-    title,
-    artist,
-    "slug": slug.current,
-    releaseDate,
-    "imageUrl": coverImage.asset->url,
-    "lqip": coverImage.asset->metadata.lqip
   }
 `;
 

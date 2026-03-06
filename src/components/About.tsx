@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function About() {
     return (
@@ -48,31 +49,31 @@ export default function About() {
 
                         {/* 1. Large Main Box (2x2) */}
                         <div className="relative col-span-2 row-span-2 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700">
-                            <img src="/images/lobby_2.jpg" alt="White Light Studio Spaces" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000 origin-center" />
+                            <Image src="/images/lobby_2.jpg" alt="White Light Studio Spaces" fill className="object-cover hover:scale-105 transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 66vw, 40vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 2. Top Right Box (1x1) */}
                         <div className="relative col-span-1 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-75">
-                            <img src="/images/room_a_3.jpg" alt="White Light Studio Amenities" className="w-full h-full object-cover scale-125 hover:scale-[1.35] transition-transform duration-1000 origin-center" />
+                            <Image src="/images/room_a_3.jpg" alt="White Light Studio Amenities" fill className="object-cover scale-125 hover:scale-[1.35] transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 33vw, 20vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 3. Mid Right Box (1x1) */}
                         <div className="relative col-span-1 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-150">
-                            <img src="/images/room_c_3.jpg" alt="White Light Studio Gear" className="w-full h-full object-cover object-bottom scale-110 hover:scale-[1.20] transition-transform duration-1000 origin-bottom" />
+                            <Image src="/images/room_c_3.jpg" alt="White Light Studio Gear" fill className="object-cover object-bottom scale-110 hover:scale-[1.20] transition-transform duration-1000 origin-bottom" sizes="(max-width: 768px) 33vw, 20vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 4. Bottom Left Box (1x1) */}
                         <div className="relative col-span-1 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-200">
-                            <img src="/images/room_d_1.jpg" alt="White Light Studio Interior" className="w-full h-full object-cover scale-125 hover:scale-[1.35] transition-transform duration-1000 origin-center" />
+                            <Image src="/images/room_d_1.jpg" alt="White Light Studio Interior" fill className="object-cover scale-125 hover:scale-[1.35] transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 33vw, 20vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 5. Bottom Right Wide Box (2x1) */}
                         <div className="relative col-span-2 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-300">
-                            <img src="/images/room_b_3.jpg" alt="White Light Studio Lobby" className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000 origin-center" />
+                            <Image src="/images/room_b_3.jpg" alt="White Light Studio Lobby" fill className="object-cover hover:scale-105 transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 66vw, 40vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 

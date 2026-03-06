@@ -2,21 +2,28 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { urlFor } from "@/sanity/lib/image";
+import { NAVER_MAP_URL } from "@/lib/constants";
 
-const NAVER_MAP_URL = "https://map.naver.com/p/entry/place/1935361517?placePath=/ticket?selectedReview=6993d71a9654b90f984b4b64&selectedReview=6993d71a9654b90f984b4b64&from=map&fromPanelNum=1&additionalHeight=76&timestamp=202602220831&locale=ko&svcName=map_pcv5&searchType=place&lng=127.0841546&lat=37.5660654&c=15.00,0,0,0,dh";
+type SanityImage = {
+    _type: "image";
+    asset: { _type: "reference"; _ref: string };
+    hotspot?: object;
+    crop?: object;
+};
 
 type Instructor = {
     _id: string;
     id: string;
     category: string;
     instructorName: string;
-    image: Record<string, unknown>;
+    image: SanityImage;
     imagePosition?: string;
-    modalImage?: Record<string, unknown>;
-    bgImage: Record<string, unknown>;
+    modalImage?: SanityImage;
+    bgImage: SanityImage;
     bgScale?: string;
     bgPosition?: string;
     subtitle: string;
@@ -130,7 +137,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     style={{ WebkitMaskImage: 'linear-gradient(to left, black 20%, transparent 80%)', maskImage: 'linear-gradient(to left, black 20%, transparent 80%)' }}
                                 >
                                     {cls.bgImage && (
-                                        <img src={urlFor(cls.bgImage).url()} alt="" className={`absolute ${cls.bgPosition || 'bottom-0 right-0 md:right-12'} ${cls.bgScale || 'h-full'} max-w-none w-auto filter grayscale mix-blend-multiply`} />
+                                        <Image src={urlFor(cls.bgImage).url()} alt="" fill className="object-cover object-right filter grayscale mix-blend-multiply" sizes="50vw" />
                                     )}
                                 </div>
 
@@ -142,10 +149,12 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                             className="w-20 sm:w-28 md:w-28 aspect-[3/4] rounded-sm overflow-hidden bg-neutral-100 flex-shrink-0 relative group cursor-pointer border-[3px] border-white shadow-md z-20 mr-6 md:mr-10"
                                         >
                                             {cls.image && (
-                                                <img
+                                                <Image
                                                     src={urlFor(cls.image).url()}
                                                     alt={cls.instructorName}
-                                                    className={`w-full h-full object-cover ${cls.imagePosition || 'object-center'} filter grayscale group-hover:grayscale-0 transition-all duration-700 mx-auto block mix-blend-multiply`}
+                                                    fill
+                                                    className={`object-cover ${cls.imagePosition || 'object-center'} filter grayscale group-hover:grayscale-0 transition-all duration-700 mix-blend-multiply`}
+                                                    sizes="160px"
                                                 />
                                             )}
                                         </div>
@@ -283,10 +292,12 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     {/* Portrait */}
                                     <div className="w-40 h-56 sm:w-48 sm:h-64 md:w-56 md:h-72 bg-white rounded-sm overflow-hidden shadow-2xl border-[6px] border-white mb-8 sm:mb-10 shrink-0 relative mt-6 lg:mt-0">
                                         {(selectedInstructor.modalImage || selectedInstructor.image) && (
-                                            <img
+                                            <Image
                                                 src={urlFor(selectedInstructor.modalImage || selectedInstructor.image).url()}
                                                 alt={selectedInstructor.instructorName}
-                                                className={`w-full h-full object-cover object-top mix-blend-multiply`}
+                                                fill
+                                                className="object-cover object-top mix-blend-multiply"
+                                                sizes="224px"
                                             />
                                         )}
                                     </div>

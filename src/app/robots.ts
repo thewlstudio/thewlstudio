@@ -1,14 +1,14 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
 
 export default function robots(): MetadataRoute.Robots {
-    const baseUrl = 'https://whitelightstudio.vercel.app'
-
     return {
         rules: {
-            userAgent: '*',
-            allow: '/',
-            disallow: ['/api/', '/studio/'], // Prevent crawling internal API endpoints and the Sanity Studio
+            userAgent: "*",
+            allow: "/",
+            disallow: ["/api/", "/studio/"], // Prevent crawling internal API endpoints and the Sanity Studio
         },
-        sitemap: `${baseUrl}/sitemap.xml`,
-    }
+        sitemap: `${BASE_URL}/sitemap.xml`,
+    };
 }

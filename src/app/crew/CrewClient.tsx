@@ -46,10 +46,8 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
 
                         {/* Image Container */}
                         <div className="relative aspect-[3/4] w-full bg-neutral-100 overflow-hidden shadow-lg">
-                            {/* Invisible overlapping link for card navigation */}
                             <Link href={`/crew/${member.slug}`} className="absolute inset-0 z-10" />
 
-                            {/* Default cover */}
                             <Image
                                 src={member.imageUrl ? urlFor(member.imageUrl).url() : '/images/placeholder.jpg'}
                                 alt={member.name}
@@ -60,19 +58,16 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
 
                             {/* JYP Style Hover Overlay */}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-between p-4 md:p-6 pointer-events-none text-center">
-                                {/* Top Text */}
                                 <div className="w-full text-right h-6 md:h-8 flex items-start justify-end">
                                     <span className="text-[8px] md:text-[10px] text-white/50 tracking-widest font-bold uppercase w-full truncate text-right">{member.role}</span>
                                 </div>
 
-                                {/* Center Text (Hover State Name) */}
                                 <div className="w-full flex flex-col items-center justify-center px-1 md:px-2">
                                     <h3 className="text-white text-xs md:text-lg lg:text-2xl font-black tracking-tighter uppercase whitespace-nowrap drop-shadow-lg italic text-center w-full">
                                         <u className="underline-offset-[4px] md:underline-offset-[6px] decoration-[1.5px] md:decoration-2">{member.name}</u>
                                     </h3>
                                 </div>
 
-                                {/* Bottom Social Icons (Spacer or Icons) */}
                                 <div className="w-full h-6 md:h-8 flex items-end justify-start space-x-3 md:space-x-6 z-20 pointer-events-auto">
                                     {member.links && member.links.map((link: any, i: number) => (
                                         <a
@@ -80,9 +75,10 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
                                             href={link.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
+                                            aria-label={`SNS 링크 ${i + 1}`}
                                             className="relative text-white hover:scale-110 transition-transform flex items-center justify-center w-5 h-5 md:w-8 md:h-8"
                                         >
-                                            <Image src={urlFor(link.iconUrl).url()} alt={`SNS Link ${i}`} fill sizes="32px" className="object-contain" />
+                                            <Image src={urlFor(link.iconUrl).url()} alt="" fill sizes="32px" className="object-contain" />
                                         </a>
                                     ))}
                                 </div>

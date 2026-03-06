@@ -35,7 +35,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
 
     // Pagination logic (max 5 pages shown)
     const renderPagination = () => {
-        if (totalPages <= 1) return null; // Hide pagination if 1 page or less
+        if (totalPages <= 1) return null;
 
         let startPage = Math.max(1, currentPage - 2);
         const endPage = Math.min(totalPages, startPage + 4);
@@ -53,6 +53,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                         setCurrentPage(i);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
+                    aria-label={`${i}페이지`}
                     className={`w-8 h-8 flex items-center justify-center transition-colors rounded-full ${currentPage === i
                         ? "bg-[#444] text-white"
                         : "hover:text-black text-neutral-400"
@@ -68,6 +69,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                 <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
+                    aria-label="첫 페이지"
                     className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronsLeft size={18} strokeWidth={1.5} />
@@ -75,6 +77,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                 <button
                     onClick={() => setCurrentPage((prev: number) => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
+                    aria-label="이전 페이지"
                     className="hover:text-black transition-colors p-1 md:mr-4 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronLeft size={18} strokeWidth={1.5} />
@@ -85,6 +88,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                 <button
                     onClick={() => setCurrentPage((prev: number) => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
+                    aria-label="다음 페이지"
                     className="hover:text-black transition-colors p-1 md:ml-4 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronRight size={18} strokeWidth={1.5} />
@@ -92,6 +96,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                 <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
+                    aria-label="마지막 페이지"
                     className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400"
                 >
                     <ChevronsRight size={18} strokeWidth={1.5} />
@@ -154,10 +159,10 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
                                 </Link>
 
                                 {/* Info */}
-                                <div className="text-[9px] md:text-[12px] text-neutral-500 uppercase tracking-widest mb-1 md:mb-1.5 font-bold md:font-semibold w-full truncate text-left">
+                                <div className="w-full text-center text-[9px] md:text-[12px] text-neutral-500 uppercase tracking-widest mb-1 md:mb-1.5 font-bold md:font-semibold truncate">
                                     {album.artist} | {album.releaseDate}
                                 </div>
-                                <h3 className="text-xs md:text-lg lg:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors w-full truncate break-keep text-left">
+                                <h3 className="w-full text-center text-xs md:text-lg lg:text-xl font-bold text-[#111] group-hover:text-neutral-600 transition-colors truncate break-keep">
                                     {album.title}
                                 </h3>
                             </motion.div>
@@ -176,6 +181,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) 
             {/* Scroll To Top Fixed Button */}
             <button
                 onClick={scrollToTop}
+                aria-label="맨 위로 이동"
                 className="fixed bottom-10 right-10 hidden md:flex flex-col items-center justify-center text-neutral-400 hover:text-black transition-colors z-50 text-[11px] font-bold tracking-widest"
             >
                 <ChevronUp size={24} strokeWidth={1.5} className="mb-1" />
