@@ -137,7 +137,11 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     style={{ WebkitMaskImage: 'linear-gradient(to left, black 20%, transparent 80%)', maskImage: 'linear-gradient(to left, black 20%, transparent 80%)' }}
                                 >
                                     {cls.bgImage && (
-                                        <Image src={urlFor(cls.bgImage).url()} alt="" fill className="object-cover object-right filter grayscale mix-blend-multiply" sizes="50vw" />
+                                        <img
+                                            src={urlFor(cls.bgImage).url()}
+                                            alt=""
+                                            className="absolute bottom-0 right-0 h-full w-auto max-w-none filter grayscale mix-blend-multiply"
+                                        />
                                     )}
                                 </div>
 
