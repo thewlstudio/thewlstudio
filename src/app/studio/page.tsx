@@ -154,31 +154,31 @@ function RoomBlock({ room }: { room: RoomData }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 lg:grid-cols-2 border-b border-white/10"
+            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10"
         >
-            {/* Image */}
-            <div className="h-[56vw] md:h-[420px] lg:h-[480px]">
+            {/* Image - aligned to bottom for editorial feel */}
+            <div className="h-[56vw] md:h-[420px] lg:h-[480px] flex items-end overflow-hidden">
                 <ImageSlider images={room.images} roomName={room.name} />
             </div>
 
             {/* Info */}
-            <div className="px-8 py-10 md:px-12 md:py-14 lg:px-16 lg:py-16 flex flex-col justify-center lg:border-l border-white/10">
+            <div className="px-8 py-10 md:px-12 md:py-14 lg:px-16 lg:py-16 flex flex-col justify-center">
                 {(() => {
                     const { prefix, room: roomLabel } = parseRoomName(room.name); return (
-                        <div className="border-b border-white/10 pb-5 mb-7">
+                        <div className="border-b border-black/10 pb-5 mb-7">
                             <p className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 mb-1.5">{prefix}</p>
-                            <h3 className="text-4xl md:text-5xl font-black tracking-tighter text-white">{roomLabel ?? room.name}</h3>
+                            <h3 className="text-4xl md:text-5xl font-black tracking-tighter text-black">{roomLabel ?? room.name}</h3>
                         </div>
                     );
                 })()}
 
                 <div className="mb-8 space-y-3">
                     {room.prices.map((p, i) => (
-                        <div key={i} className="flex justify-between items-center border-b border-white/10 pb-3">
-                            <span className="text-neutral-400 font-bold tracking-widest uppercase text-sm">{p.label}</span>
+                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
+                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
                             <div className="flex items-baseline space-x-1.5">
-                                <span className="text-xl md:text-2xl font-bold tracking-tight text-white">{p.value}</span>
-                                <span className="text-sm font-semibold tracking-wide text-neutral-500">{p.unit}</span>
+                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
+                                <span className="text-sm font-semibold tracking-wide text-neutral-400">{p.unit}</span>
                             </div>
                         </div>
                     ))}
@@ -188,8 +188,8 @@ function RoomBlock({ room }: { room: RoomData }) {
                     <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4">Equipment & Features</h4>
                     <ul className="space-y-3">
                         {room.features.map((feature, i) => (
-                            <li key={i} className="text-neutral-300 font-medium flex items-start gap-3 text-sm leading-relaxed break-keep">
-                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-700 inline-block"></span>
+                            <li key={i} className="text-neutral-600 font-medium flex items-start gap-3 text-sm leading-relaxed break-keep">
+                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-300 inline-block"></span>
                                 {feature}
                             </li>
                         ))}
@@ -197,7 +197,7 @@ function RoomBlock({ room }: { room: RoomData }) {
                 </div>
 
                 {room.notes && room.notes.length > 0 && (
-                    <div className="mt-8 pt-5 border-t border-white/10">
+                    <div className="mt-8 pt-5 border-t border-black/10">
                         {room.notes.map((note, i) => (
                             <p key={i} className="text-xs font-medium text-[#c96b6b] leading-relaxed break-keep">
                                 {note}
@@ -465,16 +465,16 @@ export default function StudioPage() {
             </section>
 
             {/* Spaces List - Interactive */}
-            <section id="spaces" className="py-24 bg-black text-white border-t border-white/10">
+            <section id="spaces" className="py-24 bg-neutral-50 text-black border-t border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="mb-16 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8 border-b border-white/10 pb-10"
+                        className="mb-0 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8 border-b border-black/10 pb-10"
                     >
                         <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-center md:text-left">SPACES</h2>
-                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-6 md:px-8 py-3 md:py-4 border border-white text-white font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs hover:bg-white hover:text-black transition-colors shrink-0">
+                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-6 md:px-8 py-3 md:py-4 border border-black text-black font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs hover:bg-black hover:text-white transition-colors shrink-0">
                             SPACE 공간 예약
                         </a>
                     </motion.div>
@@ -487,48 +487,46 @@ export default function StudioPage() {
 
                         {/* Lobby Block */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.7 }}
-                            className="bg-neutral-900 text-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-80px" }}
+                            transition={{ duration: 0.6 }}
+                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10"
                         >
-                            {/* Left: Interactive Image Slider */}
-                            <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-800">
+                            {/* Image */}
+                            <div className="h-[56vw] md:h-[420px] lg:h-[480px] flex items-end overflow-hidden">
                                 <ImageSlider images={LOBBY.images} roomName="Lobby" />
                             </div>
 
-                            {/* Right: Info Area */}
-                            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                                <div className="mb-6 border-b-2 border-neutral-700 pb-4">
-                                    <h3 className="text-sm font-bold tracking-[0.3em] text-neutral-400 uppercase mb-2">{LOBBY.subtitle}</h3>
-                                    <h2 className="text-2xl md:text-3xl font-black tracking-tight leading-snug">
-                                        {LOBBY.name}
-                                    </h2>
+                            {/* Info */}
+                            <div className="px-8 py-10 md:px-12 md:py-14 lg:px-16 lg:py-16 flex flex-col justify-center">
+                                <div className="border-b border-black/10 pb-5 mb-7">
+                                    <p className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-1.5">{LOBBY.subtitle}</p>
+                                    <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-black leading-snug">{LOBBY.name}</h2>
                                 </div>
 
-                                <div className="mb-8 space-y-3">
+                                <div className="mb-7 space-y-3">
                                     {LOBBY.prices.map((p, i) => (
-                                        <div key={i} className="flex justify-between items-center border-b border-white/20 pb-3 text-neutral-300">
-                                            <span className="font-bold tracking-widest uppercase text-sm">{p.label}</span>
-                                            <div className="flex items-baseline space-x-1.5 text-white">
-                                                <span className="text-xl md:text-2xl font-bold tracking-tight">{p.value}</span>
+                                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
+                                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
+                                            <div className="flex items-baseline space-x-1.5">
+                                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
                                                 <span className="text-sm font-semibold tracking-wide text-neutral-400">{p.unit}</span>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                <p className="text-sm md:text-base leading-relaxed text-neutral-300 mb-8 font-light italic border-l-2 border-neutral-600 pl-4">
+                                <p className="text-sm leading-relaxed text-neutral-500 mb-7 font-light italic border-l-2 border-black/10 pl-4">
                                     &quot;{LOBBY.description}&quot;
                                 </p>
 
                                 <div className="flex-1">
-                                    <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Space Rules & Features</h4>
+                                    <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4">Space Rules &amp; Features</h4>
                                     <ul className="space-y-3">
                                         {LOBBY.features.map((feature, i) => (
-                                            <li key={i} className="text-neutral-300 font-medium flex items-start gap-3 text-sm md:text-base leading-relaxed break-keep">
-                                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-500 inline-block"></span>
+                                            <li key={i} className="text-neutral-600 font-medium flex items-start gap-3 text-sm leading-relaxed break-keep">
+                                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-300 inline-block"></span>
                                                 {feature}
                                             </li>
                                         ))}
@@ -536,9 +534,9 @@ export default function StudioPage() {
                                 </div>
 
                                 {LOBBY.notes && LOBBY.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-white/10">
+                                    <div className="mt-8 pt-5 border-t border-black/10">
                                         {LOBBY.notes.map((note, i) => (
-                                            <p key={i} className="text-xs font-semibold text-[#c96b6b] leading-relaxed break-keep">
+                                            <p key={i} className="text-xs font-medium text-[#b86060] leading-relaxed break-keep">
                                                 {note}
                                             </p>
                                         ))}
