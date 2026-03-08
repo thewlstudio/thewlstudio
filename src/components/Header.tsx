@@ -43,7 +43,7 @@ export default function Header() {
                     {/* Logo */}
                     <div className="z-50 relative">
                         <Link href="/">
-                            <h1 className={`text-2xl font-black uppercase tracking-widest whitespace-nowrap hover:opacity-80 transition-opacity ${headerTextColor}`}>
+                            <h1 className={`text-2xl font-black uppercase tracking-tighter whitespace-nowrap hover:opacity-80 transition-opacity ${headerTextColor}`}>
                                 WHITE LIGHT STUDIO
                             </h1>
                         </Link>
