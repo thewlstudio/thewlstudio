@@ -154,10 +154,10 @@ function RoomBlock({ room }: { room: RoomData }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10"
+            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-center"
         >
-            {/* Image - aligned to bottom for editorial feel */}
-            <div className="h-[56vw] md:h-[420px] lg:h-[480px] flex items-end overflow-hidden">
+            {/* Image — fixed height, centers vertically within the row */}
+            <div className="h-[56vw] md:h-[380px] lg:h-[420px] overflow-hidden">
                 <ImageSlider images={room.images} roomName={room.name} />
             </div>
 
@@ -491,10 +491,10 @@ export default function StudioPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-80px" }}
                             transition={{ duration: 0.6 }}
-                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10"
+                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-center"
                         >
                             {/* Image */}
-                            <div className="h-[56vw] md:h-[420px] lg:h-[480px] flex items-end overflow-hidden">
+                            <div className="h-[56vw] md:h-[380px] lg:h-[420px] overflow-hidden">
                                 <ImageSlider images={LOBBY.images} roomName="Lobby" />
                             </div>
 
