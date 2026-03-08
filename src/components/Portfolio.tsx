@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Portfolio() {
     return (
@@ -29,10 +30,12 @@ export default function Portfolio() {
                         {/* The image of the work, we don't have the exact file, so we use a placeholder or style it heavily */}
                         <div className="aspect-video bg-neutral-900 overflow-hidden relative group">
                             <div className="absolute inset-0 bg-gradient-to-tr from-black/80 to-transparent z-10" />
-                            <img
+                            <Image
                                 src="/images/artist.jpg"
                                 alt="오빠야 강변살자"
-                                className="w-full h-full object-cover blur-sm opacity-50 group-hover:scale-105 group-hover:blur-none group-hover:opacity-100 transition-all duration-1000 grayscale group-hover:grayscale-0"
+                                fill
+                                sizes="(max-width: 1024px) 100vw, 58vw"
+                                className="object-cover blur-sm opacity-50 group-hover:scale-105 group-hover:blur-none group-hover:opacity-100 transition-all duration-1000 grayscale group-hover:grayscale-0"
                             />
                             <div className="absolute bottom-10 left-10 z-20">
                                 <p className="text-neutral-400 font-bold uppercase tracking-widest text-sm mb-2">포크폴리오</p>

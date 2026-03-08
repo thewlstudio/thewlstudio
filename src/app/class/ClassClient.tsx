@@ -15,7 +15,7 @@ type SanityImage = {
     crop?: object;
 };
 
-type Instructor = {
+export type Instructor = {
     _id: string;
     id: string;
     category: string;
@@ -137,10 +137,12 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     style={{ WebkitMaskImage: 'linear-gradient(to left, black 20%, transparent 80%)', maskImage: 'linear-gradient(to left, black 20%, transparent 80%)' }}
                                 >
                                     {cls.bgImage && (
-                                        <img
+                                        <Image
                                             src={urlFor(cls.bgImage).url()}
                                             alt=""
-                                            className="absolute bottom-0 right-0 md:right-16 h-full w-auto max-w-none filter grayscale mix-blend-multiply"
+                                            fill
+                                            sizes="(max-width: 768px) 100vw, 50vw"
+                                            className="object-cover object-right-bottom filter grayscale mix-blend-multiply"
                                         />
                                     )}
                                 </div>

@@ -7,19 +7,11 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-
-type Work = {
-    title: string;
-    artist: string;
-    slug: string;
-    releaseDate: string;
-    imageUrl: string;
-    lqip?: string;
-};
+import type { WorkSummary } from "@/types/sanity";
 
 const ITEMS_PER_PAGE = 12;
 
-export default function WorksClient({ initialWorks }: { initialWorks: Work[] }) {
+export default function WorksClient({ initialWorks }: { initialWorks: WorkSummary[] }) {
     const [currentPage, setCurrentPage] = useState(1);
 
     const scrollToTop = () => {

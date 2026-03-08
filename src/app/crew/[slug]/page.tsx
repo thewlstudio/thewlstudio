@@ -5,6 +5,7 @@ import { crewBySlugQuery } from "@/sanity/lib/queries";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CrewDetailClient from "./CrewDetailClient";
+import type { CrewMemberDetail } from "@/types/sanity";
 
 type Props = {
     params: { slug: string };
@@ -12,7 +13,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const decodedSlug = decodeURIComponent(params.slug);
-    const member = await sanityFetch<any>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
+    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
 
     if (!member) {
         return { title: "Crew Not Found | WHITE LIGHT STUDIO" };
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CrewDetailPage({ params }: Props) {
     const decodedSlug = decodeURIComponent(params.slug);
-    const member = await sanityFetch<any>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
+    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
 
     if (!member) {
         notFound();
