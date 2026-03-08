@@ -138,6 +138,13 @@ type RoomData = {
     images: string[];
 };
 
+// "W.L Studio [A Room]" → { prefix: "W.L Studio", room: "A Room" }
+function parseRoomName(name: string) {
+    const match = name.match(/^(.+?)\s*\[(.+)\]$/);
+    if (match) return { prefix: match[1].toUpperCase(), room: match[2].toUpperCase() };
+    return { prefix: name.toUpperCase(), room: null };
+}
+
 const ROOMS: RoomData[] = [ROOM_A, ROOM_B, ROOM_C, ROOM_D];
 
 function RoomBlock({ room }: { room: RoomData }) {
@@ -147,16 +154,21 @@ function RoomBlock({ room }: { room: RoomData }) {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7 }}
-            className="bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
+            className="bg-neutral-50 rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
         >
             <div className="h-[40vh] lg:h-[600px] border-b lg:border-b-0 lg:border-r border-neutral-200">
                 <ImageSlider images={room.images} roomName={room.name} />
             </div>
 
             <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase mb-6 flex items-center justify-between border-b-2 border-black pb-4">
-                    {room.name}
-                </h3>
+                {(() => {
+                    const { prefix, room: roomLabel } = parseRoomName(room.name); return (
+                        <div className="border-b-2 border-black pb-4 mb-6">
+                            <p className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 mb-1">{prefix}</p>
+                            <h3 className="text-4xl md:text-5xl font-black tracking-tighter">{roomLabel ?? room.name}</h3>
+                        </div>
+                    );
+                })()}
 
                 <div className="mb-8 space-y-3">
                     {room.prices.map((p, i) => (
@@ -174,8 +186,9 @@ function RoomBlock({ room }: { room: RoomData }) {
                     <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Equipment & Features</h4>
                     <ul className="space-y-3">
                         {room.features.map((feature, i) => (
-                            <li key={i} className="text-neutral-700 font-medium flex items-start text-sm md:text-base leading-relaxed break-keep">
-                                <span className="mr-3 text-black">✓</span> {feature}
+                            <li key={i} className="text-neutral-600 font-medium flex items-start gap-3 text-sm md:text-base leading-relaxed break-keep">
+                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-400 inline-block"></span>
+                                {feature}
                             </li>
                         ))}
                     </ul>
@@ -508,8 +521,9 @@ export default function StudioPage() {
                                     <h4 className="text-sm font-bold tracking-[0.2em] text-neutral-400 uppercase mb-4">Space Rules & Features</h4>
                                     <ul className="space-y-3">
                                         {LOBBY.features.map((feature, i) => (
-                                            <li key={i} className="text-neutral-300 font-medium flex items-start text-sm md:text-base leading-relaxed break-keep">
-                                                <span className="mr-3 text-white">✓</span> {feature}
+                                            <li key={i} className="text-neutral-300 font-medium flex items-start gap-3 text-sm md:text-base leading-relaxed break-keep">
+                                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-500 inline-block"></span>
+                                                {feature}
                                             </li>
                                         ))}
                                     </ul>
