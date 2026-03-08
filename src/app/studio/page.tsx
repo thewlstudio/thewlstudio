@@ -209,51 +209,194 @@ function MagnifiedCell({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RoomGallery — adaptive editorial collage (2 / 3 / 4+ images)
+// RoomGallery — per-room editorial collage with distinct visual DNA
 //
-// Layout rules:
-//   1 image  →  full-bleed single cell
-//   2 images →  3fr | 2fr  (large left, portrait right)
-//   3 images →  3fr | 2fr  (large left, 2 stacked right)
-//   4+ images→  2×2 grid
+// variant 0 · Room A  — LANDSCAPE BREAK
+//   Wide panoramic top (1.7fr) + asymmetric bottom strip (1fr|2fr)
+//   Entry: wide establishing shot → detail pair
+//
+// variant 1 · Room B  — VERTICAL SPINE
+//   Narrow left column (1fr) creates lateral tension
+//   Right: tall main (1.5fr) stacked over wide footer (1fr)
+//
+// variant 2 · Room C  — VOID CUT  (2 images)
+//   Full-width hero (1.8fr) + intentional negative space bottom-left
+//   Void is a deliberate editorial statement, not a missing image
+//
+// variant 3 · Room D  — TRIPTYCH
+//   Three vertical strips at irrational widths (1.2fr · 1.8fr · 1fr)
+//   Central panel dominates; flanking strips create filmic depth
+//
+// variant 4 · Lobby   — WIDE + GLIMPSE
+//   Wide primary (2.2fr) + narrow accent strip (1fr)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RoomGallery({ images, roomName }: { images: string[]; roomName: string }) {
-    const n = images.length;
+function RoomGallery({
+    images,
+    roomName,
+    variant = 0,
+}: {
+    images: string[];
+    roomName: string;
+    variant?: number;
+}) {
+    const c = (src: string, i: number) => (
+        <MagnifiedCell key={i} src={src} alt={`${roomName} ${i + 1}`} />
+    );
 
-    if (n === 1) {
-        return <MagnifiedCell src={images[0]} alt={roomName} className="h-full" />;
-    }
-
-    if (n === 2) {
+    // ── variant 0: LANDSCAPE BREAK (Room A) ─────────────────────────────────
+    // 3 imgs  ┌──────────────────────────┐       4 imgs  ┌──────────────────────┐
+    //         │   [0] panoramic hero     │ 1.7fr         │  [0] wide hero        │
+    //         ├───────────┬──────────────┤               ├──────┬───────┬────────┤
+    //         │[1] (1fr)  │ [2] (2fr)   │ 1fr           │ [1]  │  [2]  │  [3]   │
+    //         └───────────┴──────────────┘               └──────┴───────┴────────┘
+    if (variant === 0) {
+        if (images.length >= 4) {
+            return (
+                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                    {c(images[0], 0)}
+                    <div className="grid grid-cols-3 gap-px">
+                        {c(images[1], 1)}
+                        {c(images[2], 2)}
+                        {c(images[3], 3)}
+                    </div>
+                </div>
+            );
+        }
+        // 3 images (default)
         return (
-            <div className="h-full grid grid-cols-[3fr_2fr] gap-px bg-black">
-                <MagnifiedCell src={images[0]} alt={`${roomName} 1`} />
-                <MagnifiedCell src={images[1]} alt={`${roomName} 2`} />
-            </div>
-        );
-    }
-
-    if (n === 3) {
-        return (
-            // Outer grid: large left column + stacked right column
-            <div className="h-full grid grid-cols-[3fr_2fr] gap-px bg-black">
-                <MagnifiedCell src={images[0]} alt={`${roomName} 1`} />
-                {/* Right column: two equal cells */}
-                <div className="grid grid-rows-2 gap-px">
-                    <MagnifiedCell src={images[1]} alt={`${roomName} 2`} />
-                    <MagnifiedCell src={images[2]} alt={`${roomName} 3`} />
+            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                    {c(images[1], 1)}
+                    {c(images[2], 2)}
                 </div>
             </div>
         );
     }
 
-    // 4+ images: 2 × 2 grid
+    // ── variant 1: VERTICAL SPINE (Room B) ───────────────────────────────────
+    // 3 imgs  ┌──────┬──────────────────┐       4 imgs  ┌──────┬──────────────┐
+    //         │      │ [0] main 1.5fr   │               │      │ [0]  1fr     │
+    //         │ [1]  ├──────────────────┤               │  [1] ├──────────────┤
+    //         │strip │ [2] footer 1fr   │               │      │ [2]  1fr     │
+    //         └──────┴──────────────────┘               │      ├──────────────┤
+    //                                                    │      │ [3]  1fr     │
+    //                                                    └──────┴──────────────┘
+    if (variant === 1) {
+        if (images.length >= 4) {
+            return (
+                <div className="h-full grid grid-cols-[1fr_2.6fr] gap-px bg-black">
+                    {c(images[1], 1)}
+                    <div className="grid grid-rows-3 gap-px">
+                        {c(images[0], 0)}
+                        {c(images[2], 2)}
+                        {c(images[3], 3)}
+                    </div>
+                </div>
+            );
+        }
+        // 3 images (default)
+        return (
+            <div className="h-full grid grid-cols-[1fr_2.6fr] gap-px bg-black">
+                {c(images[1], 1)}
+                <div className="grid grid-rows-[1.5fr_1fr] gap-px">
+                    {c(images[0], 0)}
+                    {c(images[2], 2)}
+                </div>
+            </div>
+        );
+    }
+
+    // ── variant 2: VOID CUT (Room C) ─────────────────────────────────────────
+    // 2 imgs  ┌──────────────────────────┐       3 imgs  ┌──────────────────────┐
+    //         │     [0] hero  1.8fr      │               │ [0] panoramic  1.7fr │
+    //         ├─────────────┬────────────┤               ├──────────┬───────────┤
+    //         │  ░ void ░   │  [1] 2fr  │               │  [1] 1fr │  [2] 2fr  │
+    //         └─────────────┴────────────┘               └──────────┴───────────┘
+    if (variant === 2) {
+        if (images.length >= 3) {
+            // 3+ images: promote to LANDSCAPE BREAK (void is no longer needed)
+            return (
+                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                    {c(images[0], 0)}
+                    <div className="grid grid-cols-[1fr_2fr] gap-px">
+                        {c(images[1], 1)}
+                        {c(images[2], 2)}
+                    </div>
+                </div>
+            );
+        }
+        // 2 images (default) — intentional negative space
+        return (
+            <div className="h-full grid grid-rows-[1.8fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                    {/* Intentional void — editorial negative space */}
+                    <div className="bg-[#070707] flex items-center justify-center">
+                        <span
+                            className="text-white/[0.04] font-black tracking-tighter select-none"
+                            style={{ fontSize: "clamp(2rem, 5vw, 4rem)", writingMode: "vertical-rl" }}
+                        >
+                            WL
+                        </span>
+                    </div>
+                    {c(images[1], 1)}
+                </div>
+            </div>
+        );
+    }
+
+    // ── variant 3: TRIPTYCH (Room D) ─────────────────────────────────────────
+    // 3 imgs  ┌──────┬──────────────┬───┐       4 imgs  ┌──────┬──────────────┬───┐
+    //         │ [0]  │     [1]      │[2]│               │  [0] │     [1]      │[2]│ 1.6fr
+    //         │1.2fr │    1.8fr     │1fr│               ├──────┴──────────────┴───┤
+    //         └──────┴──────────────┴───┘               │     [3] full-width      │ 1fr
+    //                                                    └─────────────────────────┘
+    if (variant === 3) {
+        if (images.length >= 4) {
+            return (
+                <div className="h-full grid grid-rows-[1.6fr_1fr] gap-px bg-black">
+                    <div className="grid grid-cols-[1.2fr_1.8fr_1fr] gap-px">
+                        {c(images[0], 0)}
+                        {c(images[1], 1)}
+                        {c(images[2], 2)}
+                    </div>
+                    {c(images[3], 3)}
+                </div>
+            );
+        }
+        // 3 images (default)
+        return (
+            <div className="h-full grid grid-cols-[1.2fr_1.8fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                {c(images[1], 1)}
+                {c(images[2], 2)}
+            </div>
+        );
+    }
+
+    // ── variant 4: WIDE + GLIMPSE (Lobby) ────────────────────────────────────
+    // 2 imgs  ┌───────────────────┬──────┐       3 imgs  ┌───────────────────────┐
+    //         │   [0]  wide 2.2fr │ [1]  │               │    [0]  hero  1.7fr   │
+    //         │                   │ 1fr  │               ├──────────┬────────────┤
+    //         └───────────────────┴──────┘               │[1]  1fr  │ [2]  2fr  │
+    //                                                     └──────────┴────────────┘
+    if (images.length >= 3) {
+        return (
+            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                    {c(images[1], 1)}
+                    {c(images[2], 2)}
+                </div>
+            </div>
+        );
+    }
     return (
-        <div className="h-full grid grid-cols-2 grid-rows-2 gap-px bg-black">
-            {images.slice(0, 4).map((src, i) => (
-                <MagnifiedCell key={i} src={src} alt={`${roomName} ${i + 1}`} />
-            ))}
+        <div className="h-full grid grid-cols-[2.2fr_1fr] gap-px bg-black">
+            {c(images[0], 0)}
+            {c(images[1], 1)}
         </div>
     );
 }
@@ -263,7 +406,7 @@ function RoomGallery({ images, roomName }: { images: string[]; roomName: string 
 // Height is determined by the info column — the gallery stretches to match.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RoomBlock({ room }: { room: RoomData }) {
+function RoomBlock({ room, index }: { room: RoomData; index: number }) {
     // Parse "W.L Studio [B Room]" → brand: "W.L STUDIO", title: "B ROOM"
     const match = room.name.match(/^(.*?)\s*\[(.+)\]$/);
     const brand = (match ? match[1] : "").toUpperCase();
@@ -280,7 +423,7 @@ function RoomBlock({ room }: { room: RoomData }) {
         >
             {/* Left: Gallery — mobile: 65vw tall; desktop: auto-stretch to info height */}
             <div className="h-[65vw] max-h-[500px] lg:h-auto border-b border-neutral-200 lg:border-b-0 lg:border-r lg:border-neutral-200">
-                <RoomGallery images={room.images} roomName={room.name} />
+                <RoomGallery images={room.images} roomName={room.name} variant={index} />
             </div>
 
             {/* Right: Info */}
@@ -574,8 +717,8 @@ export default function StudioPage() {
 
                     {/* Room cards */}
                     <div className="flex flex-col space-y-24">
-                        {ROOMS.map((room) => (
-                            <RoomBlock key={room.name} room={room} />
+                        {ROOMS.map((room, i) => (
+                            <RoomBlock key={room.name} room={room} index={i} />
                         ))}
 
                         {/* ── Lobby Block (dark theme) ── */}
@@ -588,7 +731,7 @@ export default function StudioPage() {
                         >
                             {/* Left: Gallery */}
                             <div className="h-[65vw] max-h-[500px] lg:h-auto border-b border-neutral-800 lg:border-b-0 lg:border-r lg:border-neutral-800">
-                                <RoomGallery images={LOBBY.images} roomName="Lobby" />
+                                <RoomGallery images={LOBBY.images} roomName="Lobby" variant={4} />
                             </div>
 
                             {/* Right: Info */}
