@@ -143,7 +143,7 @@ function MagnifiedCell({
 
     return (
         <div
-            className={`relative overflow-hidden cursor-crosshair group ${className}`}
+            className={`relative overflow-hidden cursor-crosshair group shadow-xl ${className}`}
             onMouseMove={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 setMag({
@@ -156,53 +156,34 @@ function MagnifiedCell({
             }}
             onMouseLeave={() => setMag((p) => ({ ...p, active: false }))}
         >
-            {/* Base image — grayscale by default, colour on hover */}
+            {/* Base image — full colour from the start */}
             <Image
                 src={src}
                 alt={alt}
                 fill
-                className="object-cover transition-all duration-700 ease-out grayscale brightness-[0.82] group-hover:grayscale-0 group-hover:brightness-100 group-hover:scale-[1.04]"
+                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                 sizes="(max-width: 1024px) 100vw, 50vw"
             />
 
-            {/* Microscope Lens — only visible while mouse is inside */}
+            {/* Magnifier Lens — CSS background-image for pixel-accurate zoom */}
             {mag.active && (
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute z-50 rounded-full overflow-hidden"
+                    className="pointer-events-none absolute z-50 rounded-full"
                     style={{
                         width: LENS_SIZE,
                         height: LENS_SIZE,
-                        // Centre the lens circle on the cursor
                         left: mag.x - LENS_SIZE / 2,
                         top: mag.y - LENS_SIZE / 2,
-                        border: "1.5px solid rgba(255,255,255,0.6)",
-                        boxShadow: "0 0 0 1px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.5)",
+                        border: "2px solid rgba(255,255,255,0.75)",
+                        boxShadow: "0 0 0 1px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.4)",
+                        backgroundImage: `url('${src}')`,
+                        backgroundSize: `${mag.w * ZOOM}px ${mag.h * ZOOM}px`,
+                        backgroundPosition: `${LENS_SIZE / 2 - mag.x * ZOOM}px ${LENS_SIZE / 2 - mag.y * ZOOM}px`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundColor: "#000",
                     }}
-                >
-                    {/*
-                     * Inner magnified image.
-                     * Formula: to centre the cursor position at the lens centre,
-                     *   left = (LENS_SIZE/2) − (cursorX × ZOOM)
-                     *   top  = (LENS_SIZE/2) − (cursorY × ZOOM)
-                     * Image dimensions = container dimensions × ZOOM
-                     */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src={src}
-                        alt=""
-                        style={{
-                            position: "absolute",
-                            left: LENS_SIZE / 2 - mag.x * ZOOM,
-                            top: LENS_SIZE / 2 - mag.y * ZOOM,
-                            width: mag.w * ZOOM,
-                            height: mag.h * ZOOM,
-                            objectFit: "cover",
-                            userSelect: "none",
-                            pointerEvents: "none",
-                        }}
-                    />
-                </div>
+                />
             )}
         </div>
     );
@@ -253,9 +234,9 @@ function RoomGallery({
     if (variant === 0) {
         if (images.length >= 4) {
             return (
-                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
                     {c(images[0], 0)}
-                    <div className="grid grid-cols-3 gap-px">
+                    <div className="grid grid-cols-3 gap-2 md:gap-3">
                         {c(images[1], 1)}
                         {c(images[2], 2)}
                         {c(images[3], 3)}
@@ -265,9 +246,9 @@ function RoomGallery({
         }
         // 3 images (default)
         return (
-            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
                 {c(images[0], 0)}
-                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                <div className="grid grid-cols-[1fr_2fr] gap-2 md:gap-3">
                     {c(images[1], 1)}
                     {c(images[2], 2)}
                 </div>
@@ -286,9 +267,9 @@ function RoomGallery({
     if (variant === 1) {
         if (images.length >= 4) {
             return (
-                <div className="h-full grid grid-cols-[1fr_2.6fr] gap-px bg-black">
+                <div className="h-full grid grid-cols-[1fr_2.6fr] gap-2 md:gap-3">
                     {c(images[1], 1)}
-                    <div className="grid grid-rows-3 gap-px">
+                    <div className="grid grid-rows-3 gap-2 md:gap-3">
                         {c(images[0], 0)}
                         {c(images[2], 2)}
                         {c(images[3], 3)}
@@ -298,9 +279,9 @@ function RoomGallery({
         }
         // 3 images (default)
         return (
-            <div className="h-full grid grid-cols-[1fr_2.6fr] gap-px bg-black">
+            <div className="h-full grid grid-cols-[1fr_2.6fr] gap-2 md:gap-3">
                 {c(images[1], 1)}
-                <div className="grid grid-rows-[1.5fr_1fr] gap-px">
+                <div className="grid grid-rows-[1.5fr_1fr] gap-2 md:gap-3">
                     {c(images[0], 0)}
                     {c(images[2], 2)}
                 </div>
@@ -318,31 +299,20 @@ function RoomGallery({
         if (images.length >= 3) {
             // 3+ images: promote to LANDSCAPE BREAK (void is no longer needed)
             return (
-                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
                     {c(images[0], 0)}
-                    <div className="grid grid-cols-[1fr_2fr] gap-px">
+                    <div className="grid grid-cols-[1fr_2fr] gap-2 md:gap-3">
                         {c(images[1], 1)}
                         {c(images[2], 2)}
                     </div>
                 </div>
             );
         }
-        // 2 images (default) — intentional negative space
+        // 2 images (default) — asymmetric side-by-side
         return (
-            <div className="h-full grid grid-rows-[1.8fr_1fr] gap-px bg-black">
+            <div className="h-full grid grid-cols-[1.5fr_1fr] gap-2 md:gap-3">
                 {c(images[0], 0)}
-                <div className="grid grid-cols-[1fr_2fr] gap-px">
-                    {/* Intentional void — editorial negative space */}
-                    <div className="bg-[#070707] flex items-center justify-center">
-                        <span
-                            className="text-white/[0.04] font-black tracking-tighter select-none"
-                            style={{ fontSize: "clamp(2rem, 5vw, 4rem)", writingMode: "vertical-rl" }}
-                        >
-                            WL
-                        </span>
-                    </div>
-                    {c(images[1], 1)}
-                </div>
+                {c(images[1], 1)}
             </div>
         );
     }
@@ -356,8 +326,8 @@ function RoomGallery({
     if (variant === 3) {
         if (images.length >= 4) {
             return (
-                <div className="h-full grid grid-rows-[1.6fr_1fr] gap-px bg-black">
-                    <div className="grid grid-cols-[1.2fr_1.8fr_1fr] gap-px">
+                <div className="h-full grid grid-rows-[1.6fr_1fr] gap-2 md:gap-3">
+                    <div className="grid grid-cols-[1.2fr_1.8fr_1fr] gap-2 md:gap-3">
                         {c(images[0], 0)}
                         {c(images[1], 1)}
                         {c(images[2], 2)}
@@ -368,7 +338,7 @@ function RoomGallery({
         }
         // 3 images (default)
         return (
-            <div className="h-full grid grid-cols-[1.2fr_1.8fr_1fr] gap-px bg-black">
+            <div className="h-full grid grid-cols-[1.2fr_1.8fr_1fr] gap-2 md:gap-3">
                 {c(images[0], 0)}
                 {c(images[1], 1)}
                 {c(images[2], 2)}
@@ -384,9 +354,9 @@ function RoomGallery({
     //                                                     └──────────┴────────────┘
     if (images.length >= 3) {
         return (
-            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
                 {c(images[0], 0)}
-                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                <div className="grid grid-cols-[1fr_2fr] gap-2 md:gap-3">
                     {c(images[1], 1)}
                     {c(images[2], 2)}
                 </div>
@@ -394,7 +364,7 @@ function RoomGallery({
         );
     }
     return (
-        <div className="h-full grid grid-cols-[2.2fr_1fr] gap-px bg-black">
+        <div className="h-full grid grid-cols-[2.2fr_1fr] gap-2 md:gap-3">
             {c(images[0], 0)}
             {c(images[1], 1)}
         </div>
@@ -418,11 +388,10 @@ function RoomBlock({ room, index }: { room: RoomData; index: number }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-            // items-stretch (default) ensures both columns share the same height
-            className="overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-[0_8px_48px_rgba(0,0,0,0.11)]"
+            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch"
         >
-            {/* Left: Gallery — mobile: 65vw tall; desktop: auto-stretch to info height */}
-            <div className="h-[65vw] max-h-[500px] lg:h-auto border-b border-neutral-200 lg:border-b-0 lg:border-r lg:border-neutral-200">
+            {/* Left: Gallery — mobile: 65vw tall; desktop: stretches to match info height */}
+            <div className="h-[65vw] max-h-[480px] lg:h-full overflow-hidden bg-neutral-100 p-3 lg:p-6">
                 <RoomGallery images={room.images} roomName={room.name} variant={index} />
             </div>
 
@@ -727,16 +696,16 @@ export default function StudioPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-80px" }}
                             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-                            className="overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-[0_8px_48px_rgba(0,0,0,0.18)]"
+                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch"
                         >
                             {/* Left: Gallery */}
-                            <div className="h-[65vw] max-h-[500px] lg:h-auto border-b border-neutral-800 lg:border-b-0 lg:border-r lg:border-neutral-800">
+                            <div className="h-[65vw] max-h-[480px] lg:h-full overflow-hidden bg-neutral-100 p-3 lg:p-6">
                                 <RoomGallery images={LOBBY.images} roomName="Lobby" variant={4} />
                             </div>
 
                             {/* Right: Info */}
-                            <div className="bg-neutral-900 text-white p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                                <div className="mb-8 pb-5 border-b-2 border-neutral-700">
+                            <div className="bg-white text-black p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                                <div className="mb-8 pb-5 border-b-2 border-black">
                                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
                                         {LOBBY.subtitle}
                                     </p>
@@ -749,36 +718,36 @@ export default function StudioPage() {
                                     {LOBBY.prices.map((p, i) => (
                                         <div
                                             key={i}
-                                            className="flex justify-between items-center border-b border-white/10 pb-3"
+                                            className="flex justify-between items-center border-b border-black/[0.06] pb-3"
                                         >
                                             <span className="font-bold tracking-widest uppercase text-xs text-neutral-400">
                                                 {p.label}
                                             </span>
                                             <div className="flex items-baseline gap-1.5">
-                                                <span className="text-2xl md:text-3xl font-black tracking-tight">
+                                                <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
                                                     {p.value}
                                                 </span>
-                                                <span className="text-xs font-semibold text-neutral-500">{p.unit}</span>
+                                                <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                <p className="text-sm leading-relaxed text-neutral-400 mb-8 font-light italic border-l-2 border-neutral-700 pl-4">
+                                <p className="text-sm leading-relaxed text-neutral-500 mb-8 font-light italic border-l-2 border-black/20 pl-4">
                                     &quot;{LOBBY.description}&quot;
                                 </p>
 
                                 <div className="flex-1">
-                                    <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-500 uppercase mb-4">
+                                    <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4">
                                         Space Rules &amp; Features
                                     </h4>
                                     <ul className="space-y-2.5">
                                         {LOBBY.features.map((feature, i) => (
                                             <li
                                                 key={i}
-                                                className="text-neutral-300 font-medium flex items-start text-sm leading-relaxed break-keep"
+                                                className="text-neutral-700 font-medium flex items-start text-sm leading-relaxed break-keep"
                                             >
-                                                <span className="mr-3 text-neutral-600 mt-0.5 shrink-0 select-none">
+                                                <span className="mr-3 text-neutral-300 mt-0.5 shrink-0 select-none">
                                                     —
                                                 </span>
                                                 {feature}
@@ -788,11 +757,11 @@ export default function StudioPage() {
                                 </div>
 
                                 {LOBBY.notes && LOBBY.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-white/10">
+                                    <div className="mt-8 pt-6 border-t border-neutral-100">
                                         {LOBBY.notes.map((note, i) => (
                                             <p
                                                 key={i}
-                                                className="text-xs font-semibold text-[#c06060] leading-relaxed break-keep"
+                                                className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
                                             >
                                                 {note}
                                             </p>
