@@ -6,7 +6,7 @@ import Image from "next/image";
 export default function About() {
     return (
         <section id="about" className="relative w-full py-32 bg-black text-white px-6 lg:px-24">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
 
                 {/* Text Column */}
                 <motion.div
@@ -25,13 +25,17 @@ export default function About() {
 
                     <div className="text-lg md:text-[1.15rem] lg:text-[1.25rem] text-neutral-400 font-light leading-[1.8] tracking-wide space-y-4 break-keep">
                         <p>
-                            화이트 라이트 스튜디오는 단순히 소리를 녹음하는 것을 넘어,<br className="hidden md:block" />
-                            아티스트가 전하고자 하는 진심과 감정을<br className="hidden md:block" />
+                            W.L Studio는 단순히 소리를 녹음하는 것을 넘어,{' '}
+                            <br className="hidden md:block" />
+                            아티스트가 전하고자 하는 진심과 감정을{' '}
+                            <br className="hidden md:block" />
                             가장 순수한 형태로 담아내는 공간입니다.
                         </p>
                         <p>
-                            최상의 장비와 쾌적한 환경,<br className="hidden md:block" />
-                            그리고 프로페셔널한 크루들이<br className="hidden md:block" />
+                            최상의 장비와 쾌적한 환경,{' '}
+                            <br className="hidden md:block" />
+                            그리고 프로페셔널한 크루들이{' '}
+                            <br className="hidden md:block" />
                             당신만의 특별한 작품을 완성할 수 있도록 함께합니다.
                         </p>
                     </div>
