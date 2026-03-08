@@ -190,183 +190,77 @@ function MagnifiedCell({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RoomGallery — per-room editorial collage with distinct visual DNA
-//
-// variant 0 · Room A  — LANDSCAPE BREAK
-//   Wide panoramic top (1.7fr) + asymmetric bottom strip (1fr|2fr)
-//   Entry: wide establishing shot → detail pair
-//
-// variant 1 · Room B  — VERTICAL SPINE
-//   Narrow left column (1fr) creates lateral tension
-//   Right: tall main (1.5fr) stacked over wide footer (1fr)
-//
-// variant 2 · Room C  — VOID CUT  (2 images)
-//   Full-width hero (1.8fr) + intentional negative space bottom-left
-//   Void is a deliberate editorial statement, not a missing image
-//
-// variant 3 · Room D  — TRIPTYCH
-//   Three vertical strips at irrational widths (1.2fr · 1.8fr · 1fr)
-//   Central panel dominates; flanking strips create filmic depth
-//
-// variant 4 · Lobby   — WIDE + GLIMPSE
-//   Wide primary (2.2fr) + narrow accent strip (1fr)
+// RoomCarousel — single-image carousel with ‹ › navigation + magnifier lens
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RoomGallery({
+function RoomCarousel({
     images,
     roomName,
-    variant = 0,
 }: {
     images: string[];
     roomName: string;
-    variant?: number;
 }) {
-    const c = (src: string, i: number) => (
-        <MagnifiedCell key={i} src={src} alt={`${roomName} ${i + 1}`} />
-    );
+    const [current, setCurrent] = useState(0);
+    const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
+    const next = () => setCurrent((c) => (c + 1) % images.length);
 
-    // ── variant 0: LANDSCAPE BREAK (Room A) ─────────────────────────────────
-    // 3 imgs  ┌──────────────────────────┐       4 imgs  ┌──────────────────────┐
-    //         │   [0] panoramic hero     │ 1.7fr         │  [0] wide hero        │
-    //         ├───────────┬──────────────┤               ├──────┬───────┬────────┤
-    //         │[1] (1fr)  │ [2] (2fr)   │ 1fr           │ [1]  │  [2]  │  [3]   │
-    //         └───────────┴──────────────┘               └──────┴───────┴────────┘
-    if (variant === 0) {
-        if (images.length >= 4) {
-            return (
-                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
-                    {c(images[0], 0)}
-                    <div className="grid grid-cols-3 gap-2 md:gap-3">
-                        {c(images[1], 1)}
-                        {c(images[2], 2)}
-                        {c(images[3], 3)}
-                    </div>
-                </div>
-            );
-        }
-        // 3 images (default)
-        return (
-            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
-                {c(images[0], 0)}
-                <div className="grid grid-cols-[1fr_2fr] gap-2 md:gap-3">
-                    {c(images[1], 1)}
-                    {c(images[2], 2)}
-                </div>
-            </div>
-        );
-    }
-
-    // ── variant 1: VERTICAL SPINE (Room B) ───────────────────────────────────
-    // 3 imgs  ┌──────┬──────────────────┐       4 imgs  ┌──────┬──────────────┐
-    //         │      │ [0] main 1.5fr   │               │      │ [0]  1fr     │
-    //         │ [1]  ├──────────────────┤               │  [1] ├──────────────┤
-    //         │strip │ [2] footer 1fr   │               │      │ [2]  1fr     │
-    //         └──────┴──────────────────┘               │      ├──────────────┤
-    //                                                    │      │ [3]  1fr     │
-    //                                                    └──────┴──────────────┘
-    if (variant === 1) {
-        if (images.length >= 4) {
-            return (
-                <div className="h-full grid grid-cols-[1fr_2.6fr] gap-2 md:gap-3">
-                    {c(images[1], 1)}
-                    <div className="grid grid-rows-3 gap-2 md:gap-3">
-                        {c(images[0], 0)}
-                        {c(images[2], 2)}
-                        {c(images[3], 3)}
-                    </div>
-                </div>
-            );
-        }
-        // 3 images (default)
-        return (
-            <div className="h-full grid grid-cols-[1fr_2.6fr] gap-2 md:gap-3">
-                {c(images[1], 1)}
-                <div className="grid grid-rows-[1.5fr_1fr] gap-2 md:gap-3">
-                    {c(images[0], 0)}
-                    {c(images[2], 2)}
-                </div>
-            </div>
-        );
-    }
-
-    // ── variant 2: VOID CUT (Room C) ─────────────────────────────────────────
-    // 2 imgs  ┌──────────────────────────┐       3 imgs  ┌──────────────────────┐
-    //         │     [0] hero  1.8fr      │               │ [0] panoramic  1.7fr │
-    //         ├─────────────┬────────────┤               ├──────────┬───────────┤
-    //         │  ░ void ░   │  [1] 2fr  │               │  [1] 1fr │  [2] 2fr  │
-    //         └─────────────┴────────────┘               └──────────┴───────────┘
-    if (variant === 2) {
-        if (images.length >= 3) {
-            // 3+ images: promote to LANDSCAPE BREAK (void is no longer needed)
-            return (
-                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
-                    {c(images[0], 0)}
-                    <div className="grid grid-cols-[1fr_2fr] gap-2 md:gap-3">
-                        {c(images[1], 1)}
-                        {c(images[2], 2)}
-                    </div>
-                </div>
-            );
-        }
-        // 2 images (default) — asymmetric side-by-side
-        return (
-            <div className="h-full grid grid-cols-[1.5fr_1fr] gap-2 md:gap-3">
-                {c(images[0], 0)}
-                {c(images[1], 1)}
-            </div>
-        );
-    }
-
-    // ── variant 3: TRIPTYCH (Room D) ─────────────────────────────────────────
-    // 3 imgs  ┌──────┬──────────────┬───┐       4 imgs  ┌──────┬──────────────┬───┐
-    //         │ [0]  │     [1]      │[2]│               │  [0] │     [1]      │[2]│ 1.6fr
-    //         │1.2fr │    1.8fr     │1fr│               ├──────┴──────────────┴───┤
-    //         └──────┴──────────────┴───┘               │     [3] full-width      │ 1fr
-    //                                                    └─────────────────────────┘
-    if (variant === 3) {
-        if (images.length >= 4) {
-            return (
-                <div className="h-full grid grid-rows-[1.6fr_1fr] gap-2 md:gap-3">
-                    <div className="grid grid-cols-[1.2fr_1.8fr_1fr] gap-2 md:gap-3">
-                        {c(images[0], 0)}
-                        {c(images[1], 1)}
-                        {c(images[2], 2)}
-                    </div>
-                    {c(images[3], 3)}
-                </div>
-            );
-        }
-        // 3 images (default)
-        return (
-            <div className="h-full grid grid-cols-[1.2fr_1.8fr_1fr] gap-2 md:gap-3">
-                {c(images[0], 0)}
-                {c(images[1], 1)}
-                {c(images[2], 2)}
-            </div>
-        );
-    }
-
-    // ── variant 4: WIDE + GLIMPSE (Lobby) ────────────────────────────────────
-    // 2 imgs  ┌───────────────────┬──────┐       3 imgs  ┌───────────────────────┐
-    //         │   [0]  wide 2.2fr │ [1]  │               │    [0]  hero  1.7fr   │
-    //         │                   │ 1fr  │               ├──────────┬────────────┤
-    //         └───────────────────┴──────┘               │[1]  1fr  │ [2]  2fr  │
-    //                                                     └──────────┴────────────┘
-    if (images.length >= 3) {
-        return (
-            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-2 md:gap-3">
-                {c(images[0], 0)}
-                <div className="grid grid-cols-[1fr_2fr] gap-2 md:gap-3">
-                    {c(images[1], 1)}
-                    {c(images[2], 2)}
-                </div>
-            </div>
-        );
-    }
     return (
-        <div className="h-full grid grid-cols-[2.2fr_1fr] gap-2 md:gap-3">
-            {c(images[0], 0)}
-            {c(images[1], 1)}
+        <div className="space-y-3">
+            {/* Photo frame — aspect ratio container */}
+            <div className="relative aspect-[4/3]">
+                <MagnifiedCell
+                    src={images[current]}
+                    alt={`${roomName} ${current + 1}`}
+                    className="h-full"
+                />
+
+                {/* Navigation arrows */}
+                {images.length > 1 && (
+                    <>
+                        <button
+                            onClick={prev}
+                            aria-label="이전 사진"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={next}
+                            aria-label="다음 사진"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+
+                        {/* Photo counter */}
+                        <div className="absolute bottom-2 right-3 z-20 text-[10px] font-bold text-white/70 tracking-widest tabular-nums select-none">
+                            {current + 1} / {images.length}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Dot indicators */}
+            {images.length > 1 && (
+                <div className="flex justify-center gap-2">
+                    {images.map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrent(i)}
+                            className={`rounded-full transition-all duration-300 ${
+                                i === current
+                                    ? "w-4 h-1.5 bg-black"
+                                    : "w-1.5 h-1.5 bg-neutral-300 hover:bg-neutral-400"
+                            }`}
+                            aria-label={`사진 ${i + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
@@ -376,7 +270,7 @@ function RoomGallery({
 // Height is determined by the info column — the gallery stretches to match.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RoomBlock({ room, index }: { room: RoomData; index: number }) {
+function RoomBlock({ room }: { room: RoomData }) {
     // Parse "W.L Studio [B Room]" → brand: "W.L STUDIO", title: "B ROOM"
     const match = room.name.match(/^(.*?)\s*\[(.+)\]$/);
     const brand = (match ? match[1] : "").toUpperCase();
@@ -388,15 +282,13 @@ function RoomBlock({ room, index }: { room: RoomData; index: number }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start border-l-2 border-black pl-6 lg:pl-12"
         >
-            {/* Left: Gallery — mobile: 65vw tall; desktop: stretches to match info height */}
-            <div className="h-[65vw] max-h-[480px] lg:h-full overflow-hidden bg-neutral-100 p-3 lg:p-6">
-                <RoomGallery images={room.images} roomName={room.name} variant={index} />
-            </div>
+            {/* Left: Photo carousel — transparent bg, aligns with title top */}
+            <RoomCarousel images={room.images} roomName={room.name} />
 
-            {/* Right: Info */}
-            <div className="bg-white p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+            {/* Right: Info — transparent, starts at same top as carousel */}
+            <div className="flex flex-col">
                 {/* Room identity */}
                 <div className="mb-8 pb-5 border-b-2 border-black">
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
@@ -445,7 +337,7 @@ function RoomBlock({ room, index }: { room: RoomData; index: number }) {
 
                 {/* Notes */}
                 {room.notes && room.notes.length > 0 && (
-                    <div className="mt-8 pt-6 border-t border-neutral-100">
+                    <div className="mt-8 pt-6 border-t border-neutral-200">
                         {room.notes.map((note, i) => (
                             <p
                                 key={i}
@@ -684,27 +576,25 @@ export default function StudioPage() {
                         </a>
                     </motion.div>
 
-                    {/* Room cards */}
-                    <div className="flex flex-col space-y-24">
-                        {ROOMS.map((room, i) => (
-                            <RoomBlock key={room.name} room={room} index={i} />
+                    {/* Room cards — separated by space; each has a left vertical accent */}
+                    <div className="flex flex-col space-y-16 md:space-y-20">
+                        {ROOMS.map((room) => (
+                            <RoomBlock key={room.name} room={room} />
                         ))}
 
-                        {/* ── Lobby Block (dark theme) ── */}
+                        {/* ── Lobby Block ── */}
                         <motion.div
                             initial={{ opacity: 0, y: 32 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-80px" }}
                             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch"
+                            className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start border-l-2 border-black pl-6 lg:pl-12"
                         >
-                            {/* Left: Gallery */}
-                            <div className="h-[65vw] max-h-[480px] lg:h-full overflow-hidden bg-neutral-100 p-3 lg:p-6">
-                                <RoomGallery images={LOBBY.images} roomName="Lobby" variant={4} />
-                            </div>
+                            {/* Left: Carousel */}
+                            <RoomCarousel images={LOBBY.images} roomName="Lobby" />
 
-                            {/* Right: Info */}
-                            <div className="bg-white text-black p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                            {/* Right: Info — transparent bg */}
+                            <div className="flex flex-col">
                                 <div className="mb-8 pb-5 border-b-2 border-black">
                                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
                                         {LOBBY.subtitle}
@@ -757,7 +647,7 @@ export default function StudioPage() {
                                 </div>
 
                                 {LOBBY.notes && LOBBY.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-neutral-100">
+                                    <div className="mt-8 pt-6 border-t border-neutral-200">
                                         {LOBBY.notes.map((note, i) => (
                                             <p
                                                 key={i}
