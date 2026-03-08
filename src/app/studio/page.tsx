@@ -150,20 +150,22 @@ const ROOMS: RoomData[] = [ROOM_A, ROOM_B, ROOM_C, ROOM_D];
 function RoomBlock({ room }: { room: RoomData }) {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.7 }}
-            className="bg-neutral-900 text-white overflow-hidden grid grid-cols-1 lg:grid-cols-2 border border-neutral-800"
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6 }}
+            className="grid grid-cols-1 lg:grid-cols-2 border-b border-white/10"
         >
-            <div className="h-[50vw] md:h-[45vh] lg:h-[650px] border-b lg:border-b-0 lg:border-r border-neutral-800">
+            {/* Image */}
+            <div className="h-[56vw] md:h-[420px] lg:h-[480px]">
                 <ImageSlider images={room.images} roomName={room.name} />
             </div>
 
-            <div className="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+            {/* Info */}
+            <div className="px-8 py-10 md:px-12 md:py-14 lg:px-16 lg:py-16 flex flex-col justify-center lg:border-l border-white/10">
                 {(() => {
                     const { prefix, room: roomLabel } = parseRoomName(room.name); return (
-                        <div className="border-b border-neutral-700 pb-5 mb-7">
+                        <div className="border-b border-white/10 pb-5 mb-7">
                             <p className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 mb-1.5">{prefix}</p>
                             <h3 className="text-4xl md:text-5xl font-black tracking-tighter text-white">{roomLabel ?? room.name}</h3>
                         </div>
@@ -172,7 +174,7 @@ function RoomBlock({ room }: { room: RoomData }) {
 
                 <div className="mb-8 space-y-3">
                     {room.prices.map((p, i) => (
-                        <div key={i} className="flex justify-between items-center border-b border-neutral-800 pb-3">
+                        <div key={i} className="flex justify-between items-center border-b border-white/10 pb-3">
                             <span className="text-neutral-400 font-bold tracking-widest uppercase text-sm">{p.label}</span>
                             <div className="flex items-baseline space-x-1.5">
                                 <span className="text-xl md:text-2xl font-bold tracking-tight text-white">{p.value}</span>
@@ -186,8 +188,8 @@ function RoomBlock({ room }: { room: RoomData }) {
                     <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4">Equipment & Features</h4>
                     <ul className="space-y-3">
                         {room.features.map((feature, i) => (
-                            <li key={i} className="text-neutral-300 font-medium flex items-start gap-3 text-sm md:text-base leading-relaxed break-keep">
-                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-600 inline-block"></span>
+                            <li key={i} className="text-neutral-300 font-medium flex items-start gap-3 text-sm leading-relaxed break-keep">
+                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-700 inline-block"></span>
                                 {feature}
                             </li>
                         ))}
@@ -195,9 +197,9 @@ function RoomBlock({ room }: { room: RoomData }) {
                 </div>
 
                 {room.notes && room.notes.length > 0 && (
-                    <div className="mt-8 pt-6 border-t border-neutral-800">
+                    <div className="mt-8 pt-5 border-t border-white/10">
                         {room.notes.map((note, i) => (
-                            <p key={i} className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep">
+                            <p key={i} className="text-xs font-medium text-[#c96b6b] leading-relaxed break-keep">
                                 {note}
                             </p>
                         ))}
@@ -215,7 +217,7 @@ function ImageSlider({ images, roomName }: { images: string[]; roomName: string 
     const prev = () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
 
     return (
-        <div className="relative aspect-[4/3] md:aspect-auto md:h-full w-full overflow-hidden bg-neutral-900 group">
+        <div className="relative h-full w-full overflow-hidden bg-black group">
             <AnimatePresence mode="wait">
                 <motion.div
                     key={currentIndex}
@@ -223,7 +225,7 @@ function ImageSlider({ images, roomName }: { images: string[]; roomName: string 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.4 }}
                 >
                     <Image
                         src={images[currentIndex]}
@@ -236,22 +238,24 @@ function ImageSlider({ images, roomName }: { images: string[]; roomName: string 
             </AnimatePresence>
             {images.length > 1 && (
                 <>
-                    <button onClick={prev} aria-label="이전 사진" className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/images/backward.png" alt="이전" style={{ width: 20, height: 20, filter: 'invert(1)' }} />
+                    <button onClick={prev} aria-label="이전 사진" className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
                     </button>
-                    <button onClick={next} aria-label="다음 사진" className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/images/forward.png" alt="다음" style={{ width: 20, height: 20, filter: 'invert(1)' }} />
+                    <button onClick={next} aria-label="다음 사진" className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
                     </button>
                 </>
             )}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2.5 z-20">
                 {images.map((_, i) => (
                     <button
                         key={i}
                         onClick={() => setCurrentIndex(i)}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/70'}`}
+                        className={`h-px transition-all duration-300 ${i === currentIndex ? 'bg-white w-8' : 'bg-white/40 hover:bg-white/70 w-4'}`}
                         aria-label={`Go to slide ${i + 1}`}
                     />
                 ))}
@@ -461,16 +465,16 @@ export default function StudioPage() {
             </section>
 
             {/* Spaces List - Interactive */}
-            <section id="spaces" className="py-32 bg-neutral-50 text-black border-t border-black/10">
+            <section id="spaces" className="py-24 bg-black text-white border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="mb-16 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8"
+                        className="mb-16 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8 border-b border-white/10 pb-10"
                     >
                         <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-center md:text-left">SPACES</h2>
-                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-6 md:px-8 py-3 md:py-4 bg-black text-white font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs rounded-full border border-black hover:bg-transparent hover:text-black transition-colors shrink-0">
+                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-6 md:px-8 py-3 md:py-4 border border-white text-white font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs hover:bg-white hover:text-black transition-colors shrink-0">
                             SPACE 공간 예약
                         </a>
                     </motion.div>
