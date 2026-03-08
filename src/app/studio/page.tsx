@@ -223,11 +223,11 @@ function ImageSlider({ images, roomName }: { images: string[]; roomName: string 
             </AnimatePresence>
             {images.length > 1 && (
                 <>
-                    <button onClick={prev} aria-label="이전 사진" className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 hover:bg-black text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all font-mono text-xl z-20 backdrop-blur-sm">
-                        &lt;
+                    <button onClick={prev} aria-label="이전 사진" className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 hover:bg-black text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
+                        <Image src="/images/backward.png" alt="이전" width={20} height={20} className="invert" />
                     </button>
-                    <button onClick={next} aria-label="다음 사진" className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 hover:bg-black text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all font-mono text-xl z-20 backdrop-blur-sm">
-                        &gt;
+                    <button onClick={next} aria-label="다음 사진" className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 hover:bg-black text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
+                        <Image src="/images/forward.png" alt="다음" width={20} height={20} className="invert" />
                     </button>
                 </>
             )}
