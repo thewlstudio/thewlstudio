@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -147,6 +147,117 @@ function parseRoomName(name: string) {
 
 const ROOMS: RoomData[] = [ROOM_A, ROOM_B, ROOM_C, ROOM_D];
 
+/**
+ * MagnifiedImage Component
+ * Implements a "Magnifying Glass" lens that follows the cursor.
+ */
+function MagnifiedImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [showLens, setShowLens] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!containerRef.current) return;
+        const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+        setMousePos({ x, y });
+    };
+
+    return (
+        <div
+            ref={containerRef}
+            className={`relative overflow-hidden cursor-crosshair group ${className}`}
+            onMouseEnter={() => setShowLens(true)}
+            onMouseLeave={() => setShowLens(false)}
+            onMouseMove={handleMouseMove}
+        >
+            <Image
+                src={src}
+                alt={alt}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+            {/* Dark Overlay (Subtle Grayscale feel on base) */}
+            <div className="absolute inset-0 bg-black/5 transition-opacity duration-500 group-hover:opacity-0" />
+
+            <AnimatePresence>
+                {showLens && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="pointer-events-none absolute z-20 w-44 h-44 rounded-full border-2 border-white/50 shadow-2xl overflow-hidden backdrop-blur-sm"
+                        style={{
+                            left: `${mousePos.x}%`,
+                            top: `${mousePos.y}%`,
+                            transform: "translate(-50%, -50%)",
+                            boxShadow: "0 0 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.2)"
+                        }}
+                    >
+                        <div
+                            className="absolute w-[300%] h-[300%]"
+                            style={{
+                                backgroundImage: `url(${src})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
+                                transform: "translate(-33.33%, -33.33%)",
+                                left: "0",
+                                top: "0"
+                            }}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+/**
+ * StudioGallery Component
+ * Renders a dynamic collage grid based on photo count (2 to 5).
+ */
+function StudioGallery({ images, roomName }: { images: string[]; roomName: string }) {
+    const count = images.length;
+
+    // Grid Template based on count
+    if (count === 2) {
+        return (
+            <div className="grid grid-cols-12 grid-rows-6 gap-2 h-full min-h-[400px]">
+                <MagnifiedImage src={images[0]} alt={`${roomName} view 1`} className="col-span-12 row-span-4" />
+                <MagnifiedImage src={images[1]} alt={`${roomName} view 2`} className="col-span-8 col-start-5 row-span-2 -mt-4 shadow-xl z-10" />
+            </div>
+        );
+    }
+
+    if (count === 3) {
+        return (
+            <div className="grid grid-cols-3 grid-rows-3 gap-2 h-full min-h-[480px]">
+                <MagnifiedImage src={images[0]} alt={`${roomName} main`} className="col-span-2 row-span-2" />
+                <MagnifiedImage src={images[1]} alt={`${roomName} detail 1`} className="col-span-1 row-span-1" />
+                <MagnifiedImage src={images[2]} alt={`${roomName} detail 2`} className="col-span-1 row-span-1" />
+                <MagnifiedImage src={images[0]} alt={`${roomName} detail 3`} className="col-span-2 row-span-1 hidden lg:block" />
+            </div>
+        );
+    }
+
+    // Default or Higher counts (4, 5)
+    return (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 h-full min-h-[480px]">
+            {images.slice(0, 6).map((img, i) => (
+                <MagnifiedImage
+                    key={i}
+                    src={img}
+                    alt={`${roomName} ${i + 1}`}
+                    className={i === 0 ? "col-span-2 row-span-2" : "col-span-1"}
+                />
+            ))}
+        </div>
+    );
+}
+
 function RoomBlock({ room }: { room: RoomData }) {
     return (
         <motion.div
@@ -154,15 +265,15 @@ function RoomBlock({ room }: { room: RoomData }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-start"
+            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch group"
         >
-            {/* Image — fixed height, lowered for editorial balance */}
-            <div className="h-[56vw] md:h-[380px] lg:h-[480px] lg:pt-24 overflow-hidden">
-                <ImageSlider images={room.images} roomName={room.name} />
+            {/* Gallery Column */}
+            <div className="relative h-auto min-h-[500px] lg:h-full overflow-hidden bg-neutral-100 p-4 lg:p-8">
+                <StudioGallery images={room.images} roomName={room.name} />
             </div>
 
-            {/* Info */}
-            <div className="px-8 py-10 md:px-12 md:py-14 lg:px-16 lg:py-16 flex flex-col justify-center">
+            {/* Info Column */}
+            <div className="px-8 py-12 md:px-12 md:py-16 lg:px-20 lg:py-24 flex flex-col justify-center bg-white">
                 {(() => {
                     const { prefix, room: roomLabel } = parseRoomName(room.name); return (
                         <div className="border-b border-black/10 pb-5 mb-7">
@@ -210,59 +321,6 @@ function RoomBlock({ room }: { room: RoomData }) {
     );
 }
 
-function ImageSlider({ images, roomName }: { images: string[]; roomName: string }) {
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    const next = () => setCurrentIndex((prev) => (prev + 1) % images.length);
-    const prev = () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-
-    return (
-        <div className="relative h-full w-full overflow-hidden bg-black group">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={currentIndex}
-                    className="absolute inset-0"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                >
-                    <Image
-                        src={images[currentIndex]}
-                        alt={`${roomName} - 사진 ${currentIndex + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                </motion.div>
-            </AnimatePresence>
-            {images.length > 1 && (
-                <>
-                    <button onClick={prev} aria-label="이전 사진" className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                    </button>
-                    <button onClick={next} aria-label="다음 사진" className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                    </button>
-                </>
-            )}
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2.5 z-20">
-                {images.map((_, i) => (
-                    <button
-                        key={i}
-                        onClick={() => setCurrentIndex(i)}
-                        className={`h-px transition-all duration-300 ${i === currentIndex ? 'bg-white w-8' : 'bg-white/40 hover:bg-white/70 w-4'}`}
-                        aria-label={`Go to slide ${i + 1}`}
-                    />
-                ))}
-            </div>
-        </div>
-    );
-}
 
 export default function StudioPage() {
     return (
@@ -491,15 +549,15 @@ export default function StudioPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-80px" }}
                             transition={{ duration: 0.6 }}
-                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-start"
+                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch group"
                         >
-                            {/* Image — lowered for editorial balance */}
-                            <div className="h-[56vw] md:h-[380px] lg:h-[480px] lg:pt-24 overflow-hidden">
-                                <ImageSlider images={LOBBY.images} roomName="Lobby" />
+                            {/* Gallery Column */}
+                            <div className="relative h-auto min-h-[500px] lg:h-full overflow-hidden bg-neutral-100 p-4 lg:p-8">
+                                <StudioGallery images={LOBBY.images} roomName="Lobby" />
                             </div>
 
-                            {/* Info */}
-                            <div className="px-8 py-10 md:px-12 md:py-14 lg:px-16 lg:py-16 flex flex-col justify-center">
+                            {/* Info Column */}
+                            <div className="px-8 py-12 md:px-12 md:py-16 lg:px-20 lg:py-24 flex flex-col justify-center bg-white">
                                 <div className="border-b border-black/10 pb-5 mb-7">
                                     <p className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-1.5">{LOBBY.subtitle}</p>
                                     <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-black leading-snug">{LOBBY.name}</h2>
