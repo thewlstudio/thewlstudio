@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: "/",
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com",
     siteName: "WHITE LIGHT STUDIO",
     title: "WHITE LIGHT STUDIO",
     description: "서울 광진구 중곡동의 보컬 연습 스튜디오 - 화이트라이트 스튜디오. 7호선 중곡역 3번 출구.",

@@ -1,19 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { urlFor } from "@/sanity/lib/image";
 import Image from "next/image";
+import type { CrewMemberDetail } from "@/types/sanity";
 
-type CrewMember = {
-    name: string;
-    koName: string;
-    role: string;
-    imageUrl: any;
-    links: { url: string; iconUrl: any }[];
-    sections: any[];
-};
-
-export default function CrewDetailClient({ member }: { member: CrewMember }) {
+export default function CrewDetailClient({ member }: { member: CrewMemberDetail }) {
     return (
         <div className="relative">
             {/* Hero Profile Section */}
@@ -26,7 +17,7 @@ export default function CrewDetailClient({ member }: { member: CrewMember }) {
                 >
                     <div className="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden shadow-2xl mb-8 border border-neutral-800 relative group">
                         <Image
-                            src={member.imageUrl ? urlFor(member.imageUrl).url() : '/images/placeholder.jpg'}
+                            src={member.imageUrl ?? '/images/placeholder.jpg'}
                             alt={`${member.name} Profile`}
                             fill
                             sizes="(max-width: 768px) 128px, 192px"

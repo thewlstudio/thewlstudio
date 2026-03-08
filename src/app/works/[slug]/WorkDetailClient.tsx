@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { PortableText } from "next-sanity";
 import Image from "next/image";
 import { Play, Pause } from "lucide-react";
+import type { AudioBlock, WorkDetail } from "@/types/sanity";
 
 const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -17,7 +18,7 @@ const itemVariants: Variants = {
     }
 };
 
-function AudioPlayerBlock({ block }: { block: any }) {
+function AudioPlayerBlock({ block }: { block: AudioBlock }) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -152,7 +153,7 @@ function AudioPlayerBlock({ block }: { block: any }) {
     );
 }
 
-export default function WorkDetailClient({ initialWork }: { initialWork: any }) {
+export default function WorkDetailClient({ initialWork }: { initialWork: WorkDetail }) {
     const { title, artist, releaseDate, imageUrl, youtubeUrl, instagramId, instagramUrl, contentBlocks } = initialWork;
 
     // Helper to get formatted video ID
@@ -199,7 +200,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                     className={`group relative block w-full max-w-sm aspect-square shadow-2xl overflow-hidden mb-6 ${!youtubeUrl ? 'cursor-default' : ''}`}
                 >
                     <Image
-                        src={imageUrl}
+                        src={imageUrl ?? '/images/placeholder.jpg'}
                         alt={title}
                         fill
                         placeholder={initialWork.lqip ? "blur" : "empty"}
@@ -236,7 +237,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                 className="flex flex-col items-center w-full"
             >
                 {/* Dynamic Block Builder */}
-                {contentBlocks?.map((block: any, idx: number) => {
+                {contentBlocks?.map((block, idx) => {
                     switch (block._type) {
 
                         case 'descriptionBlock':
@@ -269,7 +270,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                     transition={{ duration: 0.8 }}
                                     className="flex flex-col items-center justify-center space-y-12 text-sm md:text-base w-full max-w-3xl mb-12 px-4 mt-8"
                                 >
-                                    {block.tracks?.map((track: any, i: number) => (
+                                    {block.tracks?.map((track, i) => (
                                         <div key={i} className="flex flex-col items-center">
                                             <span className="block font-bold text-neutral-900 mb-2 border-b border-neutral-200 pb-2 px-4 tracking-widest text-center">{track.title}</span>
                                             {track.description && (
@@ -309,7 +310,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                             return (
                                 <section key={block._key} className="bg-white pb-24 pt-8 md:pt-16 w-full mt-8">
                                     <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
-                                        {block.sections?.map((section: any, i: number) => (
+                                        {block.sections?.map((section, i) => (
                                             <motion.div key={i} variants={itemVariants} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }}>
                                                 {section.title && (
                                                     <h4 className="text-black font-black uppercase text-sm md:text-base border-b border-neutral-200 pb-2 mb-4 tracking-wider">
@@ -317,7 +318,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                                                     </h4>
                                                 )}
                                                 <ul className="space-y-2 text-xs md:text-[13px] leading-relaxed">
-                                                    {section.items?.map((item: any, j: number) => (
+                                                    {section.items?.map((item, j) => (
                                                         <li key={j} className={`flex ${!item.role ? 'flex-col' : ''}`}>
                                                             {item.role && (
                                                                 <span className="w-40 text-neutral-400 font-bold uppercase tracking-wider text-[10px] pt-0.5 shrink-0">
@@ -372,11 +373,11 @@ export default function WorkDetailClient({ initialWork }: { initialWork: any }) 
                             );
 
                         case 'freeformTextBlock':
-                            return (
+                            return block.content ? (
                                 <div key={block._key} className="w-full max-w-3xl mx-auto px-6 mb-16 mt-8 text-sm md:text-base text-neutral-700 leading-loose">
                                     <PortableText value={block.content} />
                                 </div>
-                            );
+                            ) : null;
 
                         case 'audioBlock':
                             return <AudioPlayerBlock key={block._key} block={block} />;
