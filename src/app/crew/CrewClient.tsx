@@ -2,19 +2,10 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { urlFor } from "@/sanity/lib/image";
 import Image from "next/image";
+import type { CrewMemberSummary } from "@/types/sanity";
 
-type CrewMember = {
-    name: string;
-    koName: string;
-    role: string;
-    slug: string;
-    imageUrl: any;
-    links?: { url: string; iconUrl: any }[];
-};
-
-export default function CrewClient({ members }: { members: CrewMember[] }) {
+export default function CrewClient({ members }: { members: CrewMemberSummary[] }) {
     return (
         <section className="pt-40 pb-24 px-4 lg:px-12 mx-auto max-w-[90rem]">
             {/* Section Header */}
@@ -49,7 +40,7 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
                             <Link href={`/crew/${member.slug}`} className="absolute inset-0 z-10" />
 
                             <Image
-                                src={member.imageUrl ? urlFor(member.imageUrl).url() : '/images/placeholder.jpg'}
+                                src={member.imageUrl ?? '/images/placeholder.jpg'}
                                 alt={member.name}
                                 fill
                                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -69,7 +60,7 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
                                 </div>
 
                                 <div className="w-full h-6 md:h-8 flex items-end justify-start space-x-3 md:space-x-6 z-20 pointer-events-auto">
-                                    {member.links && member.links.map((link: any, i: number) => (
+                                    {member.links && member.links.map((link, i) => (
                                         <a
                                             key={i}
                                             href={link.url}
@@ -78,7 +69,7 @@ export default function CrewClient({ members }: { members: CrewMember[] }) {
                                             aria-label={`SNS 링크 ${i + 1}`}
                                             className="relative text-white hover:scale-110 transition-transform flex items-center justify-center w-5 h-5 md:w-8 md:h-8"
                                         >
-                                            <Image src={urlFor(link.iconUrl).url()} alt="" fill sizes="32px" className="object-contain" />
+                                            <Image src={link.iconUrl} alt="" fill sizes="32px" className="object-contain" />
                                         </a>
                                     ))}
                                 </div>

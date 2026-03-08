@@ -177,7 +177,7 @@ function MagnifiedCell({
                         top: mag.y - LENS_SIZE / 2,
                         border: "2px solid rgba(255,255,255,0.75)",
                         boxShadow: "0 0 0 1px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.4)",
-                        backgroundImage: `url('${src}')`,
+                        backgroundImage: `url('${encodeURI(src)}')`,
                         backgroundSize: `${mag.w * ZOOM}px ${mag.h * ZOOM}px`,
                         backgroundPosition: `${LENS_SIZE / 2 - mag.x * ZOOM}px ${LENS_SIZE / 2 - mag.y * ZOOM}px`,
                         backgroundRepeat: "no-repeat",

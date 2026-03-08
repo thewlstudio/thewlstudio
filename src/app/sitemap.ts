@@ -5,25 +5,34 @@ export const revalidate = 60 * 60 * 24; // Revalidate sitemap daily
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
 
+type SanitySlugEntry = { slug: string; _updatedAt: string };
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    // Fetch Works from Sanity
-    const works = await client.fetch(
-        `*[_type == "work" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
-    );
+    // Fetch dynamic routes from Sanity — gracefully fall back to empty arrays
+    let works: SanitySlugEntry[] = [];
+    let crew: SanitySlugEntry[] = [];
 
-    // Fetch Crew from Sanity
-    const crew = await client.fetch(
-        `*[_type == "crew" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
-    );
+    try {
+        [works, crew] = await Promise.all([
+            client.fetch<SanitySlugEntry[]>(
+                `*[_type == "work" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+            ),
+            client.fetch<SanitySlugEntry[]>(
+                `*[_type == "crew" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+            ),
+        ]);
+    } catch (err) {
+        console.error("[sitemap] Sanity fetch failed:", err);
+    }
 
-    const worksUrls: MetadataRoute.Sitemap = works.map((w: { slug: string; _updatedAt: string }) => ({
+    const worksUrls: MetadataRoute.Sitemap = works.map((w) => ({
         url: `${BASE_URL}/works/${w.slug}`,
         lastModified: new Date(w._updatedAt),
         changeFrequency: "weekly",
         priority: 0.8,
     }));
 
-    const crewUrls: MetadataRoute.Sitemap = crew.map((c: { slug: string; _updatedAt: string }) => ({
+    const crewUrls: MetadataRoute.Sitemap = crew.map((c) => ({
         url: `${BASE_URL}/crew/${c.slug}`,
         lastModified: new Date(c._updatedAt),
         changeFrequency: "monthly",
