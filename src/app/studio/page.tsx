@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { NAVER_MAP_URL } from "@/lib/constants";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Room Data
+// ─────────────────────────────────────────────────────────────────────────────
 
 const ROOM_A = {
     name: "W.L Studio [A Room]",
@@ -21,16 +25,10 @@ const ROOM_A = {
         "유튜브 및 영상작업에 용이한 조명 설치 완료 (백색, 핀 조명, 무드 등)",
         "1~3명까지 수용 가능한 방",
         "블루투스 스피커",
-        "문 커튼"
+        "문 커튼",
     ],
-    notes: [
-        "* 방음문: 열때는 아래로, 문 닫고 잠글때는 위로 올려주면 소리가 더 차음됩니다."
-    ],
-    images: [
-        "/images/room_a_3.jpg",
-        "/images/room_a_2.jpg",
-        "/images/room_a_1.jpg"
-    ]
+    notes: ["* 방음문: 열때는 아래로, 문 닫고 잠글때는 위로 올려주면 소리가 더 차음됩니다."],
+    images: ["/images/room_a_3.jpg", "/images/room_a_2.jpg", "/images/room_a_1.jpg"],
 };
 
 const ROOM_B = {
@@ -46,16 +44,10 @@ const ROOM_B = {
         "철저한 방음을 위해 2중 도어 & 더블 방음 시공",
         "유튜브 및 영상 작업에 용이한 조명 설치 완료",
         "블루투스 스피커",
-        "문 커튼"
+        "문 커튼",
     ],
-    notes: [
-        "* 방음문: 열때는 아래로, 문 닫고 잠글때는 위로 올려주면 소리가 더 차음됩니다. :)"
-    ],
-    images: [
-        "/images/room_b_3.jpg",
-        "/images/room_b_2.jpg",
-        "/images/room_b_1.jpg"
-    ]
+    notes: ["* 방음문: 열때는 아래로, 문 닫고 잠글때는 위로 올려주면 소리가 더 차음됩니다. :)"],
+    images: ["/images/room_b_3.jpg", "/images/room_b_2.jpg", "/images/room_b_1.jpg"],
 };
 
 const ROOM_C = {
@@ -70,15 +62,12 @@ const ROOM_C = {
         "방음을 위해 2중 도어 & 더블 방음 시공 완료",
         "데스크 비치",
         "1~3명까지 수용 가능",
-        "냉방과 온풍 가능한 방"
+        "냉방과 온풍 가능한 방",
     ],
     notes: [
-        "* 방음문 : C룸은 들어갈때 기준으로 비밀번호 입력 후 문을 아래로 내려주시고 두번째 문은 열때 올려주시면 됩니다. 닫을 때는 문을 꾹 밀어주시고 반대로 해주시면 됩니다."
+        "* 방음문 : C룸은 들어갈때 기준으로 비밀번호 입력 후 문을 아래로 내려주시고 두번째 문은 열때 올려주시면 됩니다. 닫을 때는 문을 꾹 밀어주시고 반대로 해주시면 됩니다.",
     ],
-    images: [
-        "/images/room_c_2.jpg",
-        "/images/room_c_3.jpg"
-    ]
+    images: ["/images/room_c_2.jpg", "/images/room_c_3.jpg"],
 };
 
 const ROOM_D = {
@@ -94,40 +83,30 @@ const ROOM_D = {
         "철저한 방음을 위해 2중 도어 & 더블 방음 시공 완료",
         "유튜브 및 영상작업에 용이한 조명 설치 완료 (백색, 핀 조명, 무드 등)",
         "1~3명까지 수용 가능한 방",
-        "블루투스 스피커"
+        "블루투스 스피커",
     ],
-    notes: [
-        "* 방음문: 열때는 아래로, 문 닫고 잠글때는 위로 올려주면 소리가 더 차음됩니다. :)"
-    ],
-    images: [
-        "/images/room_d_1.jpg",
-        "/images/room_d_2.jpg",
-        "/images/room_d_3.jpg"
-    ]
+    notes: ["* 방음문: 열때는 아래로, 문 닫고 잠글때는 위로 올려주면 소리가 더 차음됩니다. :)"],
+    images: ["/images/room_d_1.jpg", "/images/room_d_2.jpg", "/images/room_d_3.jpg"],
 };
 
 const LOBBY = {
     name: "Study Together, 함께 성장하는 공간",
     subtitle: "로비 & 1인 데스크",
-    prices: [
-        { label: "이용 금액", value: "1,000", unit: "원 / 1H" }
-    ],
-    description: "저는 사람이 같이 있을 때 시너지가 난다고 생각합니다. 혼자 공부하거나, 뭔가를 계획하려고 할 때, 집에서는 늘어지고 카페에서는 제한된 시간이 아쉽다고 생각한적이 많아서 준비하게 되었어요. 공부를 하시는 분들, 사업 계획서나 개인 업무를 준비하는 분들, 각자 자신만의 목표를 이루고 싶은 분들이 편하게 오셔서 몰입할 수 있는 공간을 만들고 싶었습니다. 시간에 얽매이지 않고, 원하는 때 집중할 수 있는 환경이 되길 바라며 이곳을 준비했습니다.",
+    prices: [{ label: "이용 금액", value: "1,000", unit: "원 / 1H" }],
+    description:
+        "저는 사람이 같이 있을 때 시너지가 난다고 생각합니다. 혼자 공부하거나, 뭔가를 계획하려고 할 때, 집에서는 늘어지고 카페에서는 제한된 시간이 아쉽다고 생각한적이 많아서 준비하게 되었어요. 공부를 하시는 분들, 사업 계획서나 개인 업무를 준비하는 분들, 각자 자신만의 목표를 이루고 싶은 분들이 편하게 오셔서 몰입할 수 있는 공간을 만들고 싶었습니다. 시간에 얽매이지 않고, 원하는 때 집중할 수 있는 환경이 되길 바라며 이곳을 준비했습니다.",
     features: [
         "24시간 연중무휴 운영",
         "로비데스크 & 중앙 로비 1인 데스크 & 소파 이용 가능",
         "음식 주문 가능 (음식물 관련 규정은 추후 조정 예정)",
-        "모든 이용객에게 커피 & 티 제공 (셀프 서비스)"
+        "모든 이용객에게 커피 & 티 제공 (셀프 서비스)",
     ],
     notes: [
         "* 스터디 집중을 위해 서로 방해되지 않도록 조용한 분위기 유지",
         "* 개별 음악 연습방 이용 불가",
-        "* 원활한 운영을 위해 예약 후 노쇼(No-Show) 금지"
+        "* 원활한 운영을 위해 예약 후 노쇼(No-Show) 금지",
     ],
-    images: [
-        "/images/lobby_1.jpg",
-        "/images/lobby_2.jpg"
-    ]
+    images: ["/images/lobby_1.jpg", "/images/lobby_2.jpg"],
 };
 
 type RoomData = {
@@ -138,179 +117,371 @@ type RoomData = {
     images: string[];
 };
 
-// "W.L Studio [A Room]" → { prefix: "W.L Studio", room: "A Room" }
-function parseRoomName(name: string) {
-    const match = name.match(/^(.+?)\s*\[(.+)\]$/);
-    if (match) return { prefix: match[1].toUpperCase(), room: match[2].toUpperCase() };
-    return { prefix: name.toUpperCase(), room: null };
-}
-
 const ROOMS: RoomData[] = [ROOM_A, ROOM_B, ROOM_C, ROOM_D];
 
-/**
- * MagnifiedImage Component
- * Implements a "Magnifying Glass" lens that follows the cursor.
- */
-function MagnifiedImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const [showLens, setShowLens] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
+// ─────────────────────────────────────────────────────────────────────────────
+// Magnifier constants
+// ─────────────────────────────────────────────────────────────────────────────
 
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (!containerRef.current) return;
-        const { left, top, width, height } = containerRef.current.getBoundingClientRect();
-        const x = ((e.clientX - left) / width) * 100;
-        const y = ((e.clientY - top) / height) * 100;
-        setMousePos({ x, y });
-    };
+const LENS_SIZE = 160; // px — diameter of the magnifier circle
+const ZOOM = 3;        // magnification factor
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MagnifiedCell — single image tile with precise cursor-tracking magnifier lens
+// ─────────────────────────────────────────────────────────────────────────────
+
+function MagnifiedCell({
+    src,
+    alt,
+    className = "",
+}: {
+    src: string;
+    alt: string;
+    className?: string;
+}) {
+    const [mag, setMag] = useState({ active: false, x: 0, y: 0, w: 0, h: 0 });
 
     return (
         <div
-            ref={containerRef}
             className={`relative overflow-hidden cursor-crosshair group ${className}`}
-            onMouseEnter={() => setShowLens(true)}
-            onMouseLeave={() => setShowLens(false)}
-            onMouseMove={handleMouseMove}
+            onMouseMove={(e) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                setMag({
+                    active: true,
+                    x: e.clientX - r.left,
+                    y: e.clientY - r.top,
+                    w: r.width,
+                    h: r.height,
+                });
+            }}
+            onMouseLeave={() => setMag((p) => ({ ...p, active: false }))}
         >
+            {/* Base image — grayscale by default, colour on hover */}
             <Image
                 src={src}
                 alt={alt}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                className="object-cover transition-all duration-700 ease-out grayscale brightness-[0.82] group-hover:grayscale-0 group-hover:brightness-100 group-hover:scale-[1.04]"
                 sizes="(max-width: 1024px) 100vw, 50vw"
             />
-            {/* Dark Overlay (Subtle Grayscale feel on base) */}
-            <div className="absolute inset-0 bg-black/5 transition-opacity duration-500 group-hover:opacity-0" />
 
-            <AnimatePresence>
-                {showLens && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.5 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="pointer-events-none absolute z-20 w-44 h-44 rounded-full border-2 border-white/50 shadow-2xl overflow-hidden backdrop-blur-sm"
+            {/* Microscope Lens — only visible while mouse is inside */}
+            {mag.active && (
+                <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute z-50 rounded-full overflow-hidden"
+                    style={{
+                        width: LENS_SIZE,
+                        height: LENS_SIZE,
+                        // Centre the lens circle on the cursor
+                        left: mag.x - LENS_SIZE / 2,
+                        top: mag.y - LENS_SIZE / 2,
+                        border: "1.5px solid rgba(255,255,255,0.6)",
+                        boxShadow: "0 0 0 1px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.5)",
+                    }}
+                >
+                    {/*
+                     * Inner magnified image.
+                     * Formula: to centre the cursor position at the lens centre,
+                     *   left = (LENS_SIZE/2) − (cursorX × ZOOM)
+                     *   top  = (LENS_SIZE/2) − (cursorY × ZOOM)
+                     * Image dimensions = container dimensions × ZOOM
+                     */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={src}
+                        alt=""
                         style={{
-                            left: `${mousePos.x}%`,
-                            top: `${mousePos.y}%`,
-                            transform: "translate(-50%, -50%)",
-                            boxShadow: "0 0 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.2)"
+                            position: "absolute",
+                            left: LENS_SIZE / 2 - mag.x * ZOOM,
+                            top: LENS_SIZE / 2 - mag.y * ZOOM,
+                            width: mag.w * ZOOM,
+                            height: mag.h * ZOOM,
+                            objectFit: "cover",
+                            userSelect: "none",
+                            pointerEvents: "none",
                         }}
-                    >
-                        <div
-                            className="absolute w-[300%] h-[300%]"
-                            style={{
-                                backgroundImage: `url(${src})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
-                                transform: "translate(-33.33%, -33.33%)",
-                                left: "0",
-                                top: "0"
-                            }}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    />
+                </div>
+            )}
         </div>
     );
 }
 
-/**
- * StudioGallery Component
- * Renders a dynamic collage grid based on photo count (2 to 5).
- */
-function StudioGallery({ images, roomName }: { images: string[]; roomName: string }) {
-    const count = images.length;
+// ─────────────────────────────────────────────────────────────────────────────
+// RoomGallery — per-room editorial collage with distinct visual DNA
+//
+// variant 0 · Room A  — LANDSCAPE BREAK
+//   Wide panoramic top (1.7fr) + asymmetric bottom strip (1fr|2fr)
+//   Entry: wide establishing shot → detail pair
+//
+// variant 1 · Room B  — VERTICAL SPINE
+//   Narrow left column (1fr) creates lateral tension
+//   Right: tall main (1.5fr) stacked over wide footer (1fr)
+//
+// variant 2 · Room C  — VOID CUT  (2 images)
+//   Full-width hero (1.8fr) + intentional negative space bottom-left
+//   Void is a deliberate editorial statement, not a missing image
+//
+// variant 3 · Room D  — TRIPTYCH
+//   Three vertical strips at irrational widths (1.2fr · 1.8fr · 1fr)
+//   Central panel dominates; flanking strips create filmic depth
+//
+// variant 4 · Lobby   — WIDE + GLIMPSE
+//   Wide primary (2.2fr) + narrow accent strip (1fr)
+// ─────────────────────────────────────────────────────────────────────────────
 
-    // Grid Template based on count
-    if (count === 2) {
+function RoomGallery({
+    images,
+    roomName,
+    variant = 0,
+}: {
+    images: string[];
+    roomName: string;
+    variant?: number;
+}) {
+    const c = (src: string, i: number) => (
+        <MagnifiedCell key={i} src={src} alt={`${roomName} ${i + 1}`} />
+    );
+
+    // ── variant 0: LANDSCAPE BREAK (Room A) ─────────────────────────────────
+    // 3 imgs  ┌──────────────────────────┐       4 imgs  ┌──────────────────────┐
+    //         │   [0] panoramic hero     │ 1.7fr         │  [0] wide hero        │
+    //         ├───────────┬──────────────┤               ├──────┬───────┬────────┤
+    //         │[1] (1fr)  │ [2] (2fr)   │ 1fr           │ [1]  │  [2]  │  [3]   │
+    //         └───────────┴──────────────┘               └──────┴───────┴────────┘
+    if (variant === 0) {
+        if (images.length >= 4) {
+            return (
+                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                    {c(images[0], 0)}
+                    <div className="grid grid-cols-3 gap-px">
+                        {c(images[1], 1)}
+                        {c(images[2], 2)}
+                        {c(images[3], 3)}
+                    </div>
+                </div>
+            );
+        }
+        // 3 images (default)
         return (
-            <div className="grid grid-cols-12 grid-rows-6 gap-2 h-full min-h-[400px]">
-                <MagnifiedImage src={images[0]} alt={`${roomName} view 1`} className="col-span-12 row-span-4" />
-                <MagnifiedImage src={images[1]} alt={`${roomName} view 2`} className="col-span-8 col-start-5 row-span-2 -mt-4 shadow-xl z-10" />
+            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                    {c(images[1], 1)}
+                    {c(images[2], 2)}
+                </div>
             </div>
         );
     }
 
-    if (count === 3) {
+    // ── variant 1: VERTICAL SPINE (Room B) ───────────────────────────────────
+    // 3 imgs  ┌──────┬──────────────────┐       4 imgs  ┌──────┬──────────────┐
+    //         │      │ [0] main 1.5fr   │               │      │ [0]  1fr     │
+    //         │ [1]  ├──────────────────┤               │  [1] ├──────────────┤
+    //         │strip │ [2] footer 1fr   │               │      │ [2]  1fr     │
+    //         └──────┴──────────────────┘               │      ├──────────────┤
+    //                                                    │      │ [3]  1fr     │
+    //                                                    └──────┴──────────────┘
+    if (variant === 1) {
+        if (images.length >= 4) {
+            return (
+                <div className="h-full grid grid-cols-[1fr_2.6fr] gap-px bg-black">
+                    {c(images[1], 1)}
+                    <div className="grid grid-rows-3 gap-px">
+                        {c(images[0], 0)}
+                        {c(images[2], 2)}
+                        {c(images[3], 3)}
+                    </div>
+                </div>
+            );
+        }
+        // 3 images (default)
         return (
-            <div className="grid grid-cols-3 grid-rows-3 gap-2 h-full min-h-[480px]">
-                <MagnifiedImage src={images[0]} alt={`${roomName} main`} className="col-span-2 row-span-2" />
-                <MagnifiedImage src={images[1]} alt={`${roomName} detail 1`} className="col-span-1 row-span-1" />
-                <MagnifiedImage src={images[2]} alt={`${roomName} detail 2`} className="col-span-1 row-span-1" />
-                <MagnifiedImage src={images[0]} alt={`${roomName} detail 3`} className="col-span-2 row-span-1 hidden lg:block" />
+            <div className="h-full grid grid-cols-[1fr_2.6fr] gap-px bg-black">
+                {c(images[1], 1)}
+                <div className="grid grid-rows-[1.5fr_1fr] gap-px">
+                    {c(images[0], 0)}
+                    {c(images[2], 2)}
+                </div>
             </div>
         );
     }
 
-    // Default or Higher counts (4, 5)
+    // ── variant 2: VOID CUT (Room C) ─────────────────────────────────────────
+    // 2 imgs  ┌──────────────────────────┐       3 imgs  ┌──────────────────────┐
+    //         │     [0] hero  1.8fr      │               │ [0] panoramic  1.7fr │
+    //         ├─────────────┬────────────┤               ├──────────┬───────────┤
+    //         │  ░ void ░   │  [1] 2fr  │               │  [1] 1fr │  [2] 2fr  │
+    //         └─────────────┴────────────┘               └──────────┴───────────┘
+    if (variant === 2) {
+        if (images.length >= 3) {
+            // 3+ images: promote to LANDSCAPE BREAK (void is no longer needed)
+            return (
+                <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                    {c(images[0], 0)}
+                    <div className="grid grid-cols-[1fr_2fr] gap-px">
+                        {c(images[1], 1)}
+                        {c(images[2], 2)}
+                    </div>
+                </div>
+            );
+        }
+        // 2 images (default) — intentional negative space
+        return (
+            <div className="h-full grid grid-rows-[1.8fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                    {/* Intentional void — editorial negative space */}
+                    <div className="bg-[#070707] flex items-center justify-center">
+                        <span
+                            className="text-white/[0.04] font-black tracking-tighter select-none"
+                            style={{ fontSize: "clamp(2rem, 5vw, 4rem)", writingMode: "vertical-rl" }}
+                        >
+                            WL
+                        </span>
+                    </div>
+                    {c(images[1], 1)}
+                </div>
+            </div>
+        );
+    }
+
+    // ── variant 3: TRIPTYCH (Room D) ─────────────────────────────────────────
+    // 3 imgs  ┌──────┬──────────────┬───┐       4 imgs  ┌──────┬──────────────┬───┐
+    //         │ [0]  │     [1]      │[2]│               │  [0] │     [1]      │[2]│ 1.6fr
+    //         │1.2fr │    1.8fr     │1fr│               ├──────┴──────────────┴───┤
+    //         └──────┴──────────────┴───┘               │     [3] full-width      │ 1fr
+    //                                                    └─────────────────────────┘
+    if (variant === 3) {
+        if (images.length >= 4) {
+            return (
+                <div className="h-full grid grid-rows-[1.6fr_1fr] gap-px bg-black">
+                    <div className="grid grid-cols-[1.2fr_1.8fr_1fr] gap-px">
+                        {c(images[0], 0)}
+                        {c(images[1], 1)}
+                        {c(images[2], 2)}
+                    </div>
+                    {c(images[3], 3)}
+                </div>
+            );
+        }
+        // 3 images (default)
+        return (
+            <div className="h-full grid grid-cols-[1.2fr_1.8fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                {c(images[1], 1)}
+                {c(images[2], 2)}
+            </div>
+        );
+    }
+
+    // ── variant 4: WIDE + GLIMPSE (Lobby) ────────────────────────────────────
+    // 2 imgs  ┌───────────────────┬──────┐       3 imgs  ┌───────────────────────┐
+    //         │   [0]  wide 2.2fr │ [1]  │               │    [0]  hero  1.7fr   │
+    //         │                   │ 1fr  │               ├──────────┬────────────┤
+    //         └───────────────────┴──────┘               │[1]  1fr  │ [2]  2fr  │
+    //                                                     └──────────┴────────────┘
+    if (images.length >= 3) {
+        return (
+            <div className="h-full grid grid-rows-[1.7fr_1fr] gap-px bg-black">
+                {c(images[0], 0)}
+                <div className="grid grid-cols-[1fr_2fr] gap-px">
+                    {c(images[1], 1)}
+                    {c(images[2], 2)}
+                </div>
+            </div>
+        );
+    }
     return (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 h-full min-h-[480px]">
-            {images.slice(0, 6).map((img, i) => (
-                <MagnifiedImage
-                    key={i}
-                    src={img}
-                    alt={`${roomName} ${i + 1}`}
-                    className={i === 0 ? "col-span-2 row-span-2" : "col-span-1"}
-                />
-            ))}
+        <div className="h-full grid grid-cols-[2.2fr_1fr] gap-px bg-black">
+            {c(images[0], 0)}
+            {c(images[1], 1)}
         </div>
     );
 }
 
-function RoomBlock({ room }: { room: RoomData }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// RoomBlock — full room card: gallery left | info right
+// Height is determined by the info column — the gallery stretches to match.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RoomBlock({ room, index }: { room: RoomData; index: number }) {
+    // Parse "W.L Studio [B Room]" → brand: "W.L STUDIO", title: "B ROOM"
+    const match = room.name.match(/^(.*?)\s*\[(.+)\]$/);
+    const brand = (match ? match[1] : "").toUpperCase();
+    const title = (match ? match[2] : room.name).toUpperCase();
+
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch group"
+            transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+            // items-stretch (default) ensures both columns share the same height
+            className="overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-[0_8px_48px_rgba(0,0,0,0.11)]"
         >
-            {/* Gallery Column */}
-            <div className="relative h-auto min-h-[500px] lg:h-full overflow-hidden bg-neutral-100 p-4 lg:p-8">
-                <StudioGallery images={room.images} roomName={room.name} />
+            {/* Left: Gallery — mobile: 65vw tall; desktop: auto-stretch to info height */}
+            <div className="h-[65vw] max-h-[500px] lg:h-auto border-b border-neutral-200 lg:border-b-0 lg:border-r lg:border-neutral-200">
+                <RoomGallery images={room.images} roomName={room.name} variant={index} />
             </div>
 
-            {/* Info Column */}
-            <div className="px-8 py-12 md:px-12 md:py-16 lg:px-20 lg:py-24 flex flex-col justify-center bg-white">
-                {(() => {
-                    const { prefix, room: roomLabel } = parseRoomName(room.name); return (
-                        <div className="border-b border-black/10 pb-5 mb-7">
-                            <p className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 mb-1.5">{prefix}</p>
-                            <h3 className="text-4xl md:text-5xl font-black tracking-tighter text-black">{roomLabel ?? room.name}</h3>
-                        </div>
-                    );
-                })()}
+            {/* Right: Info */}
+            <div className="bg-white p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                {/* Room identity */}
+                <div className="mb-8 pb-5 border-b-2 border-black">
+                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
+                        {brand}
+                    </p>
+                    <h3 className="text-4xl md:text-5xl font-black tracking-tighter">{title}</h3>
+                </div>
 
+                {/* Pricing */}
                 <div className="mb-8 space-y-3">
                     {room.prices.map((p, i) => (
-                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
-                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
-                            <div className="flex items-baseline space-x-1.5">
-                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
-                                <span className="text-sm font-semibold tracking-wide text-neutral-400">{p.unit}</span>
+                        <div
+                            key={i}
+                            className="flex justify-between items-center border-b border-black/[0.06] pb-3"
+                        >
+                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-xs">
+                                {p.label}
+                            </span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
+                                    {p.value}
+                                </span>
+                                <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
                             </div>
                         </div>
                     ))}
                 </div>
 
+                {/* Features */}
                 <div className="flex-1">
-                    <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4">Equipment & Features</h4>
-                    <ul className="space-y-3">
+                    <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4">
+                        Equipment &amp; Features
+                    </h4>
+                    <ul className="space-y-2.5">
                         {room.features.map((feature, i) => (
-                            <li key={i} className="text-neutral-600 font-medium flex items-start gap-3 text-sm leading-relaxed break-keep">
-                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-300 inline-block"></span>
+                            <li
+                                key={i}
+                                className="text-neutral-700 font-medium flex items-start text-sm leading-relaxed break-keep"
+                            >
+                                <span className="mr-3 text-neutral-300 mt-0.5 shrink-0 select-none">—</span>
                                 {feature}
                             </li>
                         ))}
                     </ul>
                 </div>
 
+                {/* Notes */}
                 {room.notes && room.notes.length > 0 && (
-                    <div className="mt-8 pt-5 border-t border-black/10">
+                    <div className="mt-8 pt-6 border-t border-neutral-100">
                         {room.notes.map((note, i) => (
-                            <p key={i} className="text-xs font-medium text-[#c96b6b] leading-relaxed break-keep">
+                            <p
+                                key={i}
+                                className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
+                            >
                                 {note}
                             </p>
                         ))}
@@ -321,13 +492,16 @@ function RoomBlock({ room }: { room: RoomData }) {
     );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function StudioPage() {
     return (
         <main className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
             <Header />
 
-            {/* Hero Image Section */}
+            {/* ── Hero ── */}
             <section className="relative h-[80vh] w-full flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 opacity-40">
                     <Image
@@ -354,11 +528,9 @@ export default function StudioPage() {
                 </motion.div>
             </section>
 
-            {/* Pricing split view (Spaces & Services) */}
+            {/* ── Services ── */}
             <section className="py-32 bg-black border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-8">
-
-                    {/* Recording Block */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
@@ -367,8 +539,9 @@ export default function StudioPage() {
                         className="flex flex-col border-l border-white/20 pl-8"
                     >
                         <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">VOCAL RECORDING</h2>
-                        <h3 className="text-2xl font-light text-neutral-400 mb-8 font-mono">100,000 KRW <span className="text-sm">/ 2 Hours</span></h3>
-
+                        <h3 className="text-2xl font-light text-neutral-400 mb-8 font-mono">
+                            100,000 KRW <span className="text-sm">/ 2 Hours</span>
+                        </h3>
                         <ul className="text-neutral-400 space-y-4 text-sm md:text-base font-light leading-relaxed">
                             <li>• 최상의 컨디션을 위한 쾌적한 레코딩 환경</li>
                             <li>• 최고급 컨덴서 마이크 및 아웃보드 사용</li>
@@ -376,7 +549,6 @@ export default function StudioPage() {
                         </ul>
                     </motion.div>
 
-                    {/* Outsourcing Block */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
@@ -386,7 +558,6 @@ export default function StudioPage() {
                     >
                         <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">AUDIO OUTSOURCING</h2>
                         <h3 className="text-2xl font-light text-neutral-400 mb-8 font-mono">Contact for Quote</h3>
-
                         <ul className="text-neutral-400 space-y-4 text-sm md:text-base font-light leading-relaxed">
                             <li>• 보컬 에디팅 (튠, 타이밍 박자 보정)</li>
                             <li>• 믹싱 (Mixing)</li>
@@ -394,11 +565,10 @@ export default function StudioPage() {
                             <li>• 팟캐스트 및 유튜브 음향 보정</li>
                         </ul>
                     </motion.div>
-
                 </div>
             </section>
 
-            {/* Gear List */}
+            {/* ── Equipment ── */}
             <section id="equipment" className="py-32 bg-white text-black border-b border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12">
                     <motion.div
@@ -412,7 +582,9 @@ export default function StudioPage() {
 
                     <div className="space-y-12 md:space-y-16 text-sm md:text-base">
                         <div className="grid grid-cols-1 md:grid-cols-4 border-b border-black/10 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">Microphones</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">
+                                Microphones
+                            </h3>
                             <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
                                 <p>Neumann U87 Ai</p>
                                 <p>AKG C414 XLII</p>
@@ -421,7 +593,9 @@ export default function StudioPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 border-b border-black/10 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">Outboard &<br className="hidden md:block" /> Interface</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">
+                                Outboard &<br className="hidden md:block" /> Interface
+                            </h3>
                             <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
                                 <p>Universal Audio Apollo x8</p>
                                 <p>Rupert Neve Designs Shelford Channel</p>
@@ -430,7 +604,9 @@ export default function StudioPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">Monitoring</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">
+                                Monitoring
+                            </h3>
                             <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
                                 <p>Focal Trio6 Be</p>
                                 <p>Yamaha NS-10M Studio</p>
@@ -440,7 +616,7 @@ export default function StudioPage() {
                 </div>
             </section>
 
-            {/* Membership Details */}
+            {/* ── Membership ── */}
             <section id="membership" className="py-32 bg-black text-white relative overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-neutral-900/50 to-transparent pointer-events-none" />
                 <div className="max-w-7xl mx-auto px-4 md:px-12 relative z-10">
@@ -450,58 +626,41 @@ export default function StudioPage() {
                         viewport={{ once: true }}
                         className="text-center mb-20"
                     >
-                        <h2 className="text-sm font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4">Exclusive Benefits</h2>
+                        <h2 className="text-sm font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4">
+                            Exclusive Benefits
+                        </h2>
                         <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">MEMBERSHIP</h3>
                     </motion.div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center">
-                        {/* 1 Month */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                            className="bg-neutral-900 border border-neutral-800 rounded-3xl p-10 text-center flex flex-col items-center hover:border-white/30 transition-colors h-full"
-                        >
-                            <span className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-xl mb-6">1</span>
-                            <h4 className="text-2xl font-bold tracking-tight mb-2">1개월 회원권</h4>
-                            <p className="text-neutral-500 font-medium mb-12 uppercase tracking-widest text-xs">1 Month Pass</p>
-                            <div className="mt-auto">
-                                <p className="text-3xl font-black tracking-tighter">40,000<span className="text-base font-semibold text-neutral-500 ml-1.5 font-sans">원</span></p>
-                            </div>
-                        </motion.div>
-
-                        {/* 3 Months */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="bg-neutral-900 border border-neutral-800 rounded-3xl p-10 text-center flex flex-col items-center hover:border-white/30 transition-colors h-full"
-                        >
-                            <span className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-xl mb-6">3</span>
-                            <h4 className="text-2xl font-bold tracking-tight mb-2">3개월 회원권</h4>
-                            <p className="text-neutral-500 font-medium mb-12 uppercase tracking-widest text-xs">3 Months Pass</p>
-                            <div className="mt-auto">
-                                <p className="text-3xl font-black tracking-tighter">110,000<span className="text-base font-semibold text-neutral-500 ml-1.5 font-sans">원</span></p>
-                            </div>
-                        </motion.div>
-
-                        {/* 5 Months */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="bg-neutral-900 border border-neutral-800 rounded-3xl p-10 text-center flex flex-col items-center hover:border-white/30 transition-colors h-full"
-                        >
-                            <span className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-xl mb-6">5</span>
-                            <h4 className="text-2xl font-bold tracking-tight mb-2">5개월 회원권</h4>
-                            <p className="text-neutral-500 font-medium mb-12 uppercase tracking-widest text-xs">5 Months Pass</p>
-                            <div className="mt-auto">
-                                <p className="text-3xl font-black tracking-tighter">160,000<span className="text-base font-semibold text-neutral-500 ml-1.5 font-sans">원</span></p>
-                            </div>
-                        </motion.div>
+                        {[
+                            { num: "1", label: "1개월 회원권", sub: "1 Month Pass", price: "40,000" },
+                            { num: "3", label: "3개월 회원권", sub: "3 Months Pass", price: "110,000" },
+                            { num: "5", label: "5개월 회원권", sub: "5 Months Pass", price: "160,000" },
+                        ].map((item, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6, delay: i * 0.1 }}
+                                className="bg-neutral-900 border border-neutral-800 rounded-3xl p-10 text-center flex flex-col items-center hover:border-white/30 transition-colors h-full"
+                            >
+                                <span className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-xl mb-6">
+                                    {item.num}
+                                </span>
+                                <h4 className="text-2xl font-bold tracking-tight mb-2">{item.label}</h4>
+                                <p className="text-neutral-500 font-medium mb-12 uppercase tracking-widest text-xs">
+                                    {item.sub}
+                                </p>
+                                <div className="mt-auto">
+                                    <p className="text-3xl font-black tracking-tighter">
+                                        {item.price}
+                                        <span className="text-base font-semibold text-neutral-500 ml-1.5 font-sans">원</span>
+                                    </p>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
 
                     <motion.div
@@ -512,79 +671,116 @@ export default function StudioPage() {
                         className="mt-20 text-center"
                     >
                         <p className="text-neutral-400 font-medium text-sm md:text-base leading-relaxed mb-8 max-w-xl mx-auto break-keep">
-                            쿠폰은 구입 후 한 달간 사용 가능하며,<br className="hidden md:block" />
+                            쿠폰은 구입 후 한 달간 사용 가능하며,
+                            <br className="hidden md:block" />
                             네이버에서 구입 후 즉시 회원가로 예약(사용) 가능하십니다.
                         </p>
-                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-10 py-4 bg-white text-black font-bold tracking-[0.2em] uppercase text-xs md:text-sm rounded-full hover:bg-neutral-200 transition-colors">
+                        <a
+                            href={NAVER_MAP_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block px-10 py-4 bg-white text-black font-bold tracking-[0.2em] uppercase text-xs md:text-sm rounded-full hover:bg-neutral-200 transition-colors"
+                        >
                             멤버십 가입하기
                         </a>
                     </motion.div>
                 </div>
             </section>
 
-            {/* Spaces List - Interactive */}
-            <section id="spaces" className="py-24 bg-neutral-50 text-black border-t border-black/10">
+            {/* ── Spaces ── */}
+            <section id="spaces" className="py-32 bg-neutral-50 text-black border-t border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12">
+                    {/* Section header */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="mb-0 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8 border-b border-black/10 pb-10"
+                        className="mb-16 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 md:gap-8"
                     >
-                        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-center md:text-left">SPACES</h2>
-                        <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-6 md:px-8 py-3 md:py-4 border border-black text-black font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs hover:bg-black hover:text-white transition-colors shrink-0">
+                        <div>
+                            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-center md:text-left">
+                                SPACES
+                            </h2>
+                            <p className="mt-3 text-xs text-neutral-400 tracking-widest uppercase hidden md:block">
+                                Hover over any photo to explore in detail
+                            </p>
+                        </div>
+                        <a
+                            href={NAVER_MAP_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block px-6 md:px-8 py-3 md:py-4 bg-black text-white font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs rounded-full border border-black hover:bg-transparent hover:text-black transition-colors shrink-0"
+                        >
                             SPACE 공간 예약
                         </a>
                     </motion.div>
 
+                    {/* Room cards */}
                     <div className="flex flex-col space-y-24">
-
-                        {ROOMS.map((room) => (
-                            <RoomBlock key={room.name} room={room} />
+                        {ROOMS.map((room, i) => (
+                            <RoomBlock key={room.name} room={room} index={i} />
                         ))}
 
-                        {/* Lobby Block */}
+                        {/* ── Lobby Block (dark theme) ── */}
                         <motion.div
-                            initial={{ opacity: 0, y: 30 }}
+                            initial={{ opacity: 0, y: 32 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-80px" }}
-                            transition={{ duration: 0.6 }}
-                            className="grid grid-cols-1 lg:grid-cols-2 border-b border-black/10 lg:items-stretch group"
+                            transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+                            className="overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-[0_8px_48px_rgba(0,0,0,0.18)]"
                         >
-                            {/* Gallery Column */}
-                            <div className="relative h-auto min-h-[500px] lg:h-full overflow-hidden bg-neutral-100 p-4 lg:p-8">
-                                <StudioGallery images={LOBBY.images} roomName="Lobby" />
+                            {/* Left: Gallery */}
+                            <div className="h-[65vw] max-h-[500px] lg:h-auto border-b border-neutral-800 lg:border-b-0 lg:border-r lg:border-neutral-800">
+                                <RoomGallery images={LOBBY.images} roomName="Lobby" variant={4} />
                             </div>
 
-                            {/* Info Column */}
-                            <div className="px-8 py-12 md:px-12 md:py-16 lg:px-20 lg:py-24 flex flex-col justify-center bg-white">
-                                <div className="border-b border-black/10 pb-5 mb-7">
-                                    <p className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-1.5">{LOBBY.subtitle}</p>
-                                    <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-black leading-snug">{LOBBY.name}</h2>
+                            {/* Right: Info */}
+                            <div className="bg-neutral-900 text-white p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                                <div className="mb-8 pb-5 border-b-2 border-neutral-700">
+                                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
+                                        {LOBBY.subtitle}
+                                    </p>
+                                    <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-snug">
+                                        {LOBBY.name}
+                                    </h3>
                                 </div>
 
-                                <div className="mb-7 space-y-3">
+                                <div className="mb-6 space-y-3">
                                     {LOBBY.prices.map((p, i) => (
-                                        <div key={i} className="flex justify-between items-center border-b border-black/10 pb-3">
-                                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-sm">{p.label}</span>
-                                            <div className="flex items-baseline space-x-1.5">
-                                                <span className="text-xl md:text-2xl font-bold tracking-tight text-black">{p.value}</span>
-                                                <span className="text-sm font-semibold tracking-wide text-neutral-400">{p.unit}</span>
+                                        <div
+                                            key={i}
+                                            className="flex justify-between items-center border-b border-white/10 pb-3"
+                                        >
+                                            <span className="font-bold tracking-widest uppercase text-xs text-neutral-400">
+                                                {p.label}
+                                            </span>
+                                            <div className="flex items-baseline gap-1.5">
+                                                <span className="text-2xl md:text-3xl font-black tracking-tight">
+                                                    {p.value}
+                                                </span>
+                                                <span className="text-xs font-semibold text-neutral-500">{p.unit}</span>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                <p className="text-sm leading-relaxed text-neutral-500 mb-7 font-light italic border-l-2 border-black/10 pl-4">
+                                <p className="text-sm leading-relaxed text-neutral-400 mb-8 font-light italic border-l-2 border-neutral-700 pl-4">
                                     &quot;{LOBBY.description}&quot;
                                 </p>
 
                                 <div className="flex-1">
-                                    <h4 className="text-[10px] font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4">Space Rules &amp; Features</h4>
-                                    <ul className="space-y-3">
+                                    <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-500 uppercase mb-4">
+                                        Space Rules &amp; Features
+                                    </h4>
+                                    <ul className="space-y-2.5">
                                         {LOBBY.features.map((feature, i) => (
-                                            <li key={i} className="text-neutral-600 font-medium flex items-start gap-3 text-sm leading-relaxed break-keep">
-                                                <span className="mt-[0.55em] shrink-0 w-4 h-px bg-neutral-300 inline-block"></span>
+                                            <li
+                                                key={i}
+                                                className="text-neutral-300 font-medium flex items-start text-sm leading-relaxed break-keep"
+                                            >
+                                                <span className="mr-3 text-neutral-600 mt-0.5 shrink-0 select-none">
+                                                    —
+                                                </span>
                                                 {feature}
                                             </li>
                                         ))}
@@ -592,9 +788,12 @@ export default function StudioPage() {
                                 </div>
 
                                 {LOBBY.notes && LOBBY.notes.length > 0 && (
-                                    <div className="mt-8 pt-5 border-t border-black/10">
+                                    <div className="mt-8 pt-6 border-t border-white/10">
                                         {LOBBY.notes.map((note, i) => (
-                                            <p key={i} className="text-xs font-medium text-[#b86060] leading-relaxed break-keep">
+                                            <p
+                                                key={i}
+                                                className="text-xs font-semibold text-[#c06060] leading-relaxed break-keep"
+                                            >
                                                 {note}
                                             </p>
                                         ))}
@@ -602,12 +801,11 @@ export default function StudioPage() {
                                 )}
                             </div>
                         </motion.div>
-
                     </div>
                 </div>
             </section>
 
-            {/* Studio Guidelines */}
+            {/* ── Guidelines ── */}
             <section className="py-32 bg-white text-black border-t border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12 space-y-16">
                     <motion.div
@@ -616,9 +814,13 @@ export default function StudioPage() {
                         viewport={{ once: true }}
                         className="text-center md:text-left border-b-2 border-black pb-12"
                     >
-                        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">GUIDELINES & AMENITIES</h2>
+                        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">
+                            GUIDELINES & AMENITIES
+                        </h2>
                         <p className="mt-8 text-neutral-600 md:text-lg font-medium leading-relaxed break-keep max-w-4xl">
-                            음악과 예술을 사랑하는 사람으로써 연습실을 사용하시면서 좋은 점과 부족한 점들을 말씀해주시면 보완을 해드릴 수 있는 선에서 최선을 다해 보완해드리겠습니다. <br className="hidden md:block" />이 공간에서 좋은 연습이 되시길 바랍니다.
+                            음악과 예술을 사랑하는 사람으로써 연습실을 사용하시면서 좋은 점과 부족한 점들을 말씀해주시면
+                            보완을 해드릴 수 있는 선에서 최선을 다해 보완해드리겠습니다.{" "}
+                            <br className="hidden md:block" />이 공간에서 좋은 연습이 되시길 바랍니다.
                         </p>
                     </motion.div>
 
@@ -629,53 +831,73 @@ export default function StudioPage() {
                         transition={{ duration: 0.8, delay: 0.2 }}
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-sm md:text-base pt-6"
                     >
-                        {/* Parking */}
                         <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">Parking</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
+                                Parking
+                            </h3>
                             <div className="font-medium space-y-2">
                                 <p className="text-[#b86060] font-bold">주차가 불가합니다.</p>
-                                <p className="text-sm text-neutral-600">중곡역 4번출구 앞 <br />한전부지 임시 공영주차장 3분거리</p>
+                                <p className="text-sm text-neutral-600">
+                                    중곡역 4번출구 앞 <br />
+                                    한전부지 임시 공영주차장 3분거리
+                                </p>
                                 <p className="text-neutral-500 font-mono text-xs pt-1 flex items-center gap-2">
-                                    <span className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-400 font-sans tracking-widest leading-none">요금</span>
+                                    <span className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-400 font-sans tracking-widest leading-none">
+                                        요금
+                                    </span>
                                     <span>10분 400원 / 1시간 2,400원</span>
                                 </p>
                             </div>
                         </div>
 
-                        {/* Amenities */}
                         <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">Amenities</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
+                                Amenities
+                            </h3>
                             <div className="font-medium space-y-2 text-neutral-600">
                                 <p>냉·온·얼음 정수기</p>
                                 <p>델리코 반자동 커피머신</p>
                             </div>
                         </div>
 
-                        {/* Wi-Fi */}
                         <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">Wi-Fi</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
+                                Wi-Fi
+                            </h3>
                             <div className="font-mono text-sm space-y-4 text-neutral-600">
                                 <p>
-                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">ID</span>
+                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
+                                        ID
+                                    </span>
                                     WLSTUDIO/2.4G <br /> WLSTUDIO/5G
                                 </p>
                                 <p>
-                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">PASSWORD</span>
+                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
+                                        PASSWORD
+                                    </span>
                                     wlstudio1209
                                 </p>
                             </div>
                         </div>
 
-                        {/* Security & Responsibility */}
                         <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">Security & Duty</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
+                                Security & Duty
+                            </h3>
                             <div className="font-medium space-y-4">
                                 <div>
-                                    <p className="text-[#b86060] text-xs font-bold mb-1 flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-[#b86060] mr-1.5 animate-pulse"></span>CCTV 24시간 촬영 중</p>
-                                    <p className="text-neutral-500 text-[11px] md:text-xs break-keep leading-relaxed">고객님들의 안전과 보호를 위해 화장실 통로, 로비, 계단 촬영 중</p>
+                                    <p className="text-[#b86060] text-xs font-bold mb-1 flex items-center">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#b86060] mr-1.5 animate-pulse" />
+                                        CCTV 24시간 촬영 중
+                                    </p>
+                                    <p className="text-neutral-500 text-[11px] md:text-xs break-keep leading-relaxed">
+                                        고객님들의 안전과 보호를 위해 화장실 통로, 로비, 계단 촬영 중
+                                    </p>
                                 </div>
                                 <div className="border-t border-dashed border-black/10 pt-4">
-                                    <p className="text-xs break-keep text-neutral-600">연습실 기자재를 내 물건처럼 사용 부탁드립니다.</p>
+                                    <p className="text-xs break-keep text-neutral-600">
+                                        연습실 기자재를 내 물건처럼 사용 부탁드립니다.
+                                    </p>
                                     <p className="text-xs text-[#b86060] mt-1.5 font-bold">파손시 배상 요청드립니다.</p>
                                 </div>
                             </div>
@@ -684,14 +906,16 @@ export default function StudioPage() {
                 </div>
             </section>
 
-            {/* Call to action */}
+            {/* ── CTA ── */}
             <section className="py-32 bg-black text-center px-4">
                 <h2 className="text-3xl md:text-5xl font-black text-white mb-8 tracking-tighter">READY TO RECORD?</h2>
-                <a href="/contact" className="inline-block px-12 py-4 border border-white text-white font-bold tracking-widest hover:bg-white hover:text-black transition-colors uppercase text-sm mb-16">
+                <a
+                    href="/contact"
+                    className="inline-block px-12 py-4 border border-white text-white font-bold tracking-widest hover:bg-white hover:text-black transition-colors uppercase text-sm mb-16"
+                >
                     Contact Us
                 </a>
 
-                {/* Blog Link */}
                 <div className="pt-16 border-t border-white/10 max-w-4xl mx-auto flex flex-col items-center">
                     <p className="text-neutral-500 text-sm md:text-base mb-6 font-medium break-keep">
                         음악 제작 팁부터 스튜디오 비하인드까지, 화이트 라이트 스튜디오의 이야기를 만나보세요.
@@ -703,7 +927,19 @@ export default function StudioPage() {
                         className="text-white hover:text-neutral-400 font-bold uppercase tracking-widest text-sm inline-flex items-center gap-2 transition-colors border-b border-transparent hover:border-neutral-400 pb-1"
                     >
                         Read Our Educational Blog
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                        <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                            />
+                        </svg>
                     </a>
                 </div>
             </section>
