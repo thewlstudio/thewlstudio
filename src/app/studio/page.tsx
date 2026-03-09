@@ -726,28 +726,6 @@ export default function StudioPage() {
 
                         <div className="space-y-4">
                             <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
-                                Wi-Fi
-                            </h3>
-                            <div className="font-mono text-sm space-y-4 text-neutral-600">
-                                <p>
-                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
-                                        ID
-                                    </span>
-                                    WLSTUDIO/2.4G <br /> WLSTUDIO/5G
-                                </p>
-                                {process.env.NEXT_PUBLIC_WIFI_PASSWORD && (
-                                    <p>
-                                        <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
-                                            PASSWORD
-                                        </span>
-                                        {process.env.NEXT_PUBLIC_WIFI_PASSWORD}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
                                 Security & Duty
                             </h3>
                             <div className="font-medium space-y-4">
