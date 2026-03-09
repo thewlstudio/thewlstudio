@@ -67,16 +67,16 @@ export default function CrewDetailClient({ member }: { member: CrewMemberDetail 
                                 </div>
                                 <div className="w-full lg:w-2/3">
                                     <div className="flex flex-col space-y-20">
-                                        {section.years?.map((group: any, idx: number) => (
-                                            <div key={idx} className="flex flex-col md:flex-row gap-4 md:gap-8 group/yearblock items-start">
+                                        {section.years?.map((group, idx) => (
+                                            <div key={group._key ?? idx} className="flex flex-col md:flex-row gap-4 md:gap-8 group/yearblock items-start">
                                                 <div className="w-full md:w-28 shrink-0">
                                                     <h4 className="text-2xl md:text-4xl font-extrabold italic tracking-tight text-neutral-200 group-hover/yearblock:text-black transition-colors duration-500 leading-none -mt-1 md:-mt-1.5">
                                                         {group.year}
                                                     </h4>
                                                 </div>
                                                 <div className="w-full flex-grow space-y-2">
-                                                    {group.tracks?.map((track: any, i: number) => (
-                                                        <div key={i} className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200/60 pb-4 group/track cursor-default overflow-hidden transition-colors duration-300 hover:border-black">
+                                                    {group.tracks?.map((track, i) => (
+                                                        <div key={track._key ?? i} className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200/60 pb-4 group/track cursor-default overflow-hidden transition-colors duration-300 hover:border-black">
                                                             <h4 className="text-sm md:text-xl font-bold text-neutral-500 tracking-tight group-hover/track:text-black group-hover/track:translate-x-3 transition-all duration-300 ease-out">{track.title}</h4>
                                                             {track.desc && <span className="text-[10px] md:text-xs font-bold text-neutral-300 uppercase tracking-widest mt-1 md:mt-0 font-mono group-hover/track:text-black transition-colors duration-300 shrink-0">{track.desc}</span>}
                                                         </div>
@@ -100,8 +100,8 @@ export default function CrewDetailClient({ member }: { member: CrewMemberDetail 
                                     </h3>
                                 </div>
                                 <div className="w-full lg:w-2/3 space-y-12">
-                                    {section.items?.map((item: any, idx: number) => (
-                                        <div key={idx} className="relative pl-6 md:pl-8 border-l-[1.5px] border-neutral-200 group/career">
+                                    {section.items?.map((item, idx) => (
+                                        <div key={item._key ?? idx} className="relative pl-6 md:pl-8 border-l-[1.5px] border-neutral-200 group/career">
                                             <span className="absolute -left-[3.5px] top-1.5 w-[5px] h-[5px] bg-neutral-300 group-hover/career:bg-black transition-colors"></span>
                                             <h4 className="text-[10px] md:text-sm font-bold text-neutral-400 tracking-widest mb-2 font-mono group-hover/career:text-black transition-colors duration-300">{item.date}</h4>
                                             <h5 className="text-base md:text-xl font-bold text-neutral-600 tracking-tight mb-2 group-hover/career:text-black group-hover/career:translate-x-1.5 transition-all duration-300 ease-out">{item.title}</h5>
@@ -130,8 +130,8 @@ export default function CrewDetailClient({ member }: { member: CrewMemberDetail 
                                                 Awards
                                             </h4>
                                             <ul className="space-y-5 pt-1">
-                                                {section.awards.map((item: any, idx: number) => (
-                                                    <li key={`award-${idx}`} className="flex gap-4 group/list">
+                                                {section.awards.map((item, idx) => (
+                                                    <li key={item._key ?? `award-${idx}`} className="flex gap-4 group/list">
                                                         <span className="text-xs font-bold text-neutral-300 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
                                                         <span className="text-xs md:text-base font-semibold text-neutral-400 break-words group-hover/list:text-black group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>
@@ -147,8 +147,8 @@ export default function CrewDetailClient({ member }: { member: CrewMemberDetail 
                                                 Activities
                                             </h4>
                                             <ul className="space-y-5 pt-1">
-                                                {section.activities.map((item: any, idx: number) => (
-                                                    <li key={`activity-${idx}`} className="flex gap-4 group/list">
+                                                {section.activities.map((item, idx) => (
+                                                    <li key={item._key ?? `activity-${idx}`} className="flex gap-4 group/list">
                                                         <span className="text-xs font-bold text-neutral-300 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
                                                         <span className="text-xs md:text-base font-semibold text-neutral-400 break-words group-hover/list:text-black group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>

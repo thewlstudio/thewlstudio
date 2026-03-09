@@ -1,15 +1,20 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { sanityFetch } from "@/sanity/lib/client";
-import { crewBySlugQuery } from "@/sanity/lib/queries";
+import { client, sanityFetch } from "@/sanity/lib/client";
+import { crewBySlugQuery, crewsQuery } from "@/sanity/lib/queries";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CrewDetailClient from "./CrewDetailClient";
-import type { CrewMemberDetail } from "@/types/sanity";
+import type { CrewMemberDetail, CrewMemberSummary } from "@/types/sanity";
 
 type Props = {
     params: { slug: string };
 };
+
+export async function generateStaticParams() {
+    const crews = await client.fetch<CrewMemberSummary[]>(crewsQuery);
+    return crews.map((crew) => ({ slug: crew.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const decodedSlug = decodeURIComponent(params.slug);
