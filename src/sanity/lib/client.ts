@@ -18,7 +18,7 @@ export async function sanityFetch<QueryResponse>({
     params?: QueryParams;
     tags?: string[];
 }) {
-    const isDraftMode = draftMode().isEnabled;
+    const isDraftMode = (await draftMode()).isEnabled;
     const token = process.env.SANITY_API_READ_TOKEN;
 
     if (isDraftMode && !token) {
