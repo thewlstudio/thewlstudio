@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -37,19 +37,30 @@ export type Instructor = {
 
 export default function ClassClient({ initialInstructors }: { initialInstructors: Instructor[] }) {
     const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
 
-    // Lock body scroll when modal is open
+    const closeModal = useCallback(() => setSelectedInstructor(null), []);
+
+    // Lock body scroll + ESC key to close
     useEffect(() => {
         if (selectedInstructor) {
             document.body.style.overflow = "hidden";
+            const handleKeyDown = (e: KeyboardEvent) => {
+                if (e.key === "Escape") closeModal();
+            };
+            document.addEventListener("keydown", handleKeyDown);
+            return () => {
+                document.body.style.overflow = "unset";
+                document.removeEventListener("keydown", handleKeyDown);
+            };
         } else {
             document.body.style.overflow = "unset";
         }
         return () => { document.body.style.overflow = "unset"; };
-    }, [selectedInstructor]);
+    }, [selectedInstructor, closeModal]);
 
     return (
-        <main className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
+        <main id="main-content" className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
             <Header />
 
             {/* Hero / Curriculum Section */}

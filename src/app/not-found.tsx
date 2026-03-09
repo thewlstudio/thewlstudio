@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
     return (
-        <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 font-sans">
+        <main id="main-content" className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 font-sans">
             <div className="text-center">
                 <p className="text-xs font-bold tracking-[0.4em] text-neutral-500 uppercase mb-6">
                     WHITE LIGHT STUDIO

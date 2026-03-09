@@ -9,7 +9,7 @@ export default async function CrewPage() {
     const members = await sanityFetch<CrewMemberSummary[]>({ query: crewsQuery, tags: ['crew'] });
 
     return (
-        <main className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
+        <main id="main-content" className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
             <Header />
             <CrewClient members={members} />
             <Footer />

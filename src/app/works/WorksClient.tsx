@@ -46,7 +46,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     aria-label={`${i}페이지`}
-                    className={`w-8 h-8 flex items-center justify-center transition-colors rounded-full ${currentPage === i
+                    className={`w-8 h-8 flex items-center justify-center transition-colors rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${currentPage === i
                         ? "bg-[#444] text-white"
                         : "hover:text-black text-neutral-400"
                         }`}
@@ -62,7 +62,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
                     aria-label="첫 페이지"
-                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400"
+                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronsLeft size={18} strokeWidth={1.5} />
                 </button>
@@ -89,7 +89,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
                     aria-label="마지막 페이지"
-                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400"
+                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronsRight size={18} strokeWidth={1.5} />
                 </button>
@@ -98,7 +98,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
     };
 
     return (
-        <main className="relative bg-[#fafafa] min-h-screen w-full text-black font-sans">
+        <main id="main-content" className="relative bg-[#fafafa] min-h-screen w-full text-black font-sans">
             <Header />
 
             {/* Top Section */}

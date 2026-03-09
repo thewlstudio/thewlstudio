@@ -32,7 +32,7 @@ export async function sanityFetch<QueryResponse>({
             stega: true,
         }),
         next: {
-            revalidate: isDraftMode ? 0 : 10,
+            revalidate: isDraftMode ? 0 : 3600,
             tags,
         },
     });

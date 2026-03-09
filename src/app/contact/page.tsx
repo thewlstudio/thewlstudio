@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
     return (
-        <main className="bg-white min-h-screen text-black font-sans">
+        <main id="main-content" className="bg-white min-h-screen text-black font-sans">
             <Header />
 
             <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-40 pb-24 md:pt-48 md:pb-32">

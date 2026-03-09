@@ -204,8 +204,13 @@ function RoomCarousel({
     const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
     const next = () => setCurrent((c) => (c + 1) % images.length);
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "ArrowLeft") prev();
+        if (e.key === "ArrowRight") next();
+    };
+
     return (
-        <div className="space-y-3">
+        <div className="space-y-3" onKeyDown={handleKeyDown} tabIndex={0} role="region" aria-label={`${roomName} 사진 캐러셀`}>
             {/* Photo frame — aspect ratio container */}
             <div className="relative aspect-[4/3]">
                 <MagnifiedCell
@@ -359,7 +364,7 @@ function RoomBlock({ room }: { room: RoomData }) {
 
 export default function StudioPage() {
     return (
-        <main className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
+        <main id="main-content" className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
             <Header />
 
             {/* ── Hero ── */}
@@ -730,12 +735,14 @@ export default function StudioPage() {
                                     </span>
                                     WLSTUDIO/2.4G <br /> WLSTUDIO/5G
                                 </p>
-                                <p>
-                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
-                                        PASSWORD
-                                    </span>
-                                    wlstudio1209
-                                </p>
+                                {process.env.NEXT_PUBLIC_WIFI_PASSWORD && (
+                                    <p>
+                                        <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
+                                            PASSWORD
+                                        </span>
+                                        {process.env.NEXT_PUBLIC_WIFI_PASSWORD}
+                                    </p>
+                                )}
                             </div>
                         </div>
 

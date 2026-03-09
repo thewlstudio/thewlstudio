@@ -165,7 +165,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
     };
 
     return (
-        <main className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
+        <main id="main-content" className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
             <Header />
 
             <section className="pt-40 pb-0 px-4 flex flex-col items-center justify-center">
