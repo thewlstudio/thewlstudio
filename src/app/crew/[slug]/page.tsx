@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
         title: `${member.name} (${member.role}) | WHITE LIGHT STUDIO`,
         description: `White Light Studio Crew: ${member.name} - ${member.koName}`,
+        alternates: { canonical: `/crew/${decodedSlug}` },
         openGraph: {
             title: `${member.name} (${member.role}) | WHITE LIGHT STUDIO`,
             description: `White Light Studio Crew: ${member.name} - ${member.koName}`,
@@ -49,11 +50,33 @@ export default async function CrewDetailPage({ params }: Props) {
         notFound();
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        name: member.name,
+        alternateName: member.koName,
+        jobTitle: member.role,
+        image: member.imageUrl ?? undefined,
+        url: `${baseUrl}/crew/${decodedSlug}`,
+        worksFor: {
+            "@type": "Organization",
+            name: "WHITE LIGHT STUDIO",
+            url: baseUrl,
+        },
+    };
+
     return (
-        <main className="relative bg-[#fafafa] min-h-screen w-full overflow-hidden text-black font-sans">
-            <Header />
-            <CrewDetailClient member={member} />
-            <Footer />
-        </main>
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <main className="relative bg-[#fafafa] min-h-screen w-full overflow-hidden text-black font-sans">
+                <Header />
+                <CrewDetailClient member={member} />
+                <Footer />
+            </main>
+        </>
     );
 }

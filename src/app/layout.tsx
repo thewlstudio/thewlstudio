@@ -47,6 +47,24 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${pretendard.variable} ${pretendard.className} min-h-screen bg-black text-white selection:bg-white selection:text-black`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "WHITE LIGHT STUDIO",
+            alternateName: "화이트라이트 스튜디오",
+            url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com",
+            logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com"}/images/studio_logo.jpg`,
+            description: "서울 광진구 중곡동의 보컬 연습 스튜디오",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "서울특별시",
+              addressRegion: "광진구",
+              addressCountry: "KR",
+            },
+          }) }}
+        />
         <Preloader />
         <SmoothScroll>
           {children}
