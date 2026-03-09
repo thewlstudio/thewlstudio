@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants } from "motion/react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PortableText } from "next-sanity";
