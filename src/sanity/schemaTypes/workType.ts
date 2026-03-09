@@ -162,7 +162,7 @@ export const workType = defineType({
                     ],
                     preview: {
                         select: { media: 'image', c: 'caption' },
-                        prepare({ media, c }) { return { title: 'Image', subtitle: c || 'No caption', media: media as any } }
+                        prepare({ media, c }) { return { title: 'Image', subtitle: c || 'No caption', media } }
                     }
                 }),
                 // 6. Video Embed Block
