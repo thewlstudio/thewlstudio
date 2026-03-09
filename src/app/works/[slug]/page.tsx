@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return {
         title: `${work.artist} - ${work.title} | WHITE LIGHT STUDIO`,
         description: `White Light Studio Portfolio: ${work.artist} - ${work.title}`,
+        alternates: { canonical: `/works/${decodedSlug}` },
         openGraph: {
             title: `${work.artist} - ${work.title} | WHITE LIGHT STUDIO`,
             description: `White Light Studio Portfolio: ${work.artist} - ${work.title}`,
@@ -46,5 +47,29 @@ export default async function WorkPage({ params }: { params: { slug: string } })
         return notFound();
     }
 
-    return <WorkDetailClient initialWork={work} />;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "MusicRecording",
+        name: work.title,
+        byArtist: { "@type": "Person", name: work.artist },
+        datePublished: work.releaseDate,
+        image: work.imageUrl ?? undefined,
+        url: `${baseUrl}/works/${decodedSlug}`,
+        recordedAt: {
+            "@type": "MusicVenue",
+            name: "WHITE LIGHT STUDIO",
+            url: baseUrl,
+        },
+    };
+
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <WorkDetailClient initialWork={work} />
+        </>
+    );
 }
