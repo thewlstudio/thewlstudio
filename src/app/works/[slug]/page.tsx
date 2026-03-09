@@ -5,8 +5,9 @@ import WorkDetailClient from "./WorkDetailClient";
 import { notFound } from "next/navigation";
 import type { WorkDetail, WorkSummary } from "@/types/sanity";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-    const decodedSlug = decodeURIComponent(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
     const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug: decodedSlug }, tags: ['work'] });
 
     if (!work) {
@@ -39,8 +40,9 @@ export async function generateStaticParams() {
     }));
 }
 
-export default async function WorkPage({ params }: { params: { slug: string } }) {
-    const decodedSlug = decodeURIComponent(params.slug);
+export default async function WorkPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
     const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug: decodedSlug }, tags: ['work'] });
 
     if (!work) {

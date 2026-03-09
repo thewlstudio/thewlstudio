@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { client } from "@/sanity/lib/client";
 
-export const revalidate = 60 * 60 * 24; // Revalidate sitemap daily
+export const revalidate = 86400; // Revalidate sitemap daily (24h)
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
 

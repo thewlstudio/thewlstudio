@@ -8,7 +8,7 @@ import CrewDetailClient from "./CrewDetailClient";
 import type { CrewMemberDetail, CrewMemberSummary } from "@/types/sanity";
 
 type Props = {
-    params: { slug: string };
+    params: Promise<{ slug: string }>;
 };
 
 export async function generateStaticParams() {
@@ -17,7 +17,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const decodedSlug = decodeURIComponent(params.slug);
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
     const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
 
     if (!member) {
@@ -43,7 +44,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CrewDetailPage({ params }: Props) {
-    const decodedSlug = decodeURIComponent(params.slug);
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
     const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
 
     if (!member) {
