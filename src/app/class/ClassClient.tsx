@@ -214,6 +214,9 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                         onClick={() => setSelectedInstructor(null)}
                     >
                         <motion.div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={selectedInstructor.instructorName}
                             initial={{ opacity: 0, y: 50, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 30, scale: 0.95 }}
