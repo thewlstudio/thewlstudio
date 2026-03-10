@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
@@ -12,7 +13,31 @@ import type { WorkSummary } from "@/types/sanity";
 const ITEMS_PER_PAGE = 12;
 
 export default function WorksClient({ initialWorks }: { initialWorks: WorkSummary[] }) {
-    const [currentPage, setCurrentPage] = useState(1);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const initialPage = Math.max(1, Number(searchParams.get("page")) || 1);
+    const [currentPage, setCurrentPage] = useState(initialPage);
+
+    // URL과 페이지네이션 상태 동기화
+    const goToPage = useCallback((page: number) => {
+        setCurrentPage(page);
+        const params = new URLSearchParams(searchParams.toString());
+        if (page === 1) {
+            params.delete("page");
+        } else {
+            params.set("page", String(page));
+        }
+        const query = params.toString();
+        router.replace(query ? `/works?${query}` : "/works", { scroll: false });
+    }, [searchParams, router]);
+
+    // 브라우저 뒤로가기/앞으로가기 대응
+    useEffect(() => {
+        const pageFromUrl = Math.max(1, Number(searchParams.get("page")) || 1);
+        if (pageFromUrl !== currentPage) {
+            setCurrentPage(pageFromUrl);
+        }
+    }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -42,10 +67,11 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                 <button
                     key={i}
                     onClick={() => {
-                        setCurrentPage(i);
+                        goToPage(i);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     aria-label={`${i}페이지`}
+                    aria-current={currentPage === i ? "page" : undefined}
                     className={`w-8 h-8 flex items-center justify-center transition-colors rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${currentPage === i
                         ? "bg-[#444] text-white"
                         : "hover:text-black text-neutral-400"
@@ -57,9 +83,9 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
         }
 
         return (
-            <div className="flex items-center justify-center gap-3 md:gap-4 mt-32 text-neutral-400 text-sm font-medium">
+            <nav aria-label="페이지 탐색" className="flex items-center justify-center gap-3 md:gap-4 mt-32 text-neutral-400 text-sm font-medium">
                 <button
-                    onClick={() => setCurrentPage(1)}
+                    onClick={() => goToPage(1)}
                     disabled={currentPage === 1}
                     aria-label="첫 페이지"
                     className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
@@ -67,10 +93,10 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                     <ChevronsLeft size={18} strokeWidth={1.5} />
                 </button>
                 <button
-                    onClick={() => setCurrentPage((prev: number) => Math.max(1, prev - 1))}
+                    onClick={() => goToPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
                     aria-label="이전 페이지"
-                    className="hover:text-black transition-colors p-1 md:mr-4 disabled:opacity-30 disabled:hover:text-neutral-400"
+                    className="hover:text-black transition-colors p-1 md:mr-4 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronLeft size={18} strokeWidth={1.5} />
                 </button>
@@ -78,22 +104,22 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                 {pages}
 
                 <button
-                    onClick={() => setCurrentPage((prev: number) => Math.min(totalPages, prev + 1))}
+                    onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
                     aria-label="다음 페이지"
-                    className="hover:text-black transition-colors p-1 md:ml-4 disabled:opacity-30 disabled:hover:text-neutral-400"
+                    className="hover:text-black transition-colors p-1 md:ml-4 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronRight size={18} strokeWidth={1.5} />
                 </button>
                 <button
-                    onClick={() => setCurrentPage(totalPages)}
+                    onClick={() => goToPage(totalPages)}
                     disabled={currentPage === totalPages}
                     aria-label="마지막 페이지"
                     className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronsRight size={18} strokeWidth={1.5} />
                 </button>
-            </div>
+            </nav>
         );
     };
 

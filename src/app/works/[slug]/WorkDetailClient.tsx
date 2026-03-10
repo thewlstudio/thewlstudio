@@ -120,6 +120,7 @@ function AudioPlayerBlock({ block }: { block: AudioBlock }) {
             <div className="w-full flex items-center justify-between space-x-5">
                 <button
                     onClick={togglePlay}
+                    aria-label={isPlaying ? "일시정지" : "재생"}
                     className="w-12 h-12 flex shrink-0 items-center justify-center bg-black text-white hover:bg-neutral-800 transition-colors"
                 >
                     {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
@@ -146,6 +147,7 @@ function AudioPlayerBlock({ block }: { block: AudioBlock }) {
                     max="100"
                     value={progress}
                     onChange={handleSeek}
+                    aria-label="재생 위치"
                     className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
                 />
             </div>
@@ -153,16 +155,16 @@ function AudioPlayerBlock({ block }: { block: AudioBlock }) {
     );
 }
 
+// Helper to get formatted video ID (module scope for performance)
+function getYouTubeId(url: string): string | null {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
 export default function WorkDetailClient({ initialWork }: { initialWork: WorkDetail }) {
     const { title, artist, releaseDate, imageUrl, youtubeUrl, instagramId, instagramUrl, contentBlocks } = initialWork;
-
-    // Helper to get formatted video ID
-    const getYouTubeId = (url: string) => {
-        if (!url) return null;
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    };
 
     return (
         <main id="main-content" className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">

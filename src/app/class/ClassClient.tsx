@@ -38,15 +38,54 @@ export type Instructor = {
 export default function ClassClient({ initialInstructors }: { initialInstructors: Instructor[] }) {
     const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLLIElement | null>(null);
 
-    const closeModal = useCallback(() => setSelectedInstructor(null), []);
+    const closeModal = useCallback(() => {
+        setSelectedInstructor(null);
+        // 모달 닫힐 때 트리거 요소로 포커스 복원
+        requestAnimationFrame(() => triggerRef.current?.focus());
+    }, []);
 
-    // Lock body scroll + ESC key to close
+    const openModal = useCallback((instructor: Instructor, triggerEl: HTMLLIElement) => {
+        triggerRef.current = triggerEl;
+        setSelectedInstructor(instructor);
+    }, []);
+
+    // Lock body scroll + ESC key to close + focus trap
     useEffect(() => {
         if (selectedInstructor) {
             document.body.style.overflow = "hidden";
+
+            // 모달 열릴 때 포커스 이동
+            requestAnimationFrame(() => {
+                const closeBtn = modalRef.current?.querySelector<HTMLButtonElement>('[aria-label="Close modal"]');
+                closeBtn?.focus();
+            });
+
             const handleKeyDown = (e: KeyboardEvent) => {
                 if (e.key === "Escape") closeModal();
+
+                // Focus trap: Tab 키로 모달 밖으로 나가지 못하도록
+                if (e.key === "Tab" && modalRef.current) {
+                    const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    );
+                    if (focusable.length === 0) return;
+                    const first = focusable[0];
+                    const last = focusable[focusable.length - 1];
+
+                    if (e.shiftKey) {
+                        if (document.activeElement === first) {
+                            e.preventDefault();
+                            last.focus();
+                        }
+                    } else {
+                        if (document.activeElement === last) {
+                            e.preventDefault();
+                            first.focus();
+                        }
+                    }
+                }
             };
             document.addEventListener("keydown", handleKeyDown);
             return () => {
@@ -138,9 +177,17 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                className="group border-b border-black/10 cursor-pointer relative overflow-hidden bg-white hover:bg-neutral-50 transition-colors duration-700 list-none"
-                                onClick={() => setSelectedInstructor(cls)}
+                                transition={{ duration: 0.6, delay: Math.min(index * 0.1, 0.5) }}
+                                role="button"
+                                tabIndex={0}
+                                className="group border-b border-black/10 cursor-pointer relative overflow-hidden bg-white hover:bg-neutral-50 transition-colors duration-700 list-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-black"
+                                onClick={(e) => openModal(cls, e.currentTarget)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        openModal(cls, e.currentTarget);
+                                    }
+                                }}
                             >
                                 {/* Atmospheric Background Image (Right side - Using Instructor's Photo) */}
                                 <div
@@ -225,6 +272,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                         onClick={() => setSelectedInstructor(null)}
                     >
                         <motion.div
+                            ref={modalRef}
                             role="dialog"
                             aria-modal="true"
                             aria-label={selectedInstructor.instructorName}
