@@ -298,12 +298,13 @@ function RoomBlock({ room }: { room: RoomData }) {
 
             {/* Bottom Section: Gallery & Pricing left | Info right */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
-                {/* Left Column: Photo carousel & Pricing */}
-                <div className="flex flex-col gap-6">
-                    <RoomCarousel images={room.images} roomName={room.name} />
+                {/* Left Column: Photo carousel */}
+                <RoomCarousel images={room.images} roomName={room.name} />
 
+                {/* Right: Info (Pricing + Features) */}
+                <div className="flex flex-col h-full">
                     {/* Pricing */}
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 mb-8">
                         {room.prices.map((p, i) => (
                             <div key={i} className="flex items-baseline justify-between border-b border-black/[0.06] pb-3">
                                 <span className="text-neutral-500 font-bold tracking-widest uppercase text-xs">
@@ -318,10 +319,7 @@ function RoomBlock({ room }: { room: RoomData }) {
                             </div>
                         ))}
                     </div>
-                </div>
 
-                {/* Right: Info */}
-                <div className="flex flex-col h-full">
                     {/* Features */}
                     <div className="flex-1">
                         <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4 mt-2 lg:mt-0">
@@ -608,12 +606,15 @@ export default function StudioPage() {
 
                             {/* Bottom Section: Carousel & Pricing | Info */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
-                                {/* Left Column: Carousel & Pricing */}
+                                {/* Left Column: Carousel */}
                                 <div className="flex flex-col gap-6">
                                     <RoomCarousel images={LOBBY.images} roomName="Lobby" />
+                                </div>
 
+                                {/* Right: Info (Pricing + Features) */}
+                                <div className="flex flex-col h-full">
                                     {/* Pricing */}
-                                    <div className="flex flex-col gap-3">
+                                    <div className="flex flex-col gap-3 mb-6">
                                         {LOBBY.prices.map((p, i) => (
                                             <div key={i} className="flex items-baseline justify-between border-b border-black/[0.06] pb-3">
                                                 <span className="font-bold tracking-widest uppercase text-xs text-neutral-400">
@@ -628,10 +629,7 @@ export default function StudioPage() {
                                             </div>
                                         ))}
                                     </div>
-                                </div>
 
-                                {/* Right: Info */}
-                                <div className="flex flex-col h-full">
                                     <p className="text-sm leading-relaxed text-neutral-500 mb-8 font-light italic border-l-2 border-black/20 pl-4 mt-2 lg:mt-0">
                                         &quot;{LOBBY.description}&quot;
                                     </p>
