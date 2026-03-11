@@ -120,77 +120,7 @@ type RoomData = {
 const ROOMS: RoomData[] = [ROOM_A, ROOM_B, ROOM_C, ROOM_D];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Magnifier constants
-// ─────────────────────────────────────────────────────────────────────────────
-
-const LENS_SIZE = 160; // px — diameter of the magnifier circle
-const ZOOM = 3;        // magnification factor
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MagnifiedCell — single image tile with precise cursor-tracking magnifier lens
-// ─────────────────────────────────────────────────────────────────────────────
-
-function MagnifiedCell({
-    src,
-    alt,
-    className = "",
-}: {
-    src: string;
-    alt: string;
-    className?: string;
-}) {
-    const [mag, setMag] = useState({ active: false, x: 0, y: 0, w: 0, h: 0 });
-
-    return (
-        <div
-            className={`relative overflow-hidden cursor-crosshair group shadow-xl ${className}`}
-            onMouseMove={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                setMag({
-                    active: true,
-                    x: e.clientX - r.left,
-                    y: e.clientY - r.top,
-                    w: r.width,
-                    h: r.height,
-                });
-            }}
-            onMouseLeave={() => setMag((p) => ({ ...p, active: false }))}
-        >
-            {/* Base image — full colour from the start */}
-            <Image
-                src={src}
-                alt={alt}
-                fill
-                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-
-            {/* Magnifier Lens — CSS background-image for pixel-accurate zoom */}
-            {mag.active && (
-                <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute z-50 rounded-full"
-                    style={{
-                        width: LENS_SIZE,
-                        height: LENS_SIZE,
-                        left: mag.x - LENS_SIZE / 2,
-                        top: mag.y - LENS_SIZE / 2,
-                        border: "2px solid rgba(255,255,255,0.75)",
-                        boxShadow: "0 0 0 1px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.4)",
-                        backgroundImage: `url("${src.replace(/["\\]/g, '\\$&')}")`,
-                        backgroundSize: `${mag.w * ZOOM}px ${mag.h * ZOOM}px`,
-                        backgroundPosition: `${LENS_SIZE / 2 - mag.x * ZOOM}px ${LENS_SIZE / 2 - mag.y * ZOOM}px`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundColor: "#000",
-                    }}
-                />
-            )}
-        </div>
-    );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// RoomCarousel — single-image carousel with ‹ › navigation + magnifier lens
+// RoomCarousel — single-image carousel with ‹ › navigation
 // ─────────────────────────────────────────────────────────────────────────────
 
 function RoomCarousel({
@@ -213,11 +143,15 @@ function RoomCarousel({
         <div className="space-y-3" onKeyDown={handleKeyDown} tabIndex={0} role="region" aria-label={`${roomName} 사진 캐러셀`}>
             {/* Photo frame — aspect ratio container */}
             <div className="relative aspect-[4/3]">
-                <MagnifiedCell
-                    src={images[current]}
-                    alt={`${roomName} ${current + 1}`}
-                    className="h-full"
-                />
+                <div className="relative h-full overflow-hidden shadow-xl">
+                    <Image
+                        src={images[current]}
+                        alt={`${roomName} ${current + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                    />
+                </div>
 
                 {/* Navigation arrows */}
                 {images.length > 1 && (
