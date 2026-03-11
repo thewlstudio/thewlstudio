@@ -223,7 +223,7 @@ function RoomBlock({ room }: { room: RoomData }) {
             className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
         >
             {/* Top Section: Title */}
-            <div className="border-b-2 border-black pb-5 mb-8">
+            <div className="border-b-2 border-black/10 pb-5 mb-8">
                 <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
                     {brand}
                 </p>
@@ -529,11 +529,11 @@ export default function StudioPage() {
                             className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
                         >
                             {/* Top Section: Title */}
-                            <div className="border-b-2 border-black pb-5 mb-8">
+                            <div className="border-b-2 border-black/10 pb-5 mb-8">
                                 <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
                                     {LOBBY.subtitle}
                                 </p>
-                                <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-snug">
+                                <h3 className="text-4xl md:text-5xl font-black tracking-tighter leading-snug">
                                     {LOBBY.name}
                                 </h3>
                             </div>
