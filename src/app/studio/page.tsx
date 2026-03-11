@@ -257,8 +257,8 @@ function RoomCarousel({
                             key={i}
                             onClick={() => setCurrent(i)}
                             className={`rounded-full transition-all duration-300 ${i === current
-                                    ? "w-4 h-1.5 bg-black"
-                                    : "w-1.5 h-1.5 bg-neutral-300 hover:bg-neutral-400"
+                                ? "w-4 h-1.5 bg-black"
+                                : "w-1.5 h-1.5 bg-neutral-300 hover:bg-neutral-400"
                                 }`}
                             aria-label={`사진 ${i + 1}`}
                         />
@@ -288,37 +288,37 @@ function RoomBlock({ room }: { room: RoomData }) {
             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
             className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
         >
-            {/* Top Section: Title & Pricing */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b-2 border-black pb-5 mb-8 gap-6">
-                <div>
-                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
-                        {brand}
-                    </p>
-                    <h3 className="text-4xl md:text-5xl font-black tracking-tighter">{title}</h3>
-                </div>
-
-                {/* Pricing */}
-                <div className="flex flex-col gap-3 lg:items-end">
-                    {room.prices.map((p, i) => (
-                        <div key={i} className="flex items-baseline gap-4 md:gap-6 border-b border-black/[0.06] lg:border-none pb-2 lg:pb-0">
-                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-xs min-w-[36px] text-left lg:text-right">
-                                {p.label}
-                            </span>
-                            <div className="flex items-baseline gap-1.5 min-w-[120px] lg:justify-end">
-                                <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
-                                    {p.value}
-                                </span>
-                                <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+            {/* Top Section: Title */}
+            <div className="border-b-2 border-black pb-5 mb-8">
+                <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
+                    {brand}
+                </p>
+                <h3 className="text-4xl md:text-5xl font-black tracking-tighter">{title}</h3>
             </div>
 
-            {/* Bottom Section: Gallery left | Info right */}
+            {/* Bottom Section: Gallery & Pricing left | Info right */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
-                {/* Left: Photo carousel */}
-                <RoomCarousel images={room.images} roomName={room.name} />
+                {/* Left Column: Photo carousel & Pricing */}
+                <div className="flex flex-col gap-6">
+                    <RoomCarousel images={room.images} roomName={room.name} />
+
+                    {/* Pricing */}
+                    <div className="flex flex-col gap-3">
+                        {room.prices.map((p, i) => (
+                            <div key={i} className="flex items-baseline justify-between border-b border-black/[0.06] pb-3">
+                                <span className="text-neutral-500 font-bold tracking-widest uppercase text-xs">
+                                    {p.label}
+                                </span>
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
+                                        {p.value}
+                                    </span>
+                                    <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
                 {/* Right: Info */}
                 <div className="flex flex-col h-full">
@@ -596,38 +596,39 @@ export default function StudioPage() {
                             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
                             className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
                         >
-                            {/* Top Section: Title & Pricing */}
-                            <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b-2 border-black pb-5 mb-8 gap-6">
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
-                                        {LOBBY.subtitle}
-                                    </p>
-                                    <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-snug">
-                                        {LOBBY.name}
-                                    </h3>
-                                </div>
-
-                                <div className="flex flex-col gap-3 lg:items-end">
-                                    {LOBBY.prices.map((p, i) => (
-                                        <div key={i} className="flex items-baseline gap-4 md:gap-6 border-b border-black/[0.06] lg:border-none pb-2 lg:pb-0">
-                                            <span className="font-bold tracking-widest uppercase text-xs text-neutral-400 min-w-[56px] text-left lg:text-right">
-                                                {p.label}
-                                            </span>
-                                            <div className="flex items-baseline gap-1.5 min-w-[120px] lg:justify-end">
-                                                <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
-                                                    {p.value}
-                                                </span>
-                                                <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            {/* Top Section: Title */}
+                            <div className="border-b-2 border-black pb-5 mb-8">
+                                <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
+                                    {LOBBY.subtitle}
+                                </p>
+                                <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-snug">
+                                    {LOBBY.name}
+                                </h3>
                             </div>
 
-                            {/* Bottom Section: Carousel | Info */}
+                            {/* Bottom Section: Carousel & Pricing | Info */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
-                                {/* Left: Carousel */}
-                                <RoomCarousel images={LOBBY.images} roomName="Lobby" />
+                                {/* Left Column: Carousel & Pricing */}
+                                <div className="flex flex-col gap-6">
+                                    <RoomCarousel images={LOBBY.images} roomName="Lobby" />
+
+                                    {/* Pricing */}
+                                    <div className="flex flex-col gap-3">
+                                        {LOBBY.prices.map((p, i) => (
+                                            <div key={i} className="flex items-baseline justify-between border-b border-black/[0.06] pb-3">
+                                                <span className="font-bold tracking-widest uppercase text-xs text-neutral-400">
+                                                    {p.label}
+                                                </span>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
+                                                        {p.value}
+                                                    </span>
+                                                    <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
                                 {/* Right: Info */}
                                 <div className="flex flex-col h-full">
