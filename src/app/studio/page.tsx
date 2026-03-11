@@ -256,11 +256,10 @@ function RoomCarousel({
                         <button
                             key={i}
                             onClick={() => setCurrent(i)}
-                            className={`rounded-full transition-all duration-300 ${
-                                i === current
+                            className={`rounded-full transition-all duration-300 ${i === current
                                     ? "w-4 h-1.5 bg-black"
                                     : "w-1.5 h-1.5 bg-neutral-300 hover:bg-neutral-400"
-                            }`}
+                                }`}
                             aria-label={`사진 ${i + 1}`}
                         />
                     ))}
@@ -287,15 +286,11 @@ function RoomBlock({ room }: { room: RoomData }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start border-l-2 border-black pl-6 lg:pl-12"
+            className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
         >
-            {/* Left: Photo carousel — transparent bg, aligns with title top */}
-            <RoomCarousel images={room.images} roomName={room.name} />
-
-            {/* Right: Info — transparent, starts at same top as carousel */}
-            <div className="flex flex-col">
-                {/* Room identity */}
-                <div className="mb-8 pb-5 border-b-2 border-black">
+            {/* Top Section: Title & Pricing */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b-2 border-black pb-5 mb-8 gap-6">
+                <div>
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
                         {brand}
                     </p>
@@ -303,16 +298,13 @@ function RoomBlock({ room }: { room: RoomData }) {
                 </div>
 
                 {/* Pricing */}
-                <div className="mb-8 space-y-3">
+                <div className="flex flex-col gap-3 lg:items-end">
                     {room.prices.map((p, i) => (
-                        <div
-                            key={i}
-                            className="flex justify-between items-center border-b border-black/[0.06] pb-3"
-                        >
-                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-xs">
+                        <div key={i} className="flex items-baseline gap-4 md:gap-6 border-b border-black/[0.06] lg:border-none pb-2 lg:pb-0">
+                            <span className="text-neutral-500 font-bold tracking-widest uppercase text-xs min-w-[36px] text-left lg:text-right">
                                 {p.label}
                             </span>
-                            <div className="flex items-baseline gap-1.5">
+                            <div className="flex items-baseline gap-1.5 min-w-[120px] lg:justify-end">
                                 <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
                                     {p.value}
                                 </span>
@@ -321,38 +313,47 @@ function RoomBlock({ room }: { room: RoomData }) {
                         </div>
                     ))}
                 </div>
+            </div>
 
-                {/* Features */}
-                <div className="flex-1">
-                    <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4">
-                        Equipment &amp; Features
-                    </h4>
-                    <ul className="space-y-2.5">
-                        {room.features.map((feature, i) => (
-                            <li
-                                key={i}
-                                className="text-neutral-700 font-medium flex items-start text-sm leading-relaxed break-keep"
-                            >
-                                <span className="mr-3 text-neutral-300 mt-0.5 shrink-0 select-none">—</span>
-                                {feature}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+            {/* Bottom Section: Gallery left | Info right */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
+                {/* Left: Photo carousel */}
+                <RoomCarousel images={room.images} roomName={room.name} />
 
-                {/* Notes */}
-                {room.notes && room.notes.length > 0 && (
-                    <div className="mt-8 pt-6 border-t border-neutral-200">
-                        {room.notes.map((note, i) => (
-                            <p
-                                key={i}
-                                className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
-                            >
-                                {note}
-                            </p>
-                        ))}
+                {/* Right: Info */}
+                <div className="flex flex-col h-full">
+                    {/* Features */}
+                    <div className="flex-1">
+                        <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4 mt-2 lg:mt-0">
+                            Equipment &amp; Features
+                        </h4>
+                        <ul className="space-y-2.5">
+                            {room.features.map((feature, i) => (
+                                <li
+                                    key={i}
+                                    className="text-neutral-700 font-medium flex items-start text-sm leading-relaxed break-keep"
+                                >
+                                    <span className="mr-3 text-neutral-300 mt-0.5 shrink-0 select-none">—</span>
+                                    {feature}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                )}
+
+                    {/* Notes */}
+                    {room.notes && room.notes.length > 0 && (
+                        <div className="mt-8 pt-6 border-t border-neutral-200">
+                            {room.notes.map((note, i) => (
+                                <p
+                                    key={i}
+                                    className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
+                                >
+                                    {note}
+                                </p>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </motion.div>
     );
@@ -593,14 +594,11 @@ export default function StudioPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-80px" }}
                             transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
-                            className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start border-l-2 border-black pl-6 lg:pl-12"
+                            className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
                         >
-                            {/* Left: Carousel */}
-                            <RoomCarousel images={LOBBY.images} roomName="Lobby" />
-
-                            {/* Right: Info — transparent bg */}
-                            <div className="flex flex-col">
-                                <div className="mb-8 pb-5 border-b-2 border-black">
+                            {/* Top Section: Title & Pricing */}
+                            <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b-2 border-black pb-5 mb-8 gap-6">
+                                <div>
                                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
                                         {LOBBY.subtitle}
                                     </p>
@@ -609,16 +607,13 @@ export default function StudioPage() {
                                     </h3>
                                 </div>
 
-                                <div className="mb-6 space-y-3">
+                                <div className="flex flex-col gap-3 lg:items-end">
                                     {LOBBY.prices.map((p, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex justify-between items-center border-b border-black/[0.06] pb-3"
-                                        >
-                                            <span className="font-bold tracking-widest uppercase text-xs text-neutral-400">
+                                        <div key={i} className="flex items-baseline gap-4 md:gap-6 border-b border-black/[0.06] lg:border-none pb-2 lg:pb-0">
+                                            <span className="font-bold tracking-widest uppercase text-xs text-neutral-400 min-w-[56px] text-left lg:text-right">
                                                 {p.label}
                                             </span>
-                                            <div className="flex items-baseline gap-1.5">
+                                            <div className="flex items-baseline gap-1.5 min-w-[120px] lg:justify-end">
                                                 <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
                                                     {p.value}
                                                 </span>
@@ -627,42 +622,51 @@ export default function StudioPage() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
 
-                                <p className="text-sm leading-relaxed text-neutral-500 mb-8 font-light italic border-l-2 border-black/20 pl-4">
-                                    &quot;{LOBBY.description}&quot;
-                                </p>
+                            {/* Bottom Section: Carousel | Info */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
+                                {/* Left: Carousel */}
+                                <RoomCarousel images={LOBBY.images} roomName="Lobby" />
 
-                                <div className="flex-1">
-                                    <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4">
-                                        Space Rules &amp; Features
-                                    </h4>
-                                    <ul className="space-y-2.5">
-                                        {LOBBY.features.map((feature, i) => (
-                                            <li
-                                                key={i}
-                                                className="text-neutral-700 font-medium flex items-start text-sm leading-relaxed break-keep"
-                                            >
-                                                <span className="mr-3 text-neutral-300 mt-0.5 shrink-0 select-none">
-                                                    —
-                                                </span>
-                                                {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                                {/* Right: Info */}
+                                <div className="flex flex-col h-full">
+                                    <p className="text-sm leading-relaxed text-neutral-500 mb-8 font-light italic border-l-2 border-black/20 pl-4 mt-2 lg:mt-0">
+                                        &quot;{LOBBY.description}&quot;
+                                    </p>
 
-                                {LOBBY.notes && LOBBY.notes.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-neutral-200">
-                                        {LOBBY.notes.map((note, i) => (
-                                            <p
-                                                key={i}
-                                                className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
-                                            >
-                                                {note}
-                                            </p>
-                                        ))}
+                                    <div className="flex-1">
+                                        <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4">
+                                            Space Rules &amp; Features
+                                        </h4>
+                                        <ul className="space-y-2.5">
+                                            {LOBBY.features.map((feature, i) => (
+                                                <li
+                                                    key={i}
+                                                    className="text-neutral-700 font-medium flex items-start text-sm leading-relaxed break-keep"
+                                                >
+                                                    <span className="mr-3 text-neutral-300 mt-0.5 shrink-0 select-none">
+                                                        —
+                                                    </span>
+                                                    {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                )}
+
+                                    {LOBBY.notes && LOBBY.notes.length > 0 && (
+                                        <div className="mt-8 pt-6 border-t border-neutral-200">
+                                            {LOBBY.notes.map((note, i) => (
+                                                <p
+                                                    key={i}
+                                                    className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
+                                                >
+                                                    {note}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     </div>
