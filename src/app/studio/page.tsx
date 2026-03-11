@@ -177,7 +177,7 @@ function MagnifiedCell({
                         top: mag.y - LENS_SIZE / 2,
                         border: "2px solid rgba(255,255,255,0.75)",
                         boxShadow: "0 0 0 1px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.4)",
-                        backgroundImage: `url('${encodeURI(src)}')`,
+                        backgroundImage: `url("${src.replace(/["\\]/g, '\\$&')}")`,
                         backgroundSize: `${mag.w * ZOOM}px ${mag.h * ZOOM}px`,
                         backgroundPosition: `${LENS_SIZE / 2 - mag.x * ZOOM}px ${LENS_SIZE / 2 - mag.y * ZOOM}px`,
                         backgroundRepeat: "no-repeat",
@@ -204,8 +204,13 @@ function RoomCarousel({
     const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
     const next = () => setCurrent((c) => (c + 1) % images.length);
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "ArrowLeft") prev();
+        if (e.key === "ArrowRight") next();
+    };
+
     return (
-        <div className="space-y-3">
+        <div className="space-y-3" onKeyDown={handleKeyDown} tabIndex={0} role="region" aria-label={`${roomName} 사진 캐러셀`}>
             {/* Photo frame — aspect ratio container */}
             <div className="relative aspect-[4/3]">
                 <MagnifiedCell
@@ -359,7 +364,7 @@ function RoomBlock({ room }: { room: RoomData }) {
 
 export default function StudioPage() {
     return (
-        <main className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
+        <main id="main-content" className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
             <Header />
 
             {/* ── Hero ── */}
@@ -716,26 +721,6 @@ export default function StudioPage() {
                             <div className="font-medium space-y-2 text-neutral-600">
                                 <p>냉·온·얼음 정수기</p>
                                 <p>델리코 반자동 커피머신</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
-                                Wi-Fi
-                            </h3>
-                            <div className="font-mono text-sm space-y-4 text-neutral-600">
-                                <p>
-                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
-                                        ID
-                                    </span>
-                                    WLSTUDIO/2.4G <br /> WLSTUDIO/5G
-                                </p>
-                                <p>
-                                    <span className="text-neutral-400 font-sans text-[10px] uppercase tracking-widest block mb-1">
-                                        PASSWORD
-                                    </span>
-                                    wlstudio1209
-                                </p>
                             </div>
                         </div>
 

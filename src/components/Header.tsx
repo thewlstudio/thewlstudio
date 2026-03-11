@@ -39,25 +39,26 @@ export default function Header() {
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? (isLightThemePage ? "bg-white/90 shadow-sm" : "bg-black/90") + " backdrop-blur-md py-4" : "bg-transparent py-6"
                     }`}
             >
-                <div className="container mx-auto px-6 lg:px-12 flex justify-between items-center">
+                <nav aria-label="메인 내비게이션" className="container mx-auto px-6 lg:px-12 flex justify-between items-center">
                     {/* Logo */}
                     <div className="z-50 relative">
-                        <Link href="/">
-                            <h1 className={`text-2xl font-black uppercase tracking-tighter whitespace-nowrap hover:opacity-80 transition-opacity ${headerTextColor}`}>
+                        <Link href="/" className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current rounded-sm">
+                            <span className={`text-2xl font-black uppercase tracking-tighter whitespace-nowrap hover:opacity-80 transition-opacity block ${headerTextColor}`}>
                                 WHITE LIGHT STUDIO
-                            </h1>
+                            </span>
                         </Link>
                     </div>
 
                     {/* Right Controls */}
                     <div className="flex items-center space-x-6 md:space-x-8">
-                        <a href="https://www.instagram.com/wl_musicstudio/" target="_blank" rel="noopener noreferrer" className={`hidden md:block hover:opacity-60 transition-opacity ${isMenuOpen ? "text-white" : headerTextColor}`}>
+                        <a href="https://www.instagram.com/wl_musicstudio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={`hidden md:block hover:opacity-60 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm ${isMenuOpen ? "text-white" : headerTextColor}`}>
                             <Instagram strokeWidth={1.5} size={24} />
                         </a>
                         <button
-                            className={`z-50 hover:opacity-60 transition-opacity flex items-center justify-center ${isMenuOpen ? "text-white" : headerTextColor}`}
+                            className={`z-50 hover:opacity-60 transition-opacity flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm ${isMenuOpen ? "text-white" : headerTextColor}`}
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            aria-label="Toggle menu"
+                            aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
+                            aria-expanded={isMenuOpen}
                         >
                             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <motion.path
@@ -100,7 +101,7 @@ export default function Header() {
                             </svg>
                         </button>
                     </div>
-                </div>
+                </nav>
             </header>
 
             {/* Full Screen Menu overlay */}
@@ -129,8 +130,8 @@ export default function Header() {
                                     </Link>
                                 </div>
                                 <div className="flex flex-col space-y-5">
-                                    <Link href="/#about" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em]">ABOUT W.L STUDIO</Link>
-                                    <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em]">CONTACT</Link>
+                                    <Link href="/#about" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm">ABOUT W.L STUDIO</Link>
+                                    <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm">CONTACT</Link>
                                 </div>
                             </motion.div>
 
@@ -145,9 +146,9 @@ export default function Header() {
                                     </Link>
                                 </div>
                                 <div className="flex flex-col space-y-5">
-                                    <Link href="/studio#equipment" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] uppercase">EQUIPMENT</Link>
-                                    <Link href="/studio#membership" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] uppercase">MEMBERSHIP</Link>
-                                    <Link href="/studio#spaces" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] uppercase">SPACE</Link>
+                                    <Link href="/studio#equipment" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm uppercase">EQUIPMENT</Link>
+                                    <Link href="/studio#membership" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm uppercase">MEMBERSHIP</Link>
+                                    <Link href="/studio#spaces" onClick={() => setIsMenuOpen(false)} className="text-neutral-400 hover:text-white transition-colors text-[15px] font-medium tracking-[0.15em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm uppercase">SPACE</Link>
                                 </div>
                             </motion.div>
 

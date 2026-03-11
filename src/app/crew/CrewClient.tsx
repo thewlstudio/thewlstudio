@@ -26,8 +26,9 @@ export default function CrewClient({ members }: { members: CrewMemberSummary[] }
                     <motion.div
                         key={member.slug}
                         initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: index * 0.1 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, delay: Math.min(index * 0.1, 0.5) }}
                         className="group flex flex-col cursor-pointer"
                     >
                         {/* Default State Name (Above) */}
@@ -66,7 +67,7 @@ export default function CrewClient({ members }: { members: CrewMemberSummary[] }
                                             href={link.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            aria-label={`SNS 링크 ${i + 1}`}
+                                            aria-label={`${member.name} ${link.url.includes('instagram') ? 'Instagram' : link.url.includes('youtube') ? 'YouTube' : link.url.includes('soundcloud') ? 'SoundCloud' : link.url.includes('spotify') ? 'Spotify' : 'SNS'}`}
                                             className="relative text-white hover:scale-110 transition-transform flex items-center justify-center w-5 h-5 md:w-8 md:h-8"
                                         >
                                             <Image src={link.iconUrl} alt="" fill sizes="32px" className="object-contain" />

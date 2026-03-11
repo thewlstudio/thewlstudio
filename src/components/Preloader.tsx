@@ -1,21 +1,22 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import Image from "next/image";
 
+const emptySubscribe = () => () => {};
+
 export default function Preloader() {
+    const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
+    const alreadySeen = useSyncExternalStore(
+        emptySubscribe,
+        () => sessionStorage.getItem("wls_preloader_seen") === "true",
+        () => false,
+    );
     const [step, setStep] = useState(0);
-    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        setIsMounted(true);
-        const hasSeenPreloader = sessionStorage.getItem("wls_preloader_seen");
-
-        if (hasSeenPreloader) {
-            setStep(2); // Skip preloader completely
-            return;
-        }
+        if (!isClient || alreadySeen) return;
 
         sessionStorage.setItem("wls_preloader_seen", "true");
 
@@ -38,10 +39,10 @@ export default function Preloader() {
             clearTimeout(timer2);
             document.body.style.overflow = 'unset';
         };
-    }, []);
+    }, [isClient, alreadySeen]);
 
-    // Prevent hydration mismatch
-    if (!isMounted) return null;
+    // Prevent hydration mismatch / skip if already seen
+    if (!isClient || alreadySeen) return null;
 
     return (
         <AnimatePresence>

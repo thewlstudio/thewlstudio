@@ -74,7 +74,7 @@ export default async function CrewDetailPage({ params }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <main className="relative bg-[#fafafa] min-h-screen w-full overflow-hidden text-black font-sans">
+            <main id="main-content" className="relative bg-[#fafafa] min-h-screen w-full overflow-hidden text-black font-sans">
                 <Header />
                 <CrewDetailClient member={member} />
                 <Footer />
