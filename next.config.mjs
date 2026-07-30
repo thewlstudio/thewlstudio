@@ -4,6 +4,13 @@ const analyzer = withBundleAnalyzer({
     enabled: process.env.ANALYZE === "true",
 });
 
+// React 개발 모드는 스택 재구성 등 디버깅 기능에 eval()을 사용한다.
+// 개발 환경에서만 허용하고 프로덕션 CSP는 엄격하게 유지한다.
+const isDev = process.env.NODE_ENV === "development";
+const scriptSrc = isDev
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+    : "script-src 'self' 'unsafe-inline'";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
@@ -74,7 +81,7 @@ const nextConfig = {
                         key: "Content-Security-Policy",
                         value: [
                             "default-src 'self'",
-                            "script-src 'self' 'unsafe-inline'",
+                            scriptSrc,
                             "style-src 'self' 'unsafe-inline'",
                             "img-src 'self' data: blob: https://cdn.sanity.io",
                             "font-src 'self' data:",
