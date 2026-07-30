@@ -6,6 +6,26 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // ⚠️ Sanity CMS(instructor.imagePosition)에서 런타임에 들어오는 클래스는
+  // Tailwind가 빌드 시점에 스캔할 수 없어 CSS가 생성되지 않는다.
+  // 아래 목록에 없는 값을 CMS에 입력하면 조용히 무시되므로,
+  // 새 값을 쓰려면 반드시 여기에 먼저 추가해야 한다.
+  // (근본 해결은 CMS 필드를 자유입력 → 선택지로 바꾸는 것)
+  safelist: [
+    "object-top",
+    "object-center",
+    "object-bottom",
+    "object-[center_20%]",
+    "object-[center_30%]",
+    "object-[center_40%]",
+    "scale-[1.2]",
+    "scale-[1.5]",
+    "scale-[1.8]",
+    "scale-[2.2]",
+    "origin-[center_10%]",
+    "origin-[center_20%]",
+    "origin-[center_30%]",
+  ],
   theme: {
     extend: {
       colors: {

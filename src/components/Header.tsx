@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Instagram } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,8 @@ export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const pathname = usePathname();
+    const menuRef = useRef<HTMLDivElement>(null);
+    const toggleButtonRef = useRef<HTMLButtonElement>(null);
 
     // Determine if the current page should have a dark header text (light background pages)
     const isLightThemePage = pathname.startsWith("/class") || pathname.startsWith("/works") || pathname === "/contact" || pathname.startsWith("/crew");
@@ -19,7 +21,8 @@ export default function Header() {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 50);
         };
-        window.addEventListener("scroll", handleScroll);
+        // passive: 스크롤 성능 저하 방지 (preventDefault를 쓰지 않으므로 안전)
+        window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -31,6 +34,52 @@ export default function Header() {
             document.body.style.overflow = "unset";
         }
         return () => { document.body.style.overflow = "unset"; };
+    }, [isMenuOpen]);
+
+    // 접근성: 전체화면 메뉴에 Escape 닫기 + 포커스 트랩 + 포커스 복원
+    useEffect(() => {
+        if (!isMenuOpen) return;
+
+        const focusables = () =>
+            Array.from(
+                menuRef.current?.querySelectorAll<HTMLElement>(
+                    'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                ) ?? []
+            );
+
+        // 메뉴가 열리면 첫 링크로 포커스 이동
+        requestAnimationFrame(() => focusables()[0]?.focus());
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setIsMenuOpen(false);
+                return;
+            }
+            if (e.key !== "Tab") return;
+
+            const items = focusables();
+            if (items.length === 0) return;
+            const first = items[0];
+            const last = items[items.length - 1];
+
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+
+        // cleanup 시점에는 ref가 바뀔 수 있으므로 effect 내부에서 값을 캡처해 둔다
+        const triggerButton = toggleButtonRef.current;
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            // 메뉴를 닫으면 열었던 버튼으로 포커스 복원
+            requestAnimationFrame(() => triggerButton?.focus());
+        };
     }, [isMenuOpen]);
 
     return (
@@ -55,10 +104,13 @@ export default function Header() {
                             <Instagram strokeWidth={1.5} size={24} />
                         </a>
                         <button
-                            className={`z-50 hover:opacity-60 transition-opacity flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm ${isMenuOpen ? "text-white" : headerTextColor}`}
+                            ref={toggleButtonRef}
+                            /* w-11 h-11 = 44x44px — WCAG 2.5.8 최소 터치 타겟 충족 */
+                            className={`z-50 w-11 h-11 -mr-1 hover:opacity-60 transition-opacity flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm ${isMenuOpen ? "text-white" : headerTextColor}`}
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
                             aria-expanded={isMenuOpen}
+                            aria-controls="main-menu-overlay"
                         >
                             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <motion.path
@@ -108,6 +160,11 @@ export default function Header() {
             <AnimatePresence>
                 {isMenuOpen && (
                     <motion.div
+                        ref={menuRef}
+                        id="main-menu-overlay"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="사이트 메뉴"
                         initial={{ opacity: 0, y: "-100%" }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: "-100%" }}

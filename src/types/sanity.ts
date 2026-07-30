@@ -9,7 +9,8 @@ import type { PortableTextBlock } from '@portabletext/types';
 
 export type CrewLink = {
     url: string;
-    iconUrl: string;
+    // CMS에서 아이콘 이미지는 선택 입력이므로 비어 있을 수 있다.
+    iconUrl: string | null;
 };
 
 export type CrewMemberSummary = {

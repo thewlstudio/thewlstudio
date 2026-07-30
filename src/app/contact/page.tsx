@@ -6,6 +6,7 @@ import { NAVER_MAP_PLACE_URL } from "@/lib/constants";
 export const metadata: Metadata = {
     title: "CONTACT",
     description: "화이트라이트 스튜디오 위치 안내 - 서울특별시 광진구 능동로 413-1 지하1층, 7호선 중곡역 3번 출구",
+    alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

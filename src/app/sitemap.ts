@@ -3,7 +3,7 @@ import { client } from "@/sanity/lib/client";
 
 export const revalidate = 86400; // Revalidate sitemap daily (24h)
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app";
 
 type SanitySlugEntry = { slug: string; _updatedAt: string };
 

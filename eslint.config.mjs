@@ -4,10 +4,10 @@ const eslintConfig = [
   ...nextCoreWebVitals,
   {
     ignores: [
-      ".next/",
-      "dist/",
-      "node_modules/",
-      ".sanity/",
+      "**/.next/**",
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/.sanity/**",
     ],
   },
 ];

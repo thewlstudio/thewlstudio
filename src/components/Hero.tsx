@@ -2,8 +2,18 @@
 
 import { motion } from "motion/react";
 import Image from "next/image";
+import { usePrefersReducedMotion } from "./SmoothScroll";
 
 export default function Hero() {
+    const prefersReducedMotion = usePrefersReducedMotion();
+    // 동작 줄이기 설정 시 무한 반복 애니메이션을 정지 상태로 대체
+    const scrollIndicatorAnimation = prefersReducedMotion
+        ? { scaleY: 1 }
+        : { scaleY: [0, 1, 0], transformOrigin: ["top", "top", "bottom"] };
+    const scrollIndicatorTransition = prefersReducedMotion
+        ? { duration: 0 }
+        : { duration: 2, repeat: Infinity, ease: "easeInOut" as const };
+
     return (
         <div className="w-full">
             {/* Section 1: Logo only */}
@@ -32,8 +42,8 @@ export default function Hero() {
                     <span className="text-[10px] tracking-widest text-white uppercase mb-2">Scroll</span>
                     <motion.div
                         className="w-[1px] h-16 bg-white"
-                        animate={{ scaleY: [0, 1, 0], transformOrigin: ["top", "top", "bottom"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        animate={scrollIndicatorAnimation}
+                        transition={scrollIndicatorTransition}
                     />
                 </motion.div>
             </section>
@@ -65,8 +75,8 @@ export default function Hero() {
                     <span className="text-[10px] tracking-widest text-white uppercase mb-2">Scroll</span>
                     <motion.div
                         className="w-[1px] h-16 bg-white"
-                        animate={{ scaleY: [0, 1, 0], transformOrigin: ["top", "top", "bottom"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        animate={scrollIndicatorAnimation}
+                        transition={scrollIndicatorTransition}
                     />
                 </motion.div>
             </section>

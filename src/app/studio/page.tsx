@@ -224,7 +224,7 @@ function RoomBlock({ room }: { room: RoomData }) {
         >
             {/* Top Section: Title */}
             <div className="border-b-2 border-black/10 pb-5 mb-8">
-                <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
+                <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
                     {brand}
                 </p>
                 <h3 className="text-4xl md:text-5xl font-black tracking-tighter">{title}</h3>
@@ -248,7 +248,7 @@ function RoomBlock({ room }: { room: RoomData }) {
                                     <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
                                         {p.value}
                                     </span>
-                                    <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
+                                    <span className="text-xs font-semibold text-neutral-500">{p.unit}</span>
                                 </div>
                             </div>
                         ))}
@@ -256,7 +256,7 @@ function RoomBlock({ room }: { room: RoomData }) {
 
                     {/* Features */}
                     <div className="flex-1">
-                        <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4 mt-2 lg:mt-0">
+                        <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-500 uppercase mb-4 mt-2 lg:mt-0">
                             Equipment &amp; Features
                         </h4>
                         <ul className="space-y-2.5">
@@ -265,7 +265,7 @@ function RoomBlock({ room }: { room: RoomData }) {
                                     key={i}
                                     className="text-neutral-700 font-medium flex items-start text-sm leading-relaxed break-keep"
                                 >
-                                    <span className="mr-3 text-neutral-300 mt-0.5 shrink-0 select-none">—</span>
+                                    <span className="mr-3 text-neutral-500 mt-0.5 shrink-0 select-none">—</span>
                                     {feature}
                                 </li>
                             ))}
@@ -381,7 +381,7 @@ export default function StudioPage() {
 
                     <div className="space-y-12 md:space-y-16 text-sm md:text-base">
                         <div className="grid grid-cols-1 md:grid-cols-4 border-b border-black/10 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 mb-4 md:mb-0">
                                 Microphones
                             </h3>
                             <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
@@ -392,7 +392,7 @@ export default function StudioPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 border-b border-black/10 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 mb-4 md:mb-0">
                                 Outboard &<br className="hidden md:block" /> Interface
                             </h3>
                             <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
@@ -403,7 +403,7 @@ export default function StudioPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 mb-4 md:mb-0">
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 mb-4 md:mb-0">
                                 Monitoring
                             </h3>
                             <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
@@ -633,7 +633,7 @@ export default function StudioPage() {
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-sm md:text-base pt-6"
                     >
                         <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 border-b border-black/10 pb-2">
                                 Parking
                             </h3>
                             <div className="font-medium space-y-2">
@@ -643,7 +643,7 @@ export default function StudioPage() {
                                     한전부지 임시 공영주차장 3분거리
                                 </p>
                                 <p className="text-neutral-500 font-mono text-xs pt-1 flex items-center gap-2">
-                                    <span className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-400 font-sans tracking-widest leading-none">
+                                    <span className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-500 font-sans tracking-widest leading-none">
                                         요금
                                     </span>
                                     <span>10분 400원 / 1시간 2,400원</span>
@@ -652,7 +652,7 @@ export default function StudioPage() {
                         </div>
 
                         <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 border-b border-black/10 pb-2">
                                 Amenities
                             </h3>
                             <div className="font-medium space-y-2 text-neutral-600">
@@ -662,7 +662,7 @@ export default function StudioPage() {
                         </div>
 
                         <div className="space-y-4">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-400 border-b border-black/10 pb-2">
+                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 border-b border-black/10 pb-2">
                                 Security & Duty
                             </h3>
                             <div className="font-medium space-y-4">

@@ -49,7 +49,7 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
         return notFound();
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app";
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "MusicRecording",

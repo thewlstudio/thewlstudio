@@ -148,7 +148,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                         <div className="md:pl-16">
                             <h4 className="inline-flex items-center text-black font-bold mb-6 tracking-[0.2em] text-base uppercase">
                                 Group Class
-                                <span className="font-sans text-neutral-400 normal-case tracking-normal ml-3 font-medium text-xs">(2-5인)</span>
+                                <span className="font-sans text-neutral-500 normal-case tracking-normal ml-3 font-medium text-xs">(2-5인)</span>
                             </h4>
                             <ul className="text-neutral-800 space-y-5 font-semibold text-sm md:text-base pl-5 border-l border-black/10">
                                 <li>통기타 기초 단체수업</li>
@@ -167,7 +167,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                 {/* Editorial List Layout for Classes */}
                 <ul className="flex flex-col">
                     {initialInstructors.length === 0 ? (
-                        <div className="py-20 text-center text-neutral-400">
+                        <div className="py-20 text-center text-neutral-500">
                             등록된 클래스 강사가 없습니다. (Sanity 관리자 페이지에서 추가해주세요)
                         </div>
                     ) : (
@@ -236,7 +236,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                         </div>
 
                                         {/* Arrow */}
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 md:translate-y-0 md:top-auto md:relative opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 hidden md:block text-neutral-400">
+                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 md:translate-y-0 md:top-auto md:relative opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 hidden md:block text-neutral-500">
                                             <span className="text-4xl font-light">→</span>
                                         </div>
                                     </div>
@@ -302,7 +302,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     <div>
                                         {/* Header */}
                                         <div className="mb-10 sm:mb-12">
-                                            <h2 className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4 sm:mb-6 flex items-center">
+                                            <h2 className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4 sm:mb-6 flex items-center">
                                                 <span className="w-6 sm:w-8 h-px bg-neutral-300 mr-3 sm:mr-4"></span>
                                                 {selectedInstructor.category}
                                             </h2>
@@ -343,7 +343,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                             <div className="space-y-5 sm:space-y-6">
                                                 {selectedInstructor.process?.map((step, i) => (
                                                     <div key={i} className="flex gap-3 sm:gap-5">
-                                                        <div className="text-[10px] font-bold tracking-[0.2em] text-neutral-400 mt-1 shrink-0">{String(i + 1).padStart(2, '0')}</div>
+                                                        <div className="text-[10px] font-bold tracking-[0.2em] text-neutral-500 mt-1 shrink-0">{String(i + 1).padStart(2, '0')}</div>
                                                         <p className="text-sm sm:text-[15px] md:text-base text-neutral-700 font-light leading-relaxed font-pretendard break-keep">
                                                             {step}
                                                         </p>

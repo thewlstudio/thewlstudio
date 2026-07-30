@@ -52,7 +52,7 @@ export default async function CrewDetailPage({ params }: Props) {
         notFound();
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app";
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "Person",

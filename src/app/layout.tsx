@@ -12,12 +12,13 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app"),
   title: {
     default: "WHITE LIGHT STUDIO",
     template: "%s | WHITE LIGHT STUDIO",
   },
   description: "서울 광진구 중곡동의 보컬 연습 스튜디오 - 화이트라이트 스튜디오. 7호선 중곡역 3번 출구.",
+  alternates: { canonical: "/" },
   icons: {
     icon: "/images/studio_logo.jpg",
     apple: "/images/studio_logo.jpg",
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com",
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app",
     siteName: "WHITE LIGHT STUDIO",
     title: "WHITE LIGHT STUDIO",
     description: "서울 광진구 중곡동의 보컬 연습 스튜디오 - 화이트라이트 스튜디오. 7호선 중곡역 3번 출구.",
@@ -60,8 +61,8 @@ export default function RootLayout({
             "@type": "Organization",
             name: "WHITE LIGHT STUDIO",
             alternateName: "화이트라이트 스튜디오",
-            url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com",
-            logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://thewlstudio.com"}/images/studio_logo.jpg`,
+            url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app",
+            logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app"}/images/studio_logo.jpg`,
             description: "서울 광진구 중곡동의 보컬 연습 스튜디오",
             address: {
               "@type": "PostalAddress",

@@ -40,13 +40,15 @@ export default function CrewClient({ members }: { members: CrewMemberSummary[] }
                         <div className="relative aspect-[3/4] w-full bg-neutral-100 overflow-hidden shadow-lg">
                             <Link href={`/crew/${member.slug}`} className="absolute inset-0 z-10" />
 
-                            <Image
-                                src={member.imageUrl ?? '/images/placeholder.jpg'}
-                                alt={member.name}
-                                fill
-                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                className="object-cover transition-transform duration-700"
-                            />
+                            {member.imageUrl && (
+                                <Image
+                                    src={member.imageUrl}
+                                    alt={member.name}
+                                    fill
+                                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                    className="object-cover transition-transform duration-700"
+                                />
+                            )}
 
                             {/* JYP Style Hover Overlay */}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-between p-4 md:p-6 pointer-events-none text-center">
@@ -61,18 +63,28 @@ export default function CrewClient({ members }: { members: CrewMemberSummary[] }
                                 </div>
 
                                 <div className="w-full h-6 md:h-8 flex items-end justify-start space-x-3 md:space-x-6 z-20 pointer-events-auto">
-                                    {member.links && member.links.map((link, i) => (
-                                        <a
-                                            key={i}
-                                            href={link.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            aria-label={`${member.name} ${link.url.includes('instagram') ? 'Instagram' : link.url.includes('youtube') ? 'YouTube' : link.url.includes('soundcloud') ? 'SoundCloud' : link.url.includes('spotify') ? 'Spotify' : 'SNS'}`}
-                                            className="relative text-white hover:scale-110 transition-transform flex items-center justify-center w-5 h-5 md:w-8 md:h-8"
-                                        >
-                                            <Image src={link.iconUrl} alt="" fill sizes="32px" className="object-contain" />
-                                        </a>
-                                    ))}
+                                    {member.links && member.links.filter((link) => link.url).map((link, i) => {
+                                        const platform = link.url.includes('instagram') ? 'Instagram' : link.url.includes('youtube') ? 'YouTube' : link.url.includes('soundcloud') ? 'SoundCloud' : link.url.includes('spotify') ? 'Spotify' : 'SNS';
+                                        return (
+                                            <a
+                                                key={i}
+                                                href={link.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                aria-label={`${member.name} ${platform}`}
+                                                className="relative text-white hover:scale-110 transition-transform flex items-center justify-center w-5 h-5 md:w-8 md:h-8"
+                                            >
+                                                {/* 아이콘 미등록 시 이미지 대신 플랫폼명 축약 표시 (렌더 크래시 방지) */}
+                                                {link.iconUrl ? (
+                                                    <Image src={link.iconUrl} alt="" fill sizes="32px" className="object-contain" />
+                                                ) : (
+                                                    <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-tight">
+                                                        {platform.slice(0, 2)}
+                                                    </span>
+                                                )}
+                                            </a>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

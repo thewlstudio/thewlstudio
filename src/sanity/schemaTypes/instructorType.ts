@@ -48,10 +48,21 @@ export const instructorType = defineType({
         }),
         defineField({
             name: 'imagePosition',
-            title: '썸네일 위치/크기 (Tailwind 클래스)',
+            title: '썸네일 위치/크기',
             type: 'string',
-            description: '이미지 위치 및 크기 조정 (예: object-top 또는 object-top scale-[1.5] origin-[center_10%])',
+            description:
+                '아래 목록에서 선택하세요. 목록에 없는 값을 직접 입력하면 화면에 반영되지 않습니다.',
             initialValue: 'object-top',
+            options: {
+                list: [
+                    { title: '기본 (얼굴 위쪽 기준)', value: 'object-top' },
+                    { title: '가운데 정렬', value: 'object-center' },
+                    { title: '아래쪽 기준', value: 'object-bottom' },
+                    { title: '조금 아래로 (30%)', value: 'object-[center_30%]' },
+                    { title: '확대 1.5배 (얼굴 위쪽)', value: 'object-top scale-[1.5] origin-[center_30%]' },
+                    { title: '확대 1.8배 (얼굴 위쪽)', value: 'object-top scale-[1.8] origin-[center_20%]' },
+                ],
+            },
         }),
         defineField({
             name: 'modalImage',
@@ -68,19 +79,19 @@ export const instructorType = defineType({
             options: { hotspot: true },
             validation: (Rule) => Rule.required(),
         }),
+        // ⚠️ 아래 두 필드는 화면 렌더링에 사용되지 않는다 (ClassClient가 참조하지 않음).
+        // 기존 데이터 보존을 위해 남겨두되 입력 UI에서는 숨긴다.
         defineField({
             name: 'bgScale',
-            title: '배경 이미지 상하 크기 (Tailwind)',
+            title: '(미사용) 배경 이미지 상하 크기',
             type: 'string',
-            description: '배경 이미지 상하 크기 조절 (h-[85%] 또는 h-full 등을 입력)',
-            initialValue: 'h-full',
+            hidden: true,
         }),
         defineField({
             name: 'bgPosition',
-            title: '배경 이미지 위치 여백 (Tailwind)',
+            title: '(미사용) 배경 이미지 위치 여백',
             type: 'string',
-            description: '배경 이미지 여백 및 정렬 위치 (예: bottom-0 right-0 md:right-12)',
-            initialValue: 'bottom-0 right-0 md:right-12',
+            hidden: true,
         }),
         defineField({
             name: 'subtitle',

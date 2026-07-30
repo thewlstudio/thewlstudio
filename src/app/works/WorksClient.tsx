@@ -45,8 +45,11 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
 
     const totalPages = Math.max(1, Math.ceil(initialWorks.length / ITEMS_PER_PAGE));
 
+    // ?page=999 같은 범위 밖 값이 들어와도 빈 화면이 되지 않도록 보정
+    const safePage = Math.min(currentPage, totalPages);
+
     // Get current items
-    const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+    const indexOfLastItem = safePage * ITEMS_PER_PAGE;
     const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
     const currentItems = initialWorks.slice(indexOfFirstItem, indexOfLastItem);
 
@@ -54,7 +57,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
     const renderPagination = () => {
         if (totalPages <= 1) return null;
 
-        let startPage = Math.max(1, currentPage - 2);
+        let startPage = Math.max(1, safePage - 2);
         const endPage = Math.min(totalPages, startPage + 4);
 
         if (endPage - startPage < 4) {
@@ -71,10 +74,10 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     aria-label={`${i}페이지`}
-                    aria-current={currentPage === i ? "page" : undefined}
-                    className={`w-8 h-8 flex items-center justify-center transition-colors rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${currentPage === i
+                    aria-current={safePage === i ? "page" : undefined}
+                    className={`w-8 h-8 flex items-center justify-center transition-colors rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${safePage === i
                         ? "bg-[#444] text-white"
-                        : "hover:text-black text-neutral-400"
+                        : "hover:text-black text-neutral-500"
                         }`}
                 >
                     {i}
@@ -83,20 +86,20 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
         }
 
         return (
-            <nav aria-label="페이지 탐색" className="flex items-center justify-center gap-3 md:gap-4 mt-32 text-neutral-400 text-sm font-medium">
+            <nav aria-label="페이지 탐색" className="flex items-center justify-center gap-3 md:gap-4 mt-32 text-neutral-500 text-sm font-medium">
                 <button
                     onClick={() => goToPage(1)}
-                    disabled={currentPage === 1}
+                    disabled={safePage === 1}
                     aria-label="첫 페이지"
-                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronsLeft size={18} strokeWidth={1.5} />
                 </button>
                 <button
-                    onClick={() => goToPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
+                    onClick={() => goToPage(Math.max(1, safePage - 1))}
+                    disabled={safePage === 1}
                     aria-label="이전 페이지"
-                    className="hover:text-black transition-colors p-1 md:mr-4 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                    className="hover:text-black transition-colors p-1 md:mr-4 disabled:opacity-30 disabled:hover:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronLeft size={18} strokeWidth={1.5} />
                 </button>
@@ -104,18 +107,18 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                 {pages}
 
                 <button
-                    onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
+                    onClick={() => goToPage(Math.min(totalPages, safePage + 1))}
+                    disabled={safePage === totalPages}
                     aria-label="다음 페이지"
-                    className="hover:text-black transition-colors p-1 md:ml-4 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                    className="hover:text-black transition-colors p-1 md:ml-4 disabled:opacity-30 disabled:hover:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronRight size={18} strokeWidth={1.5} />
                 </button>
                 <button
                     onClick={() => goToPage(totalPages)}
-                    disabled={currentPage === totalPages}
+                    disabled={safePage === totalPages}
                     aria-label="마지막 페이지"
-                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                    className="hover:text-black transition-colors p-1 disabled:opacity-30 disabled:hover:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     <ChevronsRight size={18} strokeWidth={1.5} />
                 </button>
@@ -149,7 +152,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: "-100px" }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
+                                transition={{ duration: 0.6, delay: Math.min(index * 0.1, 0.5) }}
                                 className="flex flex-col items-center text-center group"
                             >
                                 {/* Album Cover Link */}
@@ -186,7 +189,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
                             </motion.div>
                         ))
                     ) : (
-                        <div className="col-span-full py-20 text-center text-neutral-400">
+                        <div className="col-span-full py-20 text-center text-neutral-500">
                             등록된 작업물이 없습니다.
                         </div>
                     )}
@@ -200,7 +203,7 @@ export default function WorksClient({ initialWorks }: { initialWorks: WorkSummar
             <button
                 onClick={scrollToTop}
                 aria-label="맨 위로 이동"
-                className="fixed bottom-10 right-10 hidden md:flex flex-col items-center justify-center text-neutral-400 hover:text-black transition-colors z-50 text-[11px] font-bold tracking-widest"
+                className="fixed bottom-10 right-10 hidden md:flex flex-col items-center justify-center text-neutral-500 hover:text-black transition-colors z-50 text-[11px] font-bold tracking-widest"
             >
                 <ChevronUp size={24} strokeWidth={1.5} className="mb-1" />
                 TOP
