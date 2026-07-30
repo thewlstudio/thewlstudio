@@ -42,6 +42,11 @@ export default async function EditInstructorPage({
 
     if (!raw?._id) notFound();
 
+    // 예전 방식(코드에 직접 쓰던 시절)의 흔적으로, 줄바꿈이 실제 개행 대신
+    // 문자 그대로의 "\n" 두 글자로 저장된 경우가 있다. 편집 화면에서 보기 좋게
+    // 진짜 줄바꿈으로 바꿔서 보여준다. (다시 저장하면 이 흔적은 사라진다)
+    const fixLegacyNewlines = (s: string) => s.replace(/\\n/g, "\n");
+
     // 폼은 undefined를 다루지 않도록 여기서 기본값을 채운다
     const data: InstructorFormData = {
         _id: raw._id,
@@ -54,7 +59,7 @@ export default async function EditInstructorPage({
         order: raw.order ?? 0,
         imagePosition: raw.imagePosition ?? "object-top",
         portfolioUrl: raw.portfolioUrl ?? "",
-        portfolioText: raw.portfolioText ?? "",
+        portfolioText: fixLegacyNewlines(raw.portfolioText ?? ""),
         portfolioBtn: raw.portfolioBtn ?? "작업물 보기",
         imageUrl: raw.imageUrl ?? null,
         modalImageUrl: raw.modalImageUrl ?? null,
