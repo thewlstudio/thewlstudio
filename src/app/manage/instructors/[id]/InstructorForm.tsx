@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useId, useMemo } from "react";
 import Link from "next/link";
-import { saveInstructor, type SaveResult } from "../actions";
+import { saveInstructor, createInstructor, type SaveResult } from "../actions";
 
 export type InstructorFormData = {
     _id: string;
@@ -127,6 +127,7 @@ function PhotoInput({
     previewClassName,
     aspect,
     onPreviewUrl,
+    required,
 }: {
     name: string;
     label: string;
@@ -138,6 +139,7 @@ function PhotoInput({
     previewClassName?: string;
     aspect: string;
     onPreviewUrl?: (url: string | null) => void;
+    required?: boolean;
 }) {
     const id = useId();
     const [preview, setPreview] = useState<string | null>(null);
@@ -145,7 +147,10 @@ function PhotoInput({
 
     return (
         <div>
-            <p className="text-sm font-bold mb-1.5">{label}</p>
+            <p className="text-sm font-bold mb-1.5">
+                {label}
+                {required && <span className="text-red-600 ml-1">*</span>}
+            </p>
             <p className="text-xs text-neutral-500 mb-0.5 leading-relaxed">📍 {whereText}</p>
             <p className="text-xs text-neutral-500 mb-3 leading-relaxed">🖼️ {howText}</p>
 
@@ -180,6 +185,7 @@ function PhotoInput({
                         name={name}
                         type="file"
                         accept="image/*"
+                        required={required && !currentUrl}
                         className="sr-only"
                         onChange={(e) => {
                             const file = e.target.files?.[0];
@@ -191,7 +197,9 @@ function PhotoInput({
                     <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
                         {preview
                             ? "새 사진이 선택되었습니다. 저장하면 바뀝니다."
-                            : "고르지 않으면 지금 사진이 그대로 유지됩니다."}
+                            : required
+                              ? "사진을 선택해 주세요."
+                              : "고르지 않으면 지금 사진이 그대로 유지됩니다."}
                     </p>
                 </div>
             </div>
@@ -352,9 +360,16 @@ function LivePreview({
 
 // ── 본체 ──────────────────────────────────────────────────────────────────────
 
-export default function InstructorForm({ data }: { data: InstructorFormData }) {
+export default function InstructorForm({
+    data,
+    mode = "edit",
+}: {
+    data: InstructorFormData;
+    mode?: "create" | "edit";
+}) {
+    const isCreate = mode === "create";
     const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(
-        saveInstructor,
+        isCreate ? createInstructor : saveInstructor,
         null,
     );
 
@@ -448,7 +463,10 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                 hint="사진은 총 3장이 필요합니다. 바꾸고 싶은 것만 고르시면 됩니다. 위 미리보기에서 바로 확인하세요."
             >
                 <div>
-                    <p className="text-sm font-bold mb-1.5">목록에 보이는 사진</p>
+                    <p className="text-sm font-bold mb-1.5">
+                        목록에 보이는 사진
+                        {isCreate && <span className="text-red-600 ml-1">*</span>}
+                    </p>
                     <p className="text-xs text-neutral-500 mb-0.5 leading-relaxed">
                         📍 위 미리보기 ① 클래스 목록 화면의 왼쪽 네모 칸
                     </p>
@@ -482,6 +500,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                                 name="imageFile"
                                 type="file"
                                 accept="image/*"
+                                required={isCreate}
                                 className="sr-only"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
@@ -491,7 +510,9 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                             <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
                                 {thumbPreview
                                     ? "새 사진이 선택되었습니다."
-                                    : "고르지 않으면 지금 사진이 유지됩니다."}
+                                    : isCreate
+                                      ? "사진을 선택해 주세요."
+                                      : "고르지 않으면 지금 사진이 유지됩니다."}
                             </p>
                         </div>
                     </div>
@@ -541,10 +562,11 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                     name="bgImageFile"
                     label="배경 사진"
                     whereText="목록 화면에서 이 강사 줄에 마우스를 올렸을 때"
-                    howText="흑백으로 흐릿하게, 오른쪽에 크게 깔리는 장식용 사진이에요. 없어도 크게 표 안 나요."
+                    howText="흑백으로 흐릿하게, 오른쪽에 크게 깔리는 장식용 사진이에요. 화면에는 크게 표 안 나지만 필수 항목이에요."
                     currentUrl={data.bgImageUrl}
                     aspect="aspect-[3/4]"
                     previewClassName="grayscale opacity-60"
+                    required={isCreate}
                 />
             </Section>
 
@@ -670,7 +692,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         disabled={isPending}
                         className="flex-1 h-12 rounded-xl bg-black text-white font-bold disabled:opacity-50 hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                     >
-                        {isPending ? "저장하는 중…" : "저장하기"}
+                        {isPending ? (isCreate ? "추가하는 중…" : "저장하는 중…") : isCreate ? "추가하기" : "저장하기"}
                     </button>
                 </div>
 

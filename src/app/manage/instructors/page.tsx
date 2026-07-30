@@ -69,9 +69,19 @@ export default async function InstructorListPage() {
                 </div>
             )}
 
-            <p className="text-sm text-neutral-600 mb-4">
-                수정할 강사를 눌러주세요. 총 {instructors.length}명이 등록되어 있습니다.
-            </p>
+            <div className="flex items-center justify-between gap-4 mb-4">
+                <p className="text-sm text-neutral-600">
+                    수정할 강사를 눌러주세요. 총 {instructors.length}명이 등록되어 있습니다.
+                </p>
+                {writeReady && (
+                    <Link
+                        href="/manage/instructors/new"
+                        className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                    >
+                        + 새 강사
+                    </Link>
+                )}
+            </div>
 
             <ul className="space-y-3">
                 {instructors.map((instructor) => (

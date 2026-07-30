@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 import { isAuthenticated } from "@/lib/manage-auth";
 import InstructorForm, { type InstructorFormData } from "./InstructorForm";
+import DeleteInstructorButton from "./DeleteInstructorButton";
 
 export const metadata = { title: "강사 수정" };
 export const dynamic = "force-dynamic";
@@ -68,16 +69,19 @@ export default async function EditInstructorPage({
 
     return (
         <main className="max-w-2xl mx-auto px-5 py-8 md:py-12">
-            <header className="mb-6">
-                <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
-                    강사 수정
-                </p>
-                <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-                    {data.instructorName || "이름 없음"}
-                </h1>
+            <header className="mb-6 space-y-3">
+                <div>
+                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
+                        강사 수정
+                    </p>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+                        {data.instructorName || "이름 없음"}
+                    </h1>
+                </div>
+                <DeleteInstructorButton documentId={data._id} instructorName={data.instructorName} />
             </header>
 
-            <InstructorForm data={data} />
+            <InstructorForm data={data} mode="edit" />
         </main>
     );
 }
