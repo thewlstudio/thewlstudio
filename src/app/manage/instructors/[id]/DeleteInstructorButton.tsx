@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { deleteInstructor } from "../actions";
 
@@ -15,10 +15,35 @@ export default function DeleteInstructorButton({
     const [confirming, setConfirming] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const cancelButtonRef = useRef<HTMLButtonElement>(null);
+    const openButtonRef = useRef<HTMLButtonElement>(null);
+
+    // 확인창이 뜨면 "안전한" 선택지(취소)로 포커스를 옮기고,
+    // Escape로 바로 닫을 수 있게 한다. 닫히면 원래 열었던 버튼으로 되돌린다.
+    useEffect(() => {
+        if (!confirming) return;
+        cancelButtonRef.current?.focus();
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setConfirming(false);
+                setError(null);
+            }
+        };
+        // cleanup 시점에는 ref가 바뀔 수 있으므로 effect 내부에서 값을 캡처해 둔다
+        const triggerButton = openButtonRef.current;
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            triggerButton?.focus();
+        };
+    }, [confirming]);
 
     if (!confirming) {
         return (
             <button
+                ref={openButtonRef}
                 type="button"
                 onClick={() => setConfirming(true)}
                 className="text-sm font-semibold text-red-600 hover:text-red-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 rounded-sm"
@@ -42,6 +67,7 @@ export default function DeleteInstructorButton({
 
             <div className="flex gap-2">
                 <button
+                    ref={cancelButtonRef}
                     type="button"
                     disabled={isPending}
                     onClick={() => {

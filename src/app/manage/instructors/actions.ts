@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
+export type DuplicateResult = { ok: true; newId: string } | { ok: false; error: string };
 
 /** 여러 줄 텍스트 → 문자열 배열 (빈 줄 제거) */
 function linesToArray(value: string): string[] {
@@ -62,18 +63,19 @@ function parseAndValidateFields(formData: FormData): { fields: Record<string, un
         return { error: `${missing.join(", ")}을(를) 입력해 주세요.` };
     }
 
-    const orderRaw = Number(formData.get("order"));
-    const order = Number.isFinite(orderRaw) ? orderRaw : 0;
+    const isActive = String(formData.get("isActive") ?? "true") === "true";
 
     return {
         fields: {
+            isActive,
             instructorName,
             category,
             subtitle,
             lessonInfo,
             about,
             process,
-            order,
+            // order는 여기서 다루지 않는다 — 목록 페이지의 위/아래 버튼(moveInstructorOrder)
+            // 으로만 바뀌며, 저장/생성 폼에서는 손대지 않는다 (중복 순서 값 방지).
             imagePosition: String(formData.get("imagePosition") ?? "object-top"),
             portfolioUrl: String(formData.get("portfolioUrl") ?? "").trim() || undefined,
             portfolioText: String(formData.get("portfolioText") ?? "").trim() || undefined,
@@ -155,15 +157,19 @@ export async function createInstructor(
             return { ok: false, error: `${missingImages.join(", ")}을(를) 선택해 주세요.` };
         }
 
-        const [image, bgImage, modalImage] = await Promise.all([
+        const [image, bgImage, modalImage, existingOrders] = await Promise.all([
             uploadImageIfPresent(client, imageFile),
             uploadImageIfPresent(client, bgImageFile),
             uploadImageIfPresent(client, modalImageFile),
+            client.fetch<number[]>(`*[_type == "instructor" && defined(order)].order`),
         ]);
+        // 새 강사는 항상 맨 뒤에 추가한다 — 순서는 목록 페이지의 위/아래 버튼으로 조정
+        const order = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 0;
 
         const created = await client.create({
             _type: "instructor",
             ...parsed.fields,
+            order,
             image,
             bgImage,
             ...(modalImage ? { modalImage } : {}),
@@ -182,6 +188,106 @@ export async function createInstructor(
     revalidatePath("/manage/instructors");
     // 방금 만든 강사의 수정 화면으로 이동 — 미리보기로 바로 확인할 수 있도록
     redirect(`/manage/instructors/${documentId}`);
+}
+
+/**
+ * 목록에서 강사를 한 칸 위/아래로 옮긴다.
+ * 숫자를 손으로 입력하게 하면 언젠가 값이 겹칠 수 있어서,
+ * 현재 정렬 순서를 다시 조회해 바로 옆 강사와 order 값을 맞바꾸는 방식으로 처리한다.
+ * (겹치거나 순서가 듬성듬성해도 항상 안전하게 동작한다)
+ */
+export async function moveInstructorOrder(
+    documentId: string,
+    direction: "up" | "down",
+): Promise<SaveResult> {
+    try {
+        await requireAuth();
+        const client = getWriteClient();
+
+        const all = await client.fetch<Array<{ _id: string; order: number }>>(
+            `*[_type == "instructor"] | order(order asc) { _id, order }`,
+        );
+
+        const index = all.findIndex((i) => i._id === documentId);
+        if (index === -1) {
+            return { ok: false, error: "강사를 찾을 수 없습니다." };
+        }
+
+        const swapIndex = direction === "up" ? index - 1 : index + 1;
+        if (swapIndex < 0 || swapIndex >= all.length) {
+            return { ok: false, error: "더 이상 이동할 수 없습니다." };
+        }
+
+        const current = all[index];
+        const swapWith = all[swapIndex];
+
+        await client
+            .transaction()
+            .patch(current._id, { set: { order: swapWith.order } })
+            .patch(swapWith._id, { set: { order: current.order } })
+            .commit();
+
+        updateTag("instructor");
+        revalidatePath("/class");
+        revalidatePath("/manage/instructors");
+
+        return { ok: true };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        console.error("[moveInstructorOrder]", err);
+        return { ok: false, error: message };
+    }
+}
+
+/**
+ * 기존 강사를 복제해 새 문서를 만든다. 비슷한 유형의 강사를 추가할 때
+ * 글(소개/커리큘럼)과 사진을 그대로 가져오고, 새로 생긴 문서를 바로 편집하며
+ * 다른 부분만 바꾸면 되게 한다.
+ * 삭제와 마찬가지로 클라이언트 컴포넌트에서 직접 호출되므로 redirect를 쓰지 않는다.
+ */
+export async function duplicateInstructor(documentId: string): Promise<DuplicateResult> {
+    try {
+        await requireAuth();
+        const client = getWriteClient();
+
+        const original = await client.fetch<Record<string, unknown> | null>(
+            `*[_type == "instructor" && _id == $id][0]`,
+            { id: documentId },
+        );
+        if (!original) {
+            return { ok: false, error: "복제할 강사를 찾을 수 없습니다." };
+        }
+
+        const existingOrders = await client.fetch<number[]>(
+            `*[_type == "instructor" && defined(order)].order`,
+        );
+        const order = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 0;
+
+        // _id, _rev 등 시스템 필드는 제외하고 나머지만 그대로 복제한다.
+        // 이미지 필드는 Sanity 이미지 참조라 여러 문서가 같이 가리켜도 안전하다.
+        const { _id, _rev, _type, _createdAt, _updatedAt, instructorName, ...rest } = original;
+        void _id;
+        void _rev;
+        void _createdAt;
+        void _updatedAt;
+
+        const created = await client.create({
+            _type: (_type as string) ?? "instructor",
+            ...rest,
+            instructorName: `${String(instructorName ?? "")} (복사본)`.trim(),
+            order,
+        });
+
+        updateTag("instructor");
+        revalidatePath("/class");
+        revalidatePath("/manage/instructors");
+
+        return { ok: true, newId: created._id };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        console.error("[duplicateInstructor]", err);
+        return { ok: false, error: message };
+    }
 }
 
 /**

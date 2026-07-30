@@ -1,18 +1,18 @@
 "use client";
 
-import { useActionState, useState, useId, useMemo } from "react";
+import { useActionState, useState, useId, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { saveInstructor, createInstructor, type SaveResult } from "../actions";
 
 export type InstructorFormData = {
     _id: string;
+    isActive: boolean;
     instructorName: string;
     category: string;
     subtitle: string;
     lessonInfo: string;
     about: string[];
     process: string[];
-    order: number;
     imagePosition: string;
     portfolioUrl: string;
     portfolioText: string;
@@ -53,6 +53,20 @@ function linesToArray(value: string): string[] {
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
+}
+
+// 서버(actions.ts)와 같은 기준. 사진을 고르는 즉시 확인해서
+// 전체 폼을 다 채운 뒤 저장 버튼을 눌러야 알게 되는 일이 없도록 한다.
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+function validateImageFile(file: File): string | null {
+    if (!file.type.startsWith("image/")) {
+        return `이미지 파일만 선택할 수 있어요. (${file.type || "알 수 없는 형식"})`;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+        return `사진 용량이 너무 커요 (${(file.size / 1024 / 1024).toFixed(1)}MB). 10MB 이하로 줄여서 다시 선택해 주세요.`;
+    }
+    return null;
 }
 
 // ── 재사용 UI 조각 ────────────────────────────────────────────────────────────
@@ -143,6 +157,7 @@ function PhotoInput({
 }) {
     const id = useId();
     const [preview, setPreview] = useState<string | null>(null);
+    const [fileError, setFileError] = useState<string | null>(null);
     const shown = preview ?? currentUrl;
 
     return (
@@ -189,18 +204,39 @@ function PhotoInput({
                         className="sr-only"
                         onChange={(e) => {
                             const file = e.target.files?.[0];
-                            const url = file ? URL.createObjectURL(file) : null;
+                            if (!file) {
+                                setFileError(null);
+                                setPreview(null);
+                                onPreviewUrl?.(null);
+                                return;
+                            }
+                            const error = validateImageFile(file);
+                            if (error) {
+                                setFileError(error);
+                                e.target.value = ""; // 잘못된 선택은 제출되지 않도록 비운다
+                                setPreview(null);
+                                onPreviewUrl?.(null);
+                                return;
+                            }
+                            setFileError(null);
+                            const url = URL.createObjectURL(file);
                             setPreview(url);
                             onPreviewUrl?.(url);
                         }}
                     />
-                    <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
-                        {preview
-                            ? "새 사진이 선택되었습니다. 저장하면 바뀝니다."
-                            : required
-                              ? "사진을 선택해 주세요."
-                              : "고르지 않으면 지금 사진이 그대로 유지됩니다."}
-                    </p>
+                    {fileError ? (
+                        <p role="alert" className="text-xs font-semibold text-red-600 mt-2 leading-relaxed">
+                            {fileError}
+                        </p>
+                    ) : (
+                        <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
+                            {preview
+                                ? "새 사진이 선택되었습니다. 저장하면 바뀝니다."
+                                : required
+                                  ? "사진을 선택해 주세요."
+                                  : "고르지 않으면 지금 사진이 그대로 유지됩니다."}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
@@ -327,9 +363,19 @@ function LivePreview({
 }) {
     return (
         <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
-            <p className="text-xs font-bold text-neutral-500 mb-3">
-                👀 실제로 이렇게 보여요 (입력하면 바로 바뀝니다)
-            </p>
+            <div className="flex items-center justify-between gap-3 mb-3">
+                <p className="text-xs font-bold text-neutral-500">
+                    👀 실제로 이렇게 보여요 (입력하면 바로 바뀝니다)
+                </p>
+                <Link
+                    href="/class"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-xs font-semibold text-neutral-500 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
+                >
+                    진짜 화면 보기 ↗
+                </Link>
+            </div>
             <div className="space-y-3">
                 <div>
                     <p className="text-[10px] font-bold text-neutral-400 mb-1.5">① 클래스 목록 화면</p>
@@ -374,7 +420,9 @@ export default function InstructorForm({
     );
 
     const [photoPosition, setPhotoPosition] = useState(data.imagePosition || "object-top");
+    const [isActive, setIsActive] = useState(data.isActive);
     const [thumbPreview, setThumbPreview] = useState<string | null>(null);
+    const [thumbFileError, setThumbFileError] = useState<string | null>(null);
     const [modalPreview, setModalPreview] = useState<string | null>(null);
     const shownThumb = thumbPreview ?? data.imageUrl;
     const shownModal = modalPreview ?? data.modalImageUrl ?? data.imageUrl;
@@ -404,10 +452,53 @@ export default function InstructorForm({
         [],
     );
 
+    // ── 저장하지 않고 나가면 잃어버릴 내용이 있는지 추적 ──────────────────────────
+    const [isDirty, setIsDirty] = useState(false);
+    const isDirtyRef = useRef(false);
+    useEffect(() => {
+        isDirtyRef.current = isDirty;
+    }, [isDirty]);
+    const markDirty = () => setIsDirty(true);
+
+    // 저장이 성공하면(수정 모드는 페이지 이동 없이 이 화면에 남아있으므로)
+    // 방금 저장한 내용을 다시 "안 저장한 상태"로 취급하지 않도록 리셋한다.
+    // useEffect 대신 렌더 중 이전 state와 비교하는 방식 — React가 권장하는
+    // "파생 state를 effect 없이 리셋하는" 패턴이다.
+    const [lastHandledState, setLastHandledState] = useState(state);
+    if (state !== lastHandledState) {
+        setLastHandledState(state);
+        if (state?.ok) setIsDirty(false);
+    }
+
+    // 탭 닫기/새로고침 시 브라우저 기본 경고. ref로 최신값을 읽으므로
+    // 리스너를 매번 다시 등록하지 않아도 된다.
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (!isDirtyRef.current) return;
+            e.preventDefault();
+            e.returnValue = "";
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, []);
+
+    const handleListLinkClick = (e: React.MouseEvent) => {
+        if (!isDirty) return;
+        const confirmed = window.confirm("저장하지 않은 내용이 있어요. 그래도 나가시겠어요?");
+        if (!confirmed) e.preventDefault();
+    };
+
     return (
-        <form action={formAction} className="space-y-5 pb-32">
+        <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="imagePosition" value={photoPosition} />
+            <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
+
+            {!isActive && (
+                <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+                    지금 비공개 상태예요. 저장해도 홈페이지 목록에는 나오지 않습니다.
+                </div>
+            )}
 
             <LivePreview
                 preview={preview}
@@ -418,6 +509,39 @@ export default function InstructorForm({
 
             {/* 1. 기본 정보 */}
             <Section step={1} title="기본 정보">
+                <fieldset>
+                    <legend className="text-sm font-bold mb-1.5">공개 상태</legend>
+                    <p className="text-xs text-neutral-500 mb-3 leading-relaxed">
+                        휴직이나 개인 사정으로 잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔주세요. 나중에 다시 공개로 되돌릴 수 있습니다.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => { setIsActive(true); markDirty(); }}
+                            aria-pressed={isActive}
+                            className={`h-11 rounded-xl text-sm font-bold border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${
+                                isActive
+                                    ? "bg-black text-white border-black"
+                                    : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-500"
+                            }`}
+                        >
+                            공개
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setIsActive(false); markDirty(); }}
+                            aria-pressed={!isActive}
+                            className={`h-11 rounded-xl text-sm font-bold border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${
+                                !isActive
+                                    ? "bg-black text-white border-black"
+                                    : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-500"
+                            }`}
+                        >
+                            비공개
+                        </button>
+                    </div>
+                </fieldset>
+
                 <Field label="강사 이름" htmlFor="instructorName" required hint="한글 이름만 적어주세요. (예: 박인국)">
                     <input
                         id="instructorName"
@@ -440,20 +564,9 @@ export default function InstructorForm({
                     />
                 </Field>
 
-                <Field
-                    label="보여지는 순서"
-                    htmlFor="order"
-                    hint="숫자가 작을수록 목록에서 위에 나옵니다."
-                >
-                    <input
-                        id="order"
-                        name="order"
-                        type="number"
-                        inputMode="numeric"
-                        defaultValue={data.order}
-                        className={`${inputClass} max-w-28`}
-                    />
-                </Field>
+                <p className="text-xs text-neutral-500 leading-relaxed">
+                    보여지는 순서는 여기서 바꾸지 않아요. 목록 화면에서 화살표 버튼으로 옮길 수 있습니다.
+                </p>
             </Section>
 
             {/* 2. 사진 */}
@@ -504,16 +617,35 @@ export default function InstructorForm({
                                 className="sr-only"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    setThumbPreview(file ? URL.createObjectURL(file) : null);
+                                    if (!file) {
+                                        setThumbFileError(null);
+                                        setThumbPreview(null);
+                                        return;
+                                    }
+                                    const error = validateImageFile(file);
+                                    if (error) {
+                                        setThumbFileError(error);
+                                        e.target.value = "";
+                                        setThumbPreview(null);
+                                        return;
+                                    }
+                                    setThumbFileError(null);
+                                    setThumbPreview(URL.createObjectURL(file));
                                 }}
                             />
-                            <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
-                                {thumbPreview
-                                    ? "새 사진이 선택되었습니다."
-                                    : isCreate
-                                      ? "사진을 선택해 주세요."
-                                      : "고르지 않으면 지금 사진이 유지됩니다."}
-                            </p>
+                            {thumbFileError ? (
+                                <p role="alert" className="text-xs font-semibold text-red-600 mt-2 leading-relaxed">
+                                    {thumbFileError}
+                                </p>
+                            ) : (
+                                <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
+                                    {thumbPreview
+                                        ? "새 사진이 선택되었습니다."
+                                        : isCreate
+                                          ? "사진을 선택해 주세요."
+                                          : "고르지 않으면 지금 사진이 유지됩니다."}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -531,7 +663,7 @@ export default function InstructorForm({
                                 <button
                                     key={preset.value}
                                     type="button"
-                                    onClick={() => setPhotoPosition(preset.value)}
+                                    onClick={() => { setPhotoPosition(preset.value); markDirty(); }}
                                     aria-pressed={selected}
                                     className={`h-11 rounded-xl text-sm font-bold border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${
                                         selected
@@ -683,6 +815,7 @@ export default function InstructorForm({
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link
                         href="/manage/instructors"
+                        onClick={handleListLinkClick}
                         className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors"
                     >
                         목록

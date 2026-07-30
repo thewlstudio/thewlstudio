@@ -1,35 +1,24 @@
 import { redirect } from "next/navigation";
-import { client } from "@/sanity/lib/client";
 import { isAuthenticated } from "@/lib/manage-auth";
 import InstructorForm, { type InstructorFormData } from "../[id]/InstructorForm";
 
 export const metadata = { title: "새 강사 추가" };
 export const dynamic = "force-dynamic";
 
-async function getNextOrder(): Promise<number> {
-    const orders = await client.fetch<number[]>(
-        `*[_type == "instructor" && defined(order)].order`,
-    );
-    if (orders.length === 0) return 0;
-    return Math.max(...orders) + 1;
-}
-
 export default async function NewInstructorPage() {
     if (!(await isAuthenticated())) {
         redirect("/manage/login");
     }
 
-    const nextOrder = await getNextOrder();
-
     const emptyData: InstructorFormData = {
         _id: "",
+        isActive: true,
         instructorName: "",
         category: "",
         subtitle: "",
         lessonInfo: "",
         about: [],
         process: [],
-        order: nextOrder,
         imagePosition: "object-top",
         portfolioUrl: "",
         portfolioText: "",

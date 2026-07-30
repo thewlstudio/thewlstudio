@@ -6,6 +6,13 @@ export const instructorType = defineType({
     type: 'document',
     fields: [
         defineField({
+            name: 'isActive',
+            title: 'Active (Show on Website)',
+            type: 'boolean',
+            description: '강사 목록에 이 강사를 공개할지 여부를 결정합니다.',
+            initialValue: true,
+        }),
+        defineField({
             name: 'id',
             title: '고유 ID',
             type: 'slug',

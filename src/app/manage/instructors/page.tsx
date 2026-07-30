@@ -5,6 +5,7 @@ import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import { isAuthenticated, destroySession } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
+import ReorderButtons from "./ReorderButtons";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
 export const metadata = { title: "강사 관리" };
@@ -17,10 +18,11 @@ type InstructorRow = {
     category?: string;
     order?: number;
     image?: SanityImageSource;
+    isActive?: boolean;
 };
 
 const listQuery = `*[_type == "instructor"] | order(order asc) {
-    _id, instructorName, category, order, image
+    _id, instructorName, category, order, image, isActive
 }`;
 
 async function logout() {
@@ -84,35 +86,58 @@ export default async function InstructorListPage() {
             </div>
 
             <ul className="space-y-3">
-                {instructors.map((instructor) => (
-                    <li key={instructor._id}>
-                        <Link
-                            href={`/manage/instructors/${encodeURIComponent(instructor._id)}`}
-                            className="flex items-center gap-4 bg-white rounded-2xl border border-neutral-200 p-4 hover:border-black hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-                        >
-                            <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
-                                {instructor.image && (
-                                    <Image
-                                        src={urlFor(instructor.image).width(112).height(112).fit("crop").url()}
-                                        alt=""
-                                        fill
-                                        sizes="56px"
-                                        className="object-cover"
-                                    />
+                {instructors.map((instructor, index) => {
+                    const isHidden = instructor.isActive === false;
+                    return (
+                        <li key={instructor._id}>
+                            <div
+                                className={`flex items-stretch gap-3 bg-white rounded-2xl border border-neutral-200 hover:border-black hover:shadow-sm transition-all ${isHidden ? "opacity-50" : ""}`}
+                            >
+                                {writeReady && (
+                                    <div className="flex items-center pl-2">
+                                        <ReorderButtons
+                                            documentId={instructor._id}
+                                            disableUp={index === 0}
+                                            disableDown={index === instructors.length - 1}
+                                        />
+                                    </div>
                                 )}
+                                <Link
+                                    href={`/manage/instructors/${encodeURIComponent(instructor._id)}`}
+                                    className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                                >
+                                    <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
+                                        {instructor.image && (
+                                            <Image
+                                                src={urlFor(instructor.image).width(112).height(112).fit("crop").url()}
+                                                alt=""
+                                                fill
+                                                sizes="56px"
+                                                className="object-cover"
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-base truncate">
+                                                {instructor.instructorName ?? "(이름 없음)"}
+                                            </p>
+                                            {isHidden && (
+                                                <span className="shrink-0 text-[10px] font-bold text-neutral-500 bg-neutral-100 px-1.5 py-0.5 rounded">
+                                                    비공개
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-neutral-500 truncate">{instructor.category}</p>
+                                    </div>
+                                    <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">
+                                        ›
+                                    </span>
+                                </Link>
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="font-bold text-base truncate">
-                                    {instructor.instructorName ?? "(이름 없음)"}
-                                </p>
-                                <p className="text-sm text-neutral-500 truncate">{instructor.category}</p>
-                            </div>
-                            <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">
-                                ›
-                            </span>
-                        </Link>
-                    </li>
-                ))}
+                        </li>
+                    );
+                })}
             </ul>
         </main>
     );
