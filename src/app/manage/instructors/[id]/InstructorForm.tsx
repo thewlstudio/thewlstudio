@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useState, useId } from "react";
-import Image from "next/image";
+import { useActionState, useState, useId, useMemo } from "react";
 import Link from "next/link";
 import { saveInstructor, type SaveResult } from "../actions";
 
@@ -36,6 +35,25 @@ const PHOTO_PRESETS = [
     { value: "object-top scale-[1.5] origin-[center_30%]", label: "1.5배 확대" },
     { value: "object-top scale-[1.8] origin-[center_20%]", label: "1.8배 확대" },
 ] as const;
+
+// ── 실시간 미리보기에 쓰는 값들 (실제 저장에는 영향 없음) ──────────────────────────
+
+type PreviewState = {
+    category: string;
+    subtitle: string;
+    instructorName: string;
+    about: string[];
+    process: string[];
+    portfolioText: string;
+    portfolioBtn: string;
+};
+
+function linesToArray(value: string): string[] {
+    return value
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+}
 
 // ── 재사용 UI 조각 ────────────────────────────────────────────────────────────
 
@@ -99,21 +117,27 @@ const inputClass =
 const textareaClass =
     "w-full px-4 py-3 rounded-xl border border-neutral-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
 
-/** 사진 업로드 + 미리보기 */
+/** 사진 업로드 + 미리보기. onPreviewUrl로 부모(상단 결과 미리보기)에도 알려준다. */
 function PhotoInput({
     name,
     label,
-    hint,
+    whereText,
+    howText,
     currentUrl,
     previewClassName,
     aspect,
+    onPreviewUrl,
 }: {
     name: string;
     label: string;
-    hint: string;
+    /** 어디에 나오는지 */
+    whereText: string;
+    /** 어떻게 잘려/보이는지 */
+    howText: string;
     currentUrl: string | null;
     previewClassName?: string;
     aspect: string;
+    onPreviewUrl?: (url: string | null) => void;
 }) {
     const id = useId();
     const [preview, setPreview] = useState<string | null>(null);
@@ -122,7 +146,8 @@ function PhotoInput({
     return (
         <div>
             <p className="text-sm font-bold mb-1.5">{label}</p>
-            <p className="text-xs text-neutral-500 mb-3 leading-relaxed">{hint}</p>
+            <p className="text-xs text-neutral-500 mb-0.5 leading-relaxed">📍 {whereText}</p>
+            <p className="text-xs text-neutral-500 mb-3 leading-relaxed">🖼️ {howText}</p>
 
             <div className="flex items-start gap-4">
                 <div
@@ -158,7 +183,9 @@ function PhotoInput({
                         className="sr-only"
                         onChange={(e) => {
                             const file = e.target.files?.[0];
-                            setPreview(file ? URL.createObjectURL(file) : null);
+                            const url = file ? URL.createObjectURL(file) : null;
+                            setPreview(url);
+                            onPreviewUrl?.(url);
                         }}
                     />
                     <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
@@ -166,6 +193,157 @@ function PhotoInput({
                             ? "새 사진이 선택되었습니다. 저장하면 바뀝니다."
                             : "고르지 않으면 지금 사진이 그대로 유지됩니다."}
                     </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ── 상단 결과 미리보기 ────────────────────────────────────────────────────────
+
+/** class 페이지의 실제 목록 줄과 최대한 비슷하게 축소 재현 */
+function ListRowPreview({
+    thumbUrl,
+    photoPosition,
+    category,
+    instructorName,
+}: {
+    thumbUrl: string | null;
+    photoPosition: string;
+    category: string;
+    instructorName: string;
+}) {
+    return (
+        <div className="flex items-center gap-4 bg-white rounded-xl border border-neutral-200 p-3">
+            <div className="relative w-14 h-[4.7rem] shrink-0 rounded-sm overflow-hidden bg-neutral-200 border-2 border-white shadow">
+                {thumbUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={thumbUrl} alt="" className={`w-full h-full object-cover ${photoPosition}`} />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[9px] text-neutral-400">
+                        사진
+                    </div>
+                )}
+            </div>
+            <div className="min-w-0">
+                <p className="text-base font-black tracking-tighter uppercase truncate text-neutral-800">
+                    {category || "클래스 이름"}
+                </p>
+                <p className="text-xs font-semibold text-neutral-500 truncate">
+                    Inst. {instructorName || "강사 이름"}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+/** 강사를 눌렀을 때 뜨는 팝업창을 최대한 비슷하게 축소 재현 */
+function PopupPreview({
+    modalUrl,
+    category,
+    subtitle,
+    instructorName,
+    about,
+    process,
+    portfolioText,
+    portfolioBtn,
+}: {
+    modalUrl: string | null;
+    category: string;
+    subtitle: string;
+    instructorName: string;
+    about: string[];
+    process: string[];
+    portfolioText: string;
+    portfolioBtn: string;
+}) {
+    const firstName = instructorName.split(" ")[0] || "강사 이름";
+    return (
+        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+            <div className="flex">
+                {/* 왼쪽: 글 정보 */}
+                <div className="flex-1 min-w-0 p-4">
+                    <p className="text-[9px] font-bold tracking-widest text-neutral-400 uppercase truncate mb-1">
+                        {category || "클래스 이름"}
+                    </p>
+                    <p className="text-sm font-black tracking-tight text-black leading-snug mb-1.5 break-keep line-clamp-2">
+                        {subtitle || "한 줄 소개가 여기 크게 나와요"}
+                    </p>
+                    <p className="text-[10px] font-bold text-neutral-600 mb-2.5">Inst. {firstName}</p>
+
+                    <p className="text-[9px] font-black tracking-widest text-neutral-400 uppercase mb-1">
+                        About
+                    </p>
+                    <p className="text-[10px] text-neutral-500 leading-relaxed break-keep line-clamp-2 mb-2">
+                        {about[0] || "레슨 소개 첫 문단이 여기 나와요"}
+                    </p>
+                    {process.length > 0 && (
+                        <p className="text-[9px] text-neutral-400">커리큘럼 {process.length}단계</p>
+                    )}
+                </div>
+
+                {/* 오른쪽: 사진 + 작업물 */}
+                <div className="w-24 shrink-0 bg-neutral-50 p-3 flex flex-col items-center border-l border-neutral-100">
+                    <div className="relative w-14 h-[4.9rem] rounded-sm overflow-hidden bg-neutral-200 border-2 border-white shadow mb-2">
+                        {modalUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={modalUrl} alt="" className="w-full h-full object-cover object-top" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[8px] text-neutral-400">
+                                사진
+                            </div>
+                        )}
+                    </div>
+                    <p className="text-[8px] text-neutral-400 text-center leading-tight break-keep line-clamp-2 mb-1.5">
+                        {portfolioText || "작업물 설명"}
+                    </p>
+                    <div className="text-[8px] font-bold border border-black px-2 py-1 text-center whitespace-nowrap">
+                        {portfolioBtn || "작업물 보기"}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function LivePreview({
+    preview,
+    thumbUrl,
+    modalUrl,
+    photoPosition,
+}: {
+    preview: PreviewState;
+    thumbUrl: string | null;
+    modalUrl: string | null;
+    photoPosition: string;
+}) {
+    return (
+        <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
+            <p className="text-xs font-bold text-neutral-500 mb-3">
+                👀 실제로 이렇게 보여요 (입력하면 바로 바뀝니다)
+            </p>
+            <div className="space-y-3">
+                <div>
+                    <p className="text-[10px] font-bold text-neutral-400 mb-1.5">① 클래스 목록 화면</p>
+                    <ListRowPreview
+                        thumbUrl={thumbUrl}
+                        photoPosition={photoPosition}
+                        category={preview.category}
+                        instructorName={preview.instructorName}
+                    />
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold text-neutral-400 mb-1.5">② 이름을 누르면 뜨는 창</p>
+                    <PopupPreview
+                        modalUrl={modalUrl}
+                        category={preview.category}
+                        subtitle={preview.subtitle}
+                        instructorName={preview.instructorName}
+                        about={preview.about}
+                        process={preview.process}
+                        portfolioText={preview.portfolioText}
+                        portfolioBtn={preview.portfolioBtn}
+                    />
                 </div>
             </div>
         </div>
@@ -182,12 +360,46 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
 
     const [photoPosition, setPhotoPosition] = useState(data.imagePosition || "object-top");
     const [thumbPreview, setThumbPreview] = useState<string | null>(null);
+    const [modalPreview, setModalPreview] = useState<string | null>(null);
     const shownThumb = thumbPreview ?? data.imageUrl;
+    const shownModal = modalPreview ?? data.modalImageUrl ?? data.imageUrl;
+
+    // 실제 저장은 폼 필드 값(uncontrolled)을 그대로 쓰고,
+    // 이 state는 오직 위쪽 "결과 미리보기"를 실시간으로 그리는 용도로만 쓴다.
+    const [preview, setPreview] = useState<PreviewState>(() => ({
+        category: data.category,
+        subtitle: data.subtitle,
+        instructorName: data.instructorName,
+        about: data.about,
+        process: data.process,
+        portfolioText: data.portfolioText,
+        portfolioBtn: data.portfolioBtn,
+    }));
+
+    const updatePreview = useMemo(
+        () =>
+            <K extends keyof PreviewState>(key: K) =>
+            (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+                const raw = e.target.value;
+                setPreview((p) => ({
+                    ...p,
+                    [key]: key === "about" || key === "process" ? linesToArray(raw) : raw,
+                }));
+            },
+        [],
+    );
 
     return (
         <form action={formAction} className="space-y-5 pb-32">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="imagePosition" value={photoPosition} />
+
+            <LivePreview
+                preview={preview}
+                thumbUrl={shownThumb}
+                modalUrl={shownModal}
+                photoPosition={photoPosition}
+            />
 
             {/* 1. 기본 정보 */}
             <Section step={1} title="기본 정보">
@@ -196,6 +408,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         id="instructorName"
                         name="instructorName"
                         defaultValue={data.instructorName}
+                        onChange={updatePreview("instructorName")}
                         required
                         className={inputClass}
                     />
@@ -206,6 +419,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         id="category"
                         name="category"
                         defaultValue={data.category}
+                        onChange={updatePreview("category")}
                         required
                         className={inputClass}
                     />
@@ -231,12 +445,15 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
             <Section
                 step={2}
                 title="사진"
-                hint="사진은 총 3장이 필요합니다. 바꾸고 싶은 것만 고르시면 됩니다."
+                hint="사진은 총 3장이 필요합니다. 바꾸고 싶은 것만 고르시면 됩니다. 위 미리보기에서 바로 확인하세요."
             >
                 <div>
                     <p className="text-sm font-bold mb-1.5">목록에 보이는 사진</p>
+                    <p className="text-xs text-neutral-500 mb-0.5 leading-relaxed">
+                        📍 위 미리보기 ① 클래스 목록 화면의 왼쪽 네모 칸
+                    </p>
                     <p className="text-xs text-neutral-500 mb-3 leading-relaxed">
-                        강사 목록에서 왼쪽 네모 칸에 들어갑니다.
+                        🖼️ 세로로 긴 네모 모양으로 잘려서 나와요. 얼굴이 잘리면 아래 &quot;사진에서 보여줄 부분&quot;에서 조정하세요.
                     </p>
                     <div className="flex items-start gap-4">
                         <div className="relative w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
@@ -313,15 +530,18 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                 <PhotoInput
                     name="modalImageFile"
                     label="팝업창 사진"
-                    hint="강사를 눌렀을 때 뜨는 창에 들어갑니다. 보정 없는 원본 사진이 좋습니다."
+                    whereText="위 미리보기 ② 팝업창의 오른쪽 위 네모 칸"
+                    howText="꾸미지 않은 원본 인물사진이 잘 어울려요. 위치 조정은 되지 않으니 얼굴이 가운데쯤 오는 사진을 골라주세요."
                     currentUrl={data.modalImageUrl}
                     aspect="aspect-[3/4]"
+                    onPreviewUrl={setModalPreview}
                 />
 
                 <PhotoInput
                     name="bgImageFile"
                     label="배경 사진"
-                    hint="목록에서 마우스를 올렸을 때 오른쪽에 은은하게 깔립니다."
+                    whereText="목록 화면에서 이 강사 줄에 마우스를 올렸을 때"
+                    howText="흑백으로 흐릿하게, 오른쪽에 크게 깔리는 장식용 사진이에요. 없어도 크게 표 안 나요."
                     currentUrl={data.bgImageUrl}
                     aspect="aspect-[3/4]"
                     previewClassName="grayscale opacity-60"
@@ -340,6 +560,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         id="subtitle"
                         name="subtitle"
                         defaultValue={data.subtitle}
+                        onChange={updatePreview("subtitle")}
                         required
                         className={inputClass}
                     />
@@ -371,6 +592,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         name="about"
                         rows={5}
                         defaultValue={data.about.join("\n")}
+                        onChange={updatePreview("about")}
                         required
                         className={textareaClass}
                     />
@@ -387,6 +609,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         name="process"
                         rows={5}
                         defaultValue={data.process.join("\n")}
+                        onChange={updatePreview("process")}
                         required
                         className={textareaClass}
                     />
@@ -417,6 +640,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         name="portfolioText"
                         rows={2}
                         defaultValue={data.portfolioText}
+                        onChange={updatePreview("portfolioText")}
                         className={textareaClass}
                     />
                 </Field>
@@ -426,6 +650,7 @@ export default function InstructorForm({ data }: { data: InstructorFormData }) {
                         id="portfolioBtn"
                         name="portfolioBtn"
                         defaultValue={data.portfolioBtn}
+                        onChange={updatePreview("portfolioBtn")}
                         className={inputClass}
                     />
                 </Field>
