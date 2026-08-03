@@ -18,7 +18,12 @@ export const workType = defineType({
             name: 'releaseDate',
             title: 'Release Date (Format: YYYY. MM. DD.)',
             type: 'string',
-            validation: (rule) => rule.required()
+            description: '이 형식 그대로 입력해야 목록이 최신순으로 정렬됩니다. (예: 2023. 10. 06.)',
+            validation: (rule) =>
+                rule.required().regex(/^\d{4}\. \d{2}\. \d{2}\.$/, {
+                    name: 'YYYY. MM. DD.',
+                    invert: false,
+                }).error('반드시 "YYYY. MM. DD." 형식으로 입력하세요. (예: 2023. 10. 06.)'),
         }),
         defineField({
             name: 'coverImage',

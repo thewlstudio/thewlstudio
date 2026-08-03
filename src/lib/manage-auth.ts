@@ -43,12 +43,20 @@ function safeEqual(a: string, b: string): boolean {
     return timingSafeEqual(bufA, bufB);
 }
 
+/** 무차별 대입 시도를 현실적으로 느리게 만들기 위한 지연 (완전 차단은 아님) */
+const FAILED_LOGIN_DELAY_MS = 1500;
+
 /** 비밀번호 검증 후 세션 쿠키 발급. 성공 여부를 반환한다. */
 export async function createSession(inputPassword: string): Promise<boolean> {
     const secret = getSecret();
     const password = getPassword();
     if (!secret || !password) return false;
-    if (!safeEqual(inputPassword, password)) return false;
+    if (!safeEqual(inputPassword, password)) {
+        // 별도 저장소 없이도 자동화된 대입 공격 속도를 늦춘다.
+        // 1명이 쓰는 관리 화면이라 IP별 잠금 같은 정교한 방식은 과함.
+        await new Promise((resolve) => setTimeout(resolve, FAILED_LOGIN_DELAY_MS));
+        return false;
+    }
 
     const expiresAt = Date.now() + SESSION_DURATION_MS;
     const token = `${expiresAt}.${sign(expiresAt, secret)}`;
