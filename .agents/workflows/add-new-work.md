@@ -4,36 +4,38 @@ description: How to add a new album to the Works page
 
 # Adding a New Album to the Works Page
 
-When the user asks you to add a new album or work to the `WORKS` page, follow this exact workflow to ensure maximum quality and consistency with the rest of the site. The user will typically provide an uploaded image, album title, artist name, release date, YouTube link, description, and credits in the chat.
+⚠️ 이 프로젝트는 더 이상 코드에 작업물 데이터를 직접 쓰지 않습니다. `src/app/works/page.tsx`에는
+`ALBUMS` 배열이 없고(Sanity CMS에서 `sanityFetch`로 불러옴), `src/app/works/[id]/page.tsx`도
+존재하지 않습니다(동적 라우트 `src/app/works/[slug]/page.tsx`가 모든 작업물을 공용으로 처리).
+아래 절차 대신 **Sanity를 통해** 작업물을 추가하세요.
 
-1. **Locate and Save the Image**
-   - Find the uploaded image path using the `ls` command in the artifacts folder.
-   - Use the `cp` command to copy the uploaded image to `public/images/[image_name_provided_by_user].jpg`. (Or `.png` depending on the original).
+## 방법 A — Sanity Studio에서 직접 (권장)
 
-2. **Create the Detail Page (`src/app/works/[id]/page.tsx`)**
-   - Analyze the provided information.
-   - You MUST create a new detail page component inside `src/app/works/[new-id-name]/page.tsx`.
-   - **Template rules to follow:**
-     - The background must be completely clean white (`bg-white relative min-h-screen text-black font-sans`).
-     - **Title Area**: The artist name h2 must be uppercase text `#222`, and immediately BELOW it, there must be a smaller centered instagram link: `<a href="https://instagram.com/아이디" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs md:text-sm font-bold text-neutral-400 hover:text-neutral-800 transition-colors tracking-widest">@아이디</a>`.
-     - **Album Title**: Remove any square brackets `[` `]` from the album title. Display it as a large heading.
-     - **Cover Image Hover Effect**: The album artwork must be wrapped in an `<a>` tag with the provided YouTube link, using `target="_blank"`. Inside the `<a>` tag, the image must have the JYP-style hover overlay: `<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">... (vertical/horizontal white lines) ...</div>`.
-     - **Release Date Section**: Add a subtle text block showing "Release Date" and the date formatted as `YYYY. MM. DD.`.
-     - **Description**: Add the provided description below a vertical divider line. Use `break-keep` and format nicely.
-     - **Credits Section**: Below another divider, list all credits in a grid (`grid-cols-2 md:grid-cols-3`).
-     - **Instagram Links in Credits**: ANY Instagram handle (e.g., `@shcord_re`, `@wl_musicstudio`) mentioned in the credits MUST be wrapped in an `<a>` tag pointing to `https://instagram.com/[handle]` with `hover:text-neutral-500 transition-colors`.
+1. `/admin` 경로로 접속해 로그인합니다.
+2. "Work / Project" 문서 타입에서 새 문서를 만듭니다.
+3. 아래 필드를 채웁니다 (스키마: `src/sanity/schemaTypes/workType.ts`):
+   - `title` — 앨범 타이틀 (대괄호 `[ ]` 제외)
+   - `artist` — 아티스트명
+   - `slug` — URL 경로 (title에서 자동 생성, 필요시 직접 수정)
+   - `releaseDate` — **반드시 `YYYY. MM. DD.` 형식** (예: `2023. 10. 06.`). 이 문자열 그대로 정렬 기준이 되므로 형식이 틀리면 목록 순서가 깨집니다.
+   - `coverImage` — 앨범 커버 이미지 업로드
+   - `youtubeUrl` — 커버 클릭 시 연결할 유튜브 링크 (선택)
+   - `instagramId` / `instagramUrl` — 아티스트 인스타그램 (선택)
+   - `contentBlocks` — 상세 페이지를 구성하는 블록들 (Description, Tracklist, Credit Grid, Image, Video 등). 순서는 드래그로 조정 가능.
+4. 저장하면 ISR(최대 1시간) 또는 `revalidateTag`로 사이트에 반영됩니다.
 
-3. **Update the Works Index (`src/app/works/page.tsx`)**
-   - Locate the `ALBUMS` array array inside `src/app/works/page.tsx`.
-   - Add a new object to this array with properties:
-     - `id`: The URL path name you created (e.g., `"haze"` or `"never-forgot-you"`).
-     - `title`: The album title (without square brackets).
-     - `artist`: The artist name (without instagram tags).
-     - `date`: The release date formatted exactly as `"YYYY. MM. DD."` (e.g., `"2023. 10. 06."`).
-     - `image`: The path to the newly saved image in `public/images/`.
-     - `link`: The path to the detail page (e.g., `"/works/haze"`).
-   - *Note: The frontend code automatically sorts the `ALBUMS` array by this `date` field, so your exact formatting matters for the chronological display.*
+## 방법 B — 채팅으로 요청받아 대신 입력할 때
 
-4. **Review and Notify**
-   - Verify that the image is in place, the detail page has the correct styling, and the index page points to it.
-   - Use `notify_user` to provide a summary of the additions.
+사용자가 이미지와 정보를 채팅으로 제공하며 "작업물 추가해줘"라고 요청하면:
+
+1. Sanity 쓰기 클라이언트(`src/sanity/lib/writeClient.ts`)를 사용해 `work` 타입 문서를 생성한다.
+   (직접 파일을 만들거나 배열을 수정하지 않는다 — 반드시 Sanity 문서로 생성한다.)
+2. 이미지는 `client.assets.upload('image', buffer, { filename })`로 Sanity에 업로드한 뒤 참조로 연결한다.
+3. `releaseDate`는 `YYYY. MM. DD.` 형식을 정확히 지킨다.
+4. 완료 후 `updateTag('work')`와 `revalidatePath('/works')`를 호출해 즉시 반영한다.
+5. 결과를 요약해 사용자에게 알린다.
+
+## 참고
+
+- 실제 렌더링 컴포넌트: `src/app/works/WorksClient.tsx`(목록), `src/app/works/[slug]/WorkDetailClient.tsx`(상세)
+- GROQ 쿼리: `src/sanity/lib/queries.ts`의 `worksQuery`, `workBySlugQuery`

@@ -201,15 +201,19 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                     transition={{ duration: 1, delay: 0.2 }}
                     className={`group relative block w-full max-w-sm aspect-square shadow-2xl overflow-hidden mb-6 ${!youtubeUrl ? 'cursor-default' : ''}`}
                 >
-                    <Image
-                        src={imageUrl ?? '/images/placeholder.jpg'}
-                        alt={title}
-                        fill
-                        placeholder={initialWork.lqip ? "blur" : "empty"}
-                        blurDataURL={initialWork.lqip || undefined}
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                    {imageUrl ? (
+                        <Image
+                            src={imageUrl}
+                            alt={title}
+                            fill
+                            placeholder={initialWork.lqip ? "blur" : "empty"}
+                            blurDataURL={initialWork.lqip || undefined}
+                            sizes="(max-width: 768px) 100vw, 400px"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-neutral-100" />
+                    )}
                     {youtubeUrl && (
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <div className="relative w-10 h-10">

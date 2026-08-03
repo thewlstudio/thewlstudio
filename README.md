@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# White Light Studio
 
-## Getting Started
+서울 광진구 중곡동 보컬 연습 스튜디오 화이트라이트 스튜디오의 공식 홈페이지입니다.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Turbopack)
+- **Sanity CMS** — 작업물(Works), 크루(Crew), 강사(Instructor) 콘텐츠 관리
+- **Tailwind CSS**, **motion**(구 framer-motion), **Lenis** 스무스 스크롤
+- 로컬 폰트: Pretendard Variable
+
+## 개발 시작하기
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) 에서 확인합니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+환경변수는 `.env.example`을 참고해 `.env.local`을 만드세요.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 콘텐츠 관리
 
-## Learn More
+두 가지 방법으로 콘텐츠를 편집할 수 있습니다.
 
-To learn more about Next.js, take a look at the following resources:
+1. **`/manage`** — 강사 정보 등을 위한 간편 관리 화면. 설문지 형태로 구성되어 있어 CSS나 코드를 몰라도 사용할 수 있습니다.
+2. **`/admin`** — Sanity Studio. 작업물(Works), 크루(Crew) 등 전체 콘텐츠를 관리하는 전문 CMS 화면입니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`/manage`를 쓰려면 `MANAGE_PASSWORD`, `MANAGE_SECRET`, `SANITY_API_WRITE_TOKEN` 환경변수가 필요합니다 (`.env.example` 참고).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 주요 명령어
 
-## Deploy on Vercel
+```bash
+npm run dev      # 개발 서버
+npm run build    # 프로덕션 빌드
+npm run lint     # ESLint 검사
+npm run analyze  # 번들 크기 분석
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 배포
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel에 배포합니다. `main` 브랜치에 푸시하면 자동 배포됩니다.

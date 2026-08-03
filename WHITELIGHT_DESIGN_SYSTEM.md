@@ -64,13 +64,15 @@
 
 이 프로젝트는 최신 모던 웹 개발 방식에 맞춰 구축되었으며 그 유지보수가 용이하도록 컴포넌트를 분할했습니다.
 
-*   **Framework**: Next.js 14 (App Router 방식)
+*   **Framework**: Next.js 16 (App Router, Turbopack)
+*   **CMS**: Sanity — Works, Crew, Instructor 콘텐츠는 코드가 아닌 CMS에서 관리합니다 (`/admin`이 Sanity Studio, `/manage`는 강사용 간편 편집 화면)
 *   **Styling**: Vanilla CSS 및 Tailwind CSS
     *   복잡한 커스텀 클래스오버라이딩을 최소화하고 직관적인 Utility Class들(`flex`, `items-center`, `justify-between` 등)의 조합으로 신속하고 확실한 반응형(Responsive) 레이아웃을 통제합니다.
-*   **Animations**: Framer Motion
+*   **Animations**: motion (framer-motion의 후속 라이브러리, import 경로는 `motion/react`)
 *   **Icons**: Lucide React (최소한의 선으로 이루어진 모던 아이콘 세트 - Contact 맵 파트 등에 활용)
 *   **File Structure (주요 레이어)**:
     *   `src/app/` : 라우팅이 걸리는 주요 페이지 모음 (`/studio`, `/contact`, `/class`, `/crew`, `/works`)
     *   `src/components/` : 모든 페이지에 재사용되는 부품 (`Header.tsx` 글로벌 네비게이션, `Footer.tsx` 하단바 등)
+    *   `src/sanity/` : Sanity 클라이언트, GROQ 쿼리, 스키마 정의
 
 이 문서는 화이트 라이트 스튜디오의 모든 온·오프라인 비주얼 자산과 브랜딩 전반에 참고될 수 있는 귀중한 기준 역할을 수행합니다.
