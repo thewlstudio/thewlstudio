@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Next.js 16.3+ auto-generates these for AI coding agents on `next dev`
+# (see node_modules/next/dist/server/lib/generate-agent-files.js) — local-only, not project docs
+/AGENTS.md
+/CLAUDE.md
