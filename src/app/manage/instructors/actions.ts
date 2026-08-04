@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
@@ -16,6 +17,20 @@ function linesToArray(value: string): string[] {
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
+}
+
+/**
+ * 스키마상 필수인 `id` slug를 새로 만든다. 프론트엔드는 이 필드를 렌더링에
+ * 쓰지 않지만(_id만 사용), Studio에서 필수값 누락 경고가 뜨지 않도록 하고
+ * 복제 시 원본과 slug가 겹치지 않도록 항상 고유하게 생성한다.
+ */
+function generateInstructorSlug(instructorName: string): string {
+    const base =
+        instructorName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-+|-+$)/g, "") || "instructor";
+    return `${base}-${randomUUID().slice(0, 8)}`;
 }
 
 /** 업로드된 파일이 있으면 Sanity 에셋으로 올리고 참조 객체를 돌려준다 */
@@ -120,7 +135,15 @@ export async function saveInstructor(
             if (uploaded) patch[field] = uploaded;
         }
 
-        await client.patch(documentId).set(patch).commit();
+        // portfolioUrl/portfolioText처럼 선택 항목을 비워서 undefined가 된 필드는
+        // set()에 그대로 넘기면 직렬화 과정에서 통째로 빠져 기존 값이 안 지워진다.
+        // Sanity에서 필드를 실제로 지우려면 unset()을 따로 호출해야 한다.
+        const unsetFields = Object.keys(patch).filter((key) => patch[key] === undefined);
+        for (const key of unsetFields) delete patch[key];
+
+        let mutation = client.patch(documentId).set(patch);
+        if (unsetFields.length > 0) mutation = mutation.unset(unsetFields);
+        await mutation.commit();
 
         // 공개 사이트에 즉시 반영.
         // updateTag는 서버 액션 전용으로, 저장 직후 본인이 바뀐 내용을 바로 볼 수 있게 한다.
@@ -181,6 +204,10 @@ export async function createInstructor(
             _type: "instructor",
             ...parsed.fields,
             order,
+            id: {
+                _type: "slug",
+                current: generateInstructorSlug(String(parsed.fields.instructorName ?? "")),
+            },
             image,
             bgImage,
             ...(modalImage ? { modalImage } : {}),
@@ -284,10 +311,17 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
         void _updatedAt;
         void trashed;
 
+        const newName = `${String(instructorName ?? "")} (복사본)`.trim();
+
         const created = await client.create({
             _type: (_type as string) ?? "instructor",
             ...rest,
-            instructorName: `${String(instructorName ?? "")} (복사본)`.trim(),
+            instructorName: newName,
+            // 복제 직후 원본 내용을 다 확인하기 전엔 홈페이지에 노출되면 안 되므로
+            // 원본의 공개 상태와 무관하게 항상 비공개로 만든다. id도 원본과 겹치지
+            // 않도록 새로 발급한다 (스키마 필수 slug).
+            isActive: false,
+            id: { _type: "slug", current: generateInstructorSlug(newName) },
             order,
         });
 
