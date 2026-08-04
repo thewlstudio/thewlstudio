@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState, useId, useMemo, useRef, useEffect } from "react";
+import { useActionState, useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
-import { saveInstructor, createInstructor, type SaveResult } from "../actions";
+import { saveInstructor, createInstructor, type SaveResult, type FieldError } from "../actions";
 
 export type InstructorFormData = {
     _id: string;
@@ -120,7 +120,7 @@ function Field({
                 {label}
                 {required && <span className="text-red-600 ml-1">*</span>}
             </label>
-            {hint && <p className="text-xs text-neutral-500 mb-2 leading-relaxed">{hint}</p>}
+            {hint && <p className="text-sm text-neutral-600 mb-2 leading-relaxed">{hint}</p>}
             {children}
         </div>
     );
@@ -155,7 +155,9 @@ function PhotoInput({
     onPreviewUrl?: (url: string | null) => void;
     required?: boolean;
 }) {
-    const id = useId();
+    // name은 이미 usage마다 고유한 값이라(예: modalImageFile, bgImageFile),
+    // 오류 요약에서 이 필드로 바로 이동할 수 있도록 그대로 id로 쓴다.
+    const id = name;
     const [preview, setPreview] = useState<string | null>(null);
     const [fileError, setFileError] = useState<string | null>(null);
     const shown = preview ?? currentUrl;
@@ -166,8 +168,8 @@ function PhotoInput({
                 {label}
                 {required && <span className="text-red-600 ml-1">*</span>}
             </p>
-            <p className="text-xs text-neutral-500 mb-0.5 leading-relaxed">📍 {whereText}</p>
-            <p className="text-xs text-neutral-500 mb-3 leading-relaxed">🖼️ {howText}</p>
+            <p className="text-sm text-neutral-600 mb-0.5 leading-relaxed">📍 {whereText}</p>
+            <p className="text-sm text-neutral-600 mb-3 leading-relaxed">🖼️ {howText}</p>
 
             <div className="flex items-start gap-4">
                 <div
@@ -182,7 +184,7 @@ function PhotoInput({
                             className={`w-full h-full object-cover ${previewClassName ?? ""}`}
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[11px] text-neutral-400 text-center px-1">
+                        <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400 text-center px-1">
                             사진 없음
                         </div>
                     )}
@@ -225,11 +227,11 @@ function PhotoInput({
                         }}
                     />
                     {fileError ? (
-                        <p role="alert" className="text-xs font-semibold text-red-600 mt-2 leading-relaxed">
+                        <p role="alert" className="text-sm font-semibold text-red-600 mt-2 leading-relaxed">
                             {fileError}
                         </p>
                     ) : (
-                        <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
+                        <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
                             {preview
                                 ? "새 사진이 선택되었습니다. 저장하면 바뀝니다."
                                 : required
@@ -350,6 +352,49 @@ function PopupPreview({
     );
 }
 
+/** 저장 실패 시 상단에 뜨는 오류 요약. 각 항목을 누르면 해당 입력칸으로 이동한다. */
+function ErrorSummary({
+    fields,
+    summaryRef,
+}: {
+    fields: FieldError[];
+    summaryRef: React.RefObject<HTMLDivElement | null>;
+}) {
+    return (
+        <div
+            ref={summaryRef}
+            tabIndex={-1}
+            role="alert"
+            className="rounded-xl border-2 border-red-400 bg-red-50 p-4 focus:outline-none"
+        >
+            <p className="text-sm font-bold text-red-700 mb-2">
+                다음 항목을 확인해 주세요 ({fields.length}개)
+            </p>
+            <ul className="space-y-1.5">
+                {fields.map((f) => (
+                    <li key={f.id}>
+                        <a
+                            href={`#${f.id}`}
+                            className="text-sm font-semibold text-red-700 underline underline-offset-4 hover:text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 rounded-sm"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                const el = document.getElementById(f.id);
+                                el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                // 사진 입력은 화면에 안 보이게 숨겨둔 요소라 포커스 링이 안 보인다.
+                                // 그런 경우는 스크롤만 하고, 눈에 보이는 입력칸만 포커스한다.
+                                const isHiddenFileInput = el instanceof HTMLInputElement && el.type === "file";
+                                if (!isHiddenFileInput) el?.focus({ preventScroll: true });
+                            }}
+                        >
+                            {f.label}
+                        </a>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
 function LivePreview({
     preview,
     thumbUrl,
@@ -364,21 +409,21 @@ function LivePreview({
     return (
         <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
             <div className="flex items-center justify-between gap-3 mb-3">
-                <p className="text-xs font-bold text-neutral-500">
+                <p className="text-sm font-bold text-neutral-600">
                     👀 실제로 이렇게 보여요 (입력하면 바로 바뀝니다)
                 </p>
                 <Link
                     href="/class"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 text-xs font-semibold text-neutral-500 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
+                    className="shrink-0 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
                 >
                     진짜 화면 보기 ↗
                 </Link>
             </div>
             <div className="space-y-3">
                 <div>
-                    <p className="text-[10px] font-bold text-neutral-400 mb-1.5">① 클래스 목록 화면</p>
+                    <p className="text-sm font-bold text-neutral-500 mb-1.5">① 클래스 목록 화면</p>
                     <ListRowPreview
                         thumbUrl={thumbUrl}
                         photoPosition={photoPosition}
@@ -387,7 +432,7 @@ function LivePreview({
                     />
                 </div>
                 <div>
-                    <p className="text-[10px] font-bold text-neutral-400 mb-1.5">② 이름을 누르면 뜨는 창</p>
+                    <p className="text-sm font-bold text-neutral-500 mb-1.5">② 이름을 누르면 뜨는 창</p>
                     <PopupPreview
                         modalUrl={modalUrl}
                         category={preview.category}
@@ -406,12 +451,14 @@ function LivePreview({
 
 // ── 본체 ──────────────────────────────────────────────────────────────────────
 
-export default function InstructorForm({
+function InstructorFormInner({
     data,
     mode = "edit",
+    onDiscard,
 }: {
     data: InstructorFormData;
     mode?: "create" | "edit";
+    onDiscard: () => void;
 }) {
     const isCreate = mode === "create";
     const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(
@@ -488,11 +535,25 @@ export default function InstructorForm({
         if (!confirmed) e.preventDefault();
     };
 
+    // 저장 실패로 필드별 오류가 새로 생기면 상단 오류 요약으로 포커스를 옮긴다.
+    // (setState가 아닌 DOM 포커스 이동이라 effect 안에서 호출해도 안전하다)
+    const errorSummaryRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (state && !state.ok && state.fields && state.fields.length > 0) {
+            errorSummaryRef.current?.focus();
+            errorSummaryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [state]);
+
     return (
         <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="imagePosition" value={photoPosition} />
             <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
+
+            {state && !state.ok && state.fields && state.fields.length > 0 && (
+                <ErrorSummary fields={state.fields} summaryRef={errorSummaryRef} />
+            )}
 
             {!isActive && (
                 <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
@@ -511,7 +572,7 @@ export default function InstructorForm({
             <Section step={1} title="기본 정보">
                 <fieldset>
                     <legend className="text-sm font-bold mb-1.5">공개 상태</legend>
-                    <p className="text-xs text-neutral-500 mb-3 leading-relaxed">
+                    <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
                         휴직이나 개인 사정으로 잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔주세요. 나중에 다시 공개로 되돌릴 수 있습니다.
                     </p>
                     <div className="grid grid-cols-2 gap-2">
@@ -564,7 +625,7 @@ export default function InstructorForm({
                     />
                 </Field>
 
-                <p className="text-xs text-neutral-500 leading-relaxed">
+                <p className="text-sm text-neutral-600 leading-relaxed">
                     보여지는 순서는 여기서 바꾸지 않아요. 목록 화면에서 화살표 버튼으로 옮길 수 있습니다.
                 </p>
             </Section>
@@ -580,10 +641,10 @@ export default function InstructorForm({
                         목록에 보이는 사진
                         {isCreate && <span className="text-red-600 ml-1">*</span>}
                     </p>
-                    <p className="text-xs text-neutral-500 mb-0.5 leading-relaxed">
+                    <p className="text-sm text-neutral-600 mb-0.5 leading-relaxed">
                         📍 위 미리보기 ① 클래스 목록 화면의 왼쪽 네모 칸
                     </p>
-                    <p className="text-xs text-neutral-500 mb-3 leading-relaxed">
+                    <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
                         🖼️ 세로로 긴 네모 모양으로 잘려서 나와요. 얼굴이 잘리면 아래 &quot;사진에서 보여줄 부분&quot;에서 조정하세요.
                     </p>
                     <div className="flex items-start gap-4">
@@ -596,7 +657,7 @@ export default function InstructorForm({
                                     className={`w-full h-full object-cover ${photoPosition}`}
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[11px] text-neutral-400">
+                                <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">
                                     사진 없음
                                 </div>
                             )}
@@ -634,11 +695,11 @@ export default function InstructorForm({
                                 }}
                             />
                             {thumbFileError ? (
-                                <p role="alert" className="text-xs font-semibold text-red-600 mt-2 leading-relaxed">
+                                <p role="alert" className="text-sm font-semibold text-red-600 mt-2 leading-relaxed">
                                     {thumbFileError}
                                 </p>
                             ) : (
-                                <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
+                                <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
                                     {thumbPreview
                                         ? "새 사진이 선택되었습니다."
                                         : isCreate
@@ -653,7 +714,7 @@ export default function InstructorForm({
                 {/* 사진 위치 — 눈으로 보고 고른다 */}
                 <fieldset>
                     <legend className="text-sm font-bold mb-1.5">사진에서 보여줄 부분</legend>
-                    <p className="text-xs text-neutral-500 mb-3 leading-relaxed">
+                    <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
                         얼굴이 잘리거나 너무 작으면 아래에서 골라보세요. 위 미리보기가 바로 바뀝니다.
                     </p>
                     <div className="grid grid-cols-3 gap-2">
@@ -812,6 +873,14 @@ export default function InstructorForm({
 
             {/* 저장 바 — 화면 아래 고정 */}
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
+                {isDirty && (
+                    <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">
+                        저장하지 않은 변경사항이 있어요
+                    </p>
+                )}
+                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">
+                    {isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영됩니다.
+                </p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link
                         href="/manage/instructors"
@@ -820,6 +889,20 @@ export default function InstructorForm({
                     >
                         목록
                     </Link>
+                    {isDirty && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const confirmed = window.confirm(
+                                    "변경한 내용을 모두 버릴까요? 되돌릴 수 없습니다.",
+                                );
+                                if (confirmed) onDiscard();
+                            }}
+                            className="h-12 px-4 rounded-xl border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                        >
+                            변경 버리기
+                        </button>
+                    )}
                     <button
                         type="submit"
                         disabled={isPending}
@@ -842,5 +925,24 @@ export default function InstructorForm({
                 )}
             </div>
         </form>
+    );
+}
+
+/**
+ * 얇은 래퍼. "변경 버리기"를 누르면 resetKey를 바꿔서 InstructorFormInner
+ * 전체를 새로 마운트한다 — 비제어 입력, PhotoInput 내부 state까지
+ * 포함해 폼의 모든 상태를 한 번에 원래 값(data)으로 되돌리는 가장 확실한 방법이다.
+ */
+export default function InstructorForm(props: {
+    data: InstructorFormData;
+    mode?: "create" | "edit";
+}) {
+    const [resetKey, setResetKey] = useState(0);
+    return (
+        <InstructorFormInner
+            key={resetKey}
+            {...props}
+            onDiscard={() => setResetKey((k) => k + 1)}
+        />
     );
 }

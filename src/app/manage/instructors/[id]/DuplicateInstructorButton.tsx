@@ -30,7 +30,7 @@ export default function DuplicateInstructorButton({ documentId }: { documentId: 
                 {isPending ? "복제하는 중…" : "복제해서 새로 만들기"}
             </button>
             {error && (
-                <p role="alert" className="text-xs font-semibold text-red-600 mt-1">
+                <p role="alert" className="text-sm font-semibold text-red-600 mt-1">
                     {error}
                 </p>
             )}

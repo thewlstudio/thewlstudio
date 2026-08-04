@@ -56,7 +56,8 @@ export default function DeleteInstructorButton({
     return (
         <div role="alertdialog" aria-label="삭제 확인" className="rounded-xl border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-bold text-red-700 mb-3 break-keep">
-                정말 &quot;{instructorName || "이 강사"}&quot;을(를) 삭제할까요? 되돌릴 수 없습니다.
+                &quot;{instructorName || "이 강사"}&quot;을(를) 휴지통으로 옮길까요? 사이트와 목록에서 바로 사라지지만,
+                나중에 휴지통에서 복원할 수 있습니다.
             </p>
 
             {error && (
@@ -93,7 +94,7 @@ export default function DeleteInstructorButton({
                     }}
                     className="h-10 px-4 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
-                    {isPending ? "삭제하는 중…" : "예, 삭제합니다"}
+                    {isPending ? "이동하는 중…" : "휴지통으로 이동"}
                 </button>
             </div>
         </div>

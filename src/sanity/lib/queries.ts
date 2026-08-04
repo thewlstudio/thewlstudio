@@ -26,7 +26,7 @@ export const crewsQuery = groq`
 `;
 
 export const instructorsQuery = groq`
-  *[_type == "instructor" && !(isActive == false)] | order(order asc) {
+  *[_type == "instructor" && !(isActive == false) && !(trashed == true)] | order(order asc) {
     _id,
     id,
     category,

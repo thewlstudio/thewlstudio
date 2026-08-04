@@ -29,7 +29,7 @@ export default async function ManageLoginPage({
 
     if (!isManageConfigured()) {
         return (
-            <main className="min-h-screen bg-neutral-50 text-black flex items-center justify-center px-6">
+            <main id="main-content" className="min-h-screen bg-neutral-50 text-black flex items-center justify-center px-6">
                 <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-neutral-200 p-8">
                     <h1 className="text-xl font-bold mb-3">설정이 필요합니다</h1>
                     <p className="text-sm text-neutral-600 leading-relaxed">
@@ -43,7 +43,7 @@ export default async function ManageLoginPage({
     }
 
     return (
-        <main className="min-h-screen bg-neutral-50 text-black flex items-center justify-center px-6">
+        <main id="main-content" className="min-h-screen bg-neutral-50 text-black flex items-center justify-center px-6">
             <div className="max-w-sm w-full">
                 <div className="text-center mb-8">
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-2">

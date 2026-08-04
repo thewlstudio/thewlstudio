@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 
-export type SaveResult = { ok: true } | { ok: false; error: string };
+/** 오류가 난 필드의 DOM id와 사람이 읽을 이름 — 상단 오류 요약에서 해당 칸으로 이동할 때 쓴다 */
+export type FieldError = { id: string; label: string };
+export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
 export type DuplicateResult = { ok: true; newId: string } | { ok: false; error: string };
 
 /** 여러 줄 텍스트 → 문자열 배열 (빈 줄 제거) */
@@ -44,7 +46,9 @@ async function uploadImageIfPresent(
 }
 
 /** 텍스트류 공통 필드를 파싱하고 필수값을 검증한다 (생성/수정 공용) */
-function parseAndValidateFields(formData: FormData): { fields: Record<string, unknown> } | { error: string } {
+function parseAndValidateFields(
+    formData: FormData,
+): { fields: Record<string, unknown> } | { error: string; missingFields: FieldError[] } {
     const instructorName = String(formData.get("instructorName") ?? "").trim();
     const category = String(formData.get("category") ?? "").trim();
     const subtitle = String(formData.get("subtitle") ?? "").trim();
@@ -52,15 +56,18 @@ function parseAndValidateFields(formData: FormData): { fields: Record<string, un
     const about = linesToArray(String(formData.get("about") ?? ""));
     const process = linesToArray(String(formData.get("process") ?? ""));
 
-    const missing: string[] = [];
-    if (!instructorName) missing.push("강사 이름");
-    if (!category) missing.push("클래스 이름");
-    if (!subtitle) missing.push("한 줄 소개");
-    if (!lessonInfo) missing.push("레슨 형태");
-    if (about.length === 0) missing.push("레슨 소개");
-    if (process.length === 0) missing.push("커리큘럼");
+    const missing: FieldError[] = [];
+    if (!instructorName) missing.push({ id: "instructorName", label: "강사 이름" });
+    if (!category) missing.push({ id: "category", label: "클래스 이름" });
+    if (!subtitle) missing.push({ id: "subtitle", label: "한 줄 소개" });
+    if (!lessonInfo) missing.push({ id: "lessonInfo", label: "레슨 형태" });
+    if (about.length === 0) missing.push({ id: "about", label: "레슨 소개" });
+    if (process.length === 0) missing.push({ id: "process", label: "커리큘럼" });
     if (missing.length > 0) {
-        return { error: `${missing.join(", ")}을(를) 입력해 주세요.` };
+        return {
+            error: `${missing.map((m) => m.label).join(", ")}을(를) 입력해 주세요.`,
+            missingFields: missing,
+        };
     }
 
     const isActive = String(formData.get("isActive") ?? "true") === "true";
@@ -98,7 +105,7 @@ export async function saveInstructor(
         }
 
         const parsed = parseAndValidateFields(formData);
-        if ("error" in parsed) return { ok: false, error: parsed.error };
+        if ("error" in parsed) return { ok: false, error: parsed.error, fields: parsed.missingFields };
 
         const patch: Record<string, unknown> = { ...parsed.fields };
 
@@ -143,18 +150,22 @@ export async function createInstructor(
         const client = getWriteClient();
 
         const parsed = parseAndValidateFields(formData);
-        if ("error" in parsed) return { ok: false, error: parsed.error };
+        if ("error" in parsed) return { ok: false, error: parsed.error, fields: parsed.missingFields };
 
         const imageFile = formData.get("imageFile") as File | null;
         const bgImageFile = formData.get("bgImageFile") as File | null;
         const modalImageFile = formData.get("modalImageFile") as File | null;
 
         // 목록 사진 / 배경 사진은 CMS 스키마상 필수 항목이다
-        const missingImages: string[] = [];
-        if (!imageFile || imageFile.size === 0) missingImages.push("목록에 보이는 사진");
-        if (!bgImageFile || bgImageFile.size === 0) missingImages.push("배경 사진");
+        const missingImages: FieldError[] = [];
+        if (!imageFile || imageFile.size === 0) missingImages.push({ id: "imageFile", label: "목록에 보이는 사진" });
+        if (!bgImageFile || bgImageFile.size === 0) missingImages.push({ id: "bgImageFile", label: "배경 사진" });
         if (missingImages.length > 0) {
-            return { ok: false, error: `${missingImages.join(", ")}을(를) 선택해 주세요.` };
+            return {
+                ok: false,
+                error: `${missingImages.map((m) => m.label).join(", ")}을(를) 선택해 주세요.`,
+                fields: missingImages,
+            };
         }
 
         const [image, bgImage, modalImage, existingOrders] = await Promise.all([
@@ -205,7 +216,7 @@ export async function moveInstructorOrder(
         const client = getWriteClient();
 
         const all = await client.fetch<Array<{ _id: string; order: number }>>(
-            `*[_type == "instructor"] | order(order asc) { _id, order }`,
+            `*[_type == "instructor" && !(trashed == true)] | order(order asc) { _id, order }`,
         );
 
         const index = all.findIndex((i) => i._id === documentId);
@@ -265,11 +276,13 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
 
         // _id, _rev 등 시스템 필드는 제외하고 나머지만 그대로 복제한다.
         // 이미지 필드는 Sanity 이미지 참조라 여러 문서가 같이 가리켜도 안전하다.
-        const { _id, _rev, _type, _createdAt, _updatedAt, instructorName, ...rest } = original;
+        // trashed는 절대 복제하지 않는다 — 휴지통에 있던 것을 복제해도 새 문서는 정상이어야 한다.
+        const { _id, _rev, _type, _createdAt, _updatedAt, instructorName, trashed, ...rest } = original;
         void _id;
         void _rev;
         void _createdAt;
         void _updatedAt;
+        void trashed;
 
         const created = await client.create({
             _type: (_type as string) ?? "instructor",
@@ -291,7 +304,10 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
 }
 
 /**
- * 강사 삭제. 클라이언트 컴포넌트에서 직접 호출되므로(폼 액션이 아님)
+ * 강사를 휴지통으로 이동한다 (소프트 삭제 — 문서를 실제로 지우지 않고
+ * trashed: true만 세운다). 목록·공개 사이트에서는 즉시 안 보이게 되지만
+ * 휴지통에서 언제든 복원할 수 있다.
+ * 클라이언트 컴포넌트에서 직접 호출되므로(폼 액션이 아님)
  * redirect()를 쓰지 않고 결과만 돌려준다 — 이동은 호출부에서 router로 처리한다.
  */
 export async function deleteInstructor(documentId: string): Promise<SaveResult> {
@@ -301,7 +317,7 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
             return { ok: false, error: "삭제할 강사를 찾을 수 없습니다." };
         }
         const client = getWriteClient();
-        await client.delete(documentId);
+        await client.patch(documentId).set({ trashed: true }).commit();
 
         updateTag("instructor");
         revalidatePath("/class");
@@ -311,6 +327,28 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
     } catch (err) {
         const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
         console.error("[deleteInstructor]", err);
+        return { ok: false, error: message };
+    }
+}
+
+/** 휴지통에서 강사를 복원한다 (trashed: false). */
+export async function restoreInstructor(documentId: string): Promise<SaveResult> {
+    try {
+        await requireAuth();
+        if (!documentId) {
+            return { ok: false, error: "복원할 강사를 찾을 수 없습니다." };
+        }
+        const client = getWriteClient();
+        await client.patch(documentId).set({ trashed: false }).commit();
+
+        updateTag("instructor");
+        revalidatePath("/class");
+        revalidatePath("/manage/instructors");
+
+        return { ok: true };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        console.error("[restoreInstructor]", err);
         return { ok: false, error: message };
     }
 }

@@ -2,7 +2,7 @@
 // 셋 다 이 하위 세그먼트에 속해서, 자체 loading.tsx가 없는 한 이 화면을 함께 쓴다.
 export default function InstructorsLoading() {
     return (
-        <main className="max-w-2xl mx-auto px-5 py-10 md:py-16 animate-pulse">
+        <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16 animate-pulse">
             <div className="mb-8">
                 <div className="h-2.5 w-24 bg-neutral-200 rounded mb-2" />
                 <div className="h-8 w-32 bg-neutral-200 rounded" />

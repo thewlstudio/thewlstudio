@@ -12,6 +12,17 @@ export const instructorType = defineType({
             description: '강사 목록에 이 강사를 공개할지 여부를 결정합니다.',
             initialValue: true,
         }),
+        // /manage의 "삭제"는 이 필드를 true로 바꾸는 소프트 삭제다 (실제 문서는 지우지 않음).
+        // isActive와는 의미가 다르다: isActive=false는 "사이트엔 안 보이지만 관리 목록에는
+        // 여전히 정상 항목으로 남아 수정 가능", trashed=true는 "관리 목록에서도 제외되고
+        // 휴지통에서만 복원 가능"한 상태다. Studio 편집 화면에는 노출하지 않는다.
+        defineField({
+            name: 'trashed',
+            title: '(휴지통) 삭제됨',
+            type: 'boolean',
+            initialValue: false,
+            hidden: true,
+        }),
         defineField({
             name: 'id',
             title: '고유 ID',

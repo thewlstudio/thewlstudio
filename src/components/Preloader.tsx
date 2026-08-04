@@ -2,11 +2,15 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 
 const emptySubscribe = () => () => {};
 
 export default function Preloader() {
+    const pathname = usePathname();
+    const isAdminScreen = pathname.startsWith("/manage") || pathname.startsWith("/admin");
+
     const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
     const alreadySeen = useSyncExternalStore(
         emptySubscribe,
@@ -16,6 +20,8 @@ export default function Preloader() {
     const [step, setStep] = useState(0);
 
     useEffect(() => {
+        // 관리 화면은 안정성이 우선이라 장식적 스플래시를 건너뛴다
+        if (isAdminScreen) return;
         if (!isClient || alreadySeen) return;
 
         sessionStorage.setItem("wls_preloader_seen", "true");
@@ -39,10 +45,10 @@ export default function Preloader() {
             clearTimeout(timer2);
             document.body.style.overflow = 'unset';
         };
-    }, [isClient, alreadySeen]);
+    }, [isAdminScreen, isClient, alreadySeen]);
 
-    // Prevent hydration mismatch / skip if already seen
-    if (!isClient || alreadySeen) return null;
+    // 관리 화면 제외 + 하이드레이션 불일치 방지 / 이미 봤으면 스킵
+    if (isAdminScreen || !isClient || alreadySeen) return null;
 
     return (
         <AnimatePresence>
@@ -67,6 +73,7 @@ export default function Preloader() {
                                     src="/images/studio_logo_2.png"
                                     alt="White Light Studio Logo PNG"
                                     fill
+                                    sizes="(max-width: 768px) 256px, (max-width: 1024px) 384px, 768px"
                                     className="object-contain"
                                     priority
                                 />
@@ -85,6 +92,7 @@ export default function Preloader() {
                                     src="/images/studio_logo.jpg"
                                     alt="White Light Studio Logo JPG"
                                     fill
+                                    sizes="(max-width: 768px) 256px, 80vw"
                                     className="object-cover md:object-contain grayscale contrast-150 rounded"
                                     priority
                                 />

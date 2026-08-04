@@ -25,9 +25,10 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const prefersReducedMotion = usePrefersReducedMotion();
 
-    // Sanity Studio (/admin)에서는 Lenis 비활성화 — 폼 입력, 드롭다운 등과 충돌 방지
+    // Sanity Studio(/admin), 관리 화면(/manage)에서는 Lenis 비활성화
+    // — 폼 입력, 드롭다운 등 관리 화면 조작과 충돌 방지, 안정성 우선
     // 동작 줄이기 설정 시에도 비활성화 — 스크롤 하이재킹은 어지럼증을 유발할 수 있음
-    if (pathname.startsWith('/admin') || prefersReducedMotion) {
+    if (pathname.startsWith('/admin') || pathname.startsWith('/manage') || prefersReducedMotion) {
         return <>{children}</>;
     }
 

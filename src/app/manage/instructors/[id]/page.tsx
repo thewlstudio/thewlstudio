@@ -5,6 +5,7 @@ import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import InstructorForm, { type InstructorFormData } from "./InstructorForm";
 import DeleteInstructorButton from "./DeleteInstructorButton";
 import DuplicateInstructorButton from "./DuplicateInstructorButton";
+import RestoreButton from "../RestoreButton";
 
 export const metadata = { title: "강사 수정" };
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 const detailQuery = `*[_type == "instructor" && _id == $id][0]{
     _id,
     isActive,
+    trashed,
     instructorName,
     category,
     subtitle,
@@ -27,7 +29,7 @@ const detailQuery = `*[_type == "instructor" && _id == $id][0]{
     "bgImageUrl": bgImage.asset->url
 }`;
 
-type RawInstructor = Partial<InstructorFormData> & { _id?: string };
+type RawInstructor = Partial<InstructorFormData> & { _id?: string; trashed?: boolean };
 
 export default async function EditInstructorPage({
     params,
@@ -46,6 +48,7 @@ export default async function EditInstructorPage({
     if (!raw?._id) notFound();
 
     const writeReady = isWriteConfigured();
+    const isTrashed = raw.trashed === true;
 
     // 예전 방식(코드에 직접 쓰던 시절)의 흔적으로, 줄바꿈이 실제 개행 대신
     // 문자 그대로의 "\n" 두 글자로 저장된 경우가 있다. 편집 화면에서 보기 좋게
@@ -73,7 +76,7 @@ export default async function EditInstructorPage({
     };
 
     return (
-        <main className="max-w-2xl mx-auto px-5 py-8 md:py-12">
+        <main id="main-content" className="max-w-2xl mx-auto px-5 py-8 md:py-12">
             <header className="mb-6 space-y-3">
                 <div>
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
@@ -84,10 +87,19 @@ export default async function EditInstructorPage({
                     </h1>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    {writeReady && <DuplicateInstructorButton documentId={data._id} />}
-                    <DeleteInstructorButton documentId={data._id} instructorName={data.instructorName} />
-                </div>
+                {isTrashed ? (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+                        <p className="text-sm font-bold text-amber-800 mb-3">
+                            이 강사는 휴지통에 있습니다. 사이트와 목록에 보이지 않습니다.
+                        </p>
+                        {writeReady && <RestoreButton documentId={data._id} />}
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-4">
+                        {writeReady && <DuplicateInstructorButton documentId={data._id} />}
+                        <DeleteInstructorButton documentId={data._id} instructorName={data.instructorName} />
+                    </div>
+                )}
             </header>
 
             <InstructorForm data={data} mode="edit" />

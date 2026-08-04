@@ -29,7 +29,7 @@ export default async function NewInstructorPage() {
     };
 
     return (
-        <main className="max-w-2xl mx-auto px-5 py-8 md:py-12">
+        <main id="main-content" className="max-w-2xl mx-auto px-5 py-8 md:py-12">
             <header className="mb-6">
                 <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
                     새 강사 추가
