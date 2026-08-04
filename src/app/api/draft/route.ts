@@ -1,6 +1,5 @@
 import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { timingSafeEqual } from 'crypto'
 
 function sanitizeRedirectPath(path: string | null): string {
     if (!path) return '/'
@@ -9,29 +8,14 @@ function sanitizeRedirectPath(path: string | null): string {
     return path
 }
 
-function safeEqual(a: string, b: string): boolean {
-    const bufA = Buffer.from(a)
-    const bufB = Buffer.from(b)
-    if (bufA.length !== bufB.length) return false
-    return timingSafeEqual(bufA, bufB)
-}
-
+// TODO: SANITY_API_READ_TOKEN을 사용해 실제 Draft Preview를 활성화할 때
+// 이 임시 호환 로직을 next-sanity의 defineEnableDraftMode로 교체한다.
+// 현재는 draft 콘텐츠를 읽지 않으므로 기존 Presentation 화면 유지를 위해
+// 별도 시크릿 검증을 강제하지 않는다.
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url)
-
-    // 시크릿이 설정돼 있으면 반드시 일치해야 draft 모드를 켤 수 있다.
-    // 인증 없이 이 URL만 알면 누구나 미공개 콘텐츠를 볼 수 있게 되는 것을 막는다.
-    // (Next.js 공식 권장 패턴)
-    const secret = process.env.DRAFT_MODE_SECRET
-    if (secret) {
-        const provided = searchParams.get('secret')
-        if (!provided || !safeEqual(provided, secret)) {
-            return new Response('잘못된 접근입니다.', { status: 401 })
-        }
-    }
-
     (await draftMode()).enable()
 
+    const { searchParams } = new URL(request.url)
     const redirectPath = sanitizeRedirectPath(searchParams.get('slug'))
 
     redirect(redirectPath)
