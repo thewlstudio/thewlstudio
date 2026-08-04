@@ -92,7 +92,7 @@ export default async function InstructorListPage({
             {isTrashView ? (
                 <>
                     <p className="text-sm text-neutral-600 mb-4">
-                        삭제된 강사 {instructors.length}명. 복원하면 원래 순서 맨 뒤에 다시 나타납니다.
+                        삭제된 강사 {instructors.length}명. 복원하면 기존 목록에 원래 순서 그대로 다시 나타납니다.
                     </p>
                     <Link
                         href="/manage/instructors"

@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { saveInstructor, createInstructor, type SaveResult, type FieldError } from "../actions";
 
 export type InstructorFormData = {
@@ -461,6 +462,7 @@ function InstructorFormInner({
     onDiscard: () => void;
 }) {
     const isCreate = mode === "create";
+    const router = useRouter();
     const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(
         isCreate ? createInstructor : saveInstructor,
         null,
@@ -516,6 +518,13 @@ function InstructorFormInner({
         setLastHandledState(state);
         if (state?.ok) setIsDirty(false);
     }
+
+    // 저장 성공 후 "변경 버리기"가 방금 저장한 값이 아니라 페이지 최초 로딩
+    // 시점의 옛 값으로 되돌아가지 않도록, 서버 데이터를 다시 받아온다
+    // (수정 페이지는 force-dynamic이라 매번 최신 문서를 반환한다).
+    useEffect(() => {
+        if (state?.ok) router.refresh();
+    }, [state, router]);
 
     // 탭 닫기/새로고침 시 브라우저 기본 경고. ref로 최신값을 읽으므로
     // 리스너를 매번 다시 등록하지 않아도 된다.
