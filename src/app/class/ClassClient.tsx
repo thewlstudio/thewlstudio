@@ -1,13 +1,16 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { urlFor } from "@/sanity/lib/image";
 import { NAVER_MAP_URL } from "@/lib/constants";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+
+const emptySubscribe = () => () => {};
 
 type SanityImage = {
     _type: "image";
@@ -38,33 +41,79 @@ export type Instructor = {
 
 export default function ClassClient({ initialInstructors }: { initialInstructors: Instructor[] }) {
     const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
+    // isModalOpen: 모달의 열림/닫힘 "목표 상태" — AnimatePresence가 이 값을 보고
+    // 진입/퇴장 애니메이션을 재생한다(퇴장 최대 0.4초).
+    // isModalActive: 모달이 화면에 실제로 남아있는 동안(열림 + 퇴장 애니메이션
+    // 재생 중) 전부 true — 스크롤 잠금·inert·포커스 트랩은 반드시 이 값을
+    // 기준으로 유지/해제해야, 퇴장 애니메이션 재생 중에 배경이 조기에 풀리지
+    // 않는다. 메뉴(Header.tsx)에서 검증된 패턴과 동일.
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalActive, setIsModalActive] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLLIElement | null>(null);
+    const hasOpenedModalRef = useRef(false);
 
+    // 모달을 body에 portal로 그리려면 클라이언트 마운트 이후여야 한다
+    const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+    // 닫는 방법(Escape, 배경 클릭, X 버튼)과 무관하게 항상 이 함수 하나로 닫는다
+    // — 그래야 포커스 복원이 모든 경로에서 동일하게 동작한다.
     const closeModal = useCallback(() => {
-        setSelectedInstructor(null);
-        // 모달 닫힐 때 트리거 요소로 포커스 복원
-        requestAnimationFrame(() => triggerRef.current?.focus());
+        setIsModalOpen(false);
     }, []);
 
     const openModal = useCallback((instructor: Instructor, triggerEl: HTMLLIElement) => {
         triggerRef.current = triggerEl;
         setSelectedInstructor(instructor);
+        hasOpenedModalRef.current = true;
+        setIsModalActive(true);
+        setIsModalOpen(true);
+    }, []);
+
+    // 퇴장 애니메이션이 완전히 끝난 뒤에야 잠금/inert 해제 — isModalActive를
+    // false로 내리면 아래 effect들의 클린업이 실행된다. selectedInstructor도
+    // 이 시점에 비워서, 애니메이션이 재생되는 동안엔 계속 올바른 강사 정보가
+    // 보이게 한다.
+    const handleModalExitComplete = useCallback(() => {
+        setIsModalActive(false);
+        setSelectedInstructor(null);
     }, []);
 
     // 배경 스크롤 잠금은 헤더 메뉴·Preloader와 공유하는 useBodyScrollLock이
     // 담당한다 (각자 body.style.overflow를 직접 건드리면 서로 충돌할 수 있음).
-    useBodyScrollLock(selectedInstructor !== null);
+    useBodyScrollLock(isModalActive);
 
-    // ESC key to close + focus trap
+    // 배경 접근성: 모달이 portal로 body에 그려지므로, 열려 있는 동안 본문
+    // (<main id="main-content">)과 본문 바로가기 링크를 inert 처리해 스크린
+    // 리더 가상 커서가 배경으로 새지 않게 한다. 메뉴와 동일한 패턴.
     useEffect(() => {
-        if (!selectedInstructor) return;
+        const mainEl = document.getElementById("main-content");
+        const skipLink = document.getElementById("skip-link");
+        if (isModalActive) {
+            mainEl?.setAttribute("inert", "");
+            skipLink?.setAttribute("inert", "");
+        } else {
+            mainEl?.removeAttribute("inert");
+            skipLink?.removeAttribute("inert");
+        }
+        return () => {
+            mainEl?.removeAttribute("inert");
+            skipLink?.removeAttribute("inert");
+        };
+    }, [isModalActive]);
 
-        // 모달 열릴 때 포커스 이동
-        requestAnimationFrame(() => {
-            const closeBtn = modalRef.current?.querySelector<HTMLButtonElement>('[aria-label="Close modal"]');
-            closeBtn?.focus();
-        });
+    // ESC key to close + focus trap. isModalActive 기준으로 유지해 퇴장
+    // 애니메이션 중에도 Tab/Escape가 배경으로 새지 않게 한다.
+    useEffect(() => {
+        if (!isModalActive) return;
+
+        // 모달이 막 열렸을 때만 포커스 이동 (닫히는 중엔 다시 옮기지 않음)
+        if (isModalOpen) {
+            requestAnimationFrame(() => {
+                const closeBtn = modalRef.current?.querySelector<HTMLButtonElement>('[aria-label="Close modal"]');
+                closeBtn?.focus();
+            });
+        }
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") closeModal();
@@ -95,9 +144,19 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [selectedInstructor, closeModal]);
+    }, [isModalActive, isModalOpen, closeModal]);
+
+    // 모달을 닫은 뒤 트리거 카드로 포커스 복원. 반드시 위 inert 해제 effect보다
+    // 아래에 선언돼 있어야 순서가 보장된다 (React가 여러 effect를 선언 순서대로
+    // 정리하기 때문). hasOpenedModalRef로 최초 로딩 시 불필요한 포커스 이동도
+    // 막는다.
+    useEffect(() => {
+        if (isModalActive || !hasOpenedModalRef.current) return;
+        triggerRef.current?.focus();
+    }, [isModalActive]);
 
     return (
+        <>
         <main id="main-content" className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
             <Header />
 
@@ -258,17 +317,24 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
             </section>
 
             <Footer />
+        </main>
 
-            {/* Instructor Detail Modal (AnimatePresence) */}
-            <AnimatePresence>
-                {selectedInstructor && (
+        {/*
+          Instructor Detail Modal — 헤더 메뉴와 동일한 이유로 body에 portal로
+          그린다: <main>과 같은 DOM 트리에 있으면 모달이 열렸을 때 <main>에
+          inert를 걸 수 없다(모달 자신까지 막혀버림). portal로 분리하면 모달은
+          영향받지 않고 <main>만 꺼둘 수 있다.
+        */}
+        {mounted && createPortal(
+            <AnimatePresence onExitComplete={handleModalExitComplete}>
+                {isModalOpen && selectedInstructor && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setSelectedInstructor(null)}
+                        onClick={closeModal}
                     >
                         <motion.div
                             ref={modalRef}
@@ -284,7 +350,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                         >
                             {/* Close Button */}
                             <button
-                                onClick={() => setSelectedInstructor(null)}
+                                onClick={closeModal}
                                 className="absolute top-4 right-4 md:top-6 md:right-6 lg:top-8 lg:right-8 z-20 w-10 h-10 bg-neutral-100 hover:bg-black text-neutral-500 hover:text-white rounded-full flex items-center justify-center transition-colors"
                                 aria-label="Close modal"
                             >
@@ -407,7 +473,9 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                         </motion.div>
                     </motion.div>
                 )}
-            </AnimatePresence>
-        </main>
+            </AnimatePresence>,
+            document.body
+        )}
+        </>
     );
 }
