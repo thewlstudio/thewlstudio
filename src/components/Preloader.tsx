@@ -4,12 +4,16 @@ import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { usePrefersReducedMotion } from "./SmoothScroll";
 
 const emptySubscribe = () => () => {};
 
 export default function Preloader() {
     const pathname = usePathname();
     const isAdminScreen = pathname.startsWith("/manage") || pathname.startsWith("/admin");
+    // 훅은 조건 없이 항상 호출하고, 건너뛸지 여부는 이 값을 조합해 아래에서 판단한다
+    const prefersReducedMotion = usePrefersReducedMotion();
+    const skip = isAdminScreen || prefersReducedMotion;
 
     const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
     const alreadySeen = useSyncExternalStore(
@@ -20,8 +24,9 @@ export default function Preloader() {
     const [step, setStep] = useState(0);
 
     useEffect(() => {
-        // 관리 화면은 안정성이 우선이라 장식적 스플래시를 건너뛴다
-        if (isAdminScreen) return;
+        // 관리 화면이거나 동작 줄이기 설정이면 안정성·접근성이 우선이라
+        // 타이머·스크롤 잠금 등 어떤 부수효과도 실행하지 않고 완전히 건너뛴다
+        if (skip) return;
         if (!isClient || alreadySeen) return;
 
         sessionStorage.setItem("wls_preloader_seen", "true");
@@ -45,16 +50,17 @@ export default function Preloader() {
             clearTimeout(timer2);
             document.body.style.overflow = 'unset';
         };
-    }, [isAdminScreen, isClient, alreadySeen]);
+    }, [skip, isClient, alreadySeen]);
 
-    // 관리 화면 제외 + 하이드레이션 불일치 방지 / 이미 봤으면 스킵
-    if (isAdminScreen || !isClient || alreadySeen) return null;
+    // 관리 화면/동작 줄이기 제외 + 하이드레이션 불일치 방지 / 이미 봤으면 스킵
+    if (skip || !isClient || alreadySeen) return null;
 
     return (
         <AnimatePresence>
             {step < 2 && (
                 <motion.div
                     key="preloader"
+                    aria-hidden="true"
                     exit={{ opacity: 0, y: "-100%" }}
                     transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
                     className="fixed inset-0 z-[99999] bg-black flex flex-col items-center justify-center overflow-hidden pointer-events-none"
@@ -71,7 +77,7 @@ export default function Preloader() {
                             >
                                 <Image
                                     src="/images/studio_logo_2.png"
-                                    alt="White Light Studio Logo PNG"
+                                    alt=""
                                     fill
                                     sizes="(max-width: 768px) 256px, (max-width: 1024px) 384px, 768px"
                                     className="object-contain"
@@ -90,7 +96,7 @@ export default function Preloader() {
                             >
                                 <Image
                                     src="/images/studio_logo.jpg"
-                                    alt="White Light Studio Logo JPG"
+                                    alt=""
                                     fill
                                     sizes="(max-width: 768px) 256px, 80vw"
                                     className="object-cover md:object-contain grayscale contrast-150 rounded"
