@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Instagram } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 const emptySubscribe = () => () => {};
 
@@ -88,24 +89,25 @@ export default function Header() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // 배경 스크롤 잠금 + 페이지 본문 inert 처리는 isMenuActive를 기준으로 한다
-    // (isMenuOpen이 아니라) — 그래야 퇴장 애니메이션이 재생되는 0.6초 동안에도
-    // 배경이 계속 잠겨 있는다. isMenuActive는 onExitComplete가 불릴 때만 false로
-    // 내려간다.
+    // 배경 스크롤 잠금은 Preloader·클래스 모달과 공유하는 useBodyScrollLock이
+    // 담당한다 (여러 UI가 각자 body.style.overflow를 직접 건드리면, 하나가
+    // 끝나면서 다른 하나가 아직 열려 있는 잠금까지 풀어버리는 충돌이 생기기
+    // 때문). 페이지 본문 inert 처리는 이 컴포넌트만의 관심사라 별도로 유지.
+    // isMenuOpen이 아니라 isMenuActive 기준 — 그래야 퇴장 애니메이션이 재생되는
+    // 0.6초 동안에도 배경이 계속 잠겨 있는다. isMenuActive는 onExitComplete가
+    // 불릴 때만 false로 내려간다.
+    useBodyScrollLock(isMenuActive);
     useEffect(() => {
         const mainEl = document.getElementById("main-content");
         const skipLink = document.getElementById("skip-link");
         if (isMenuActive) {
-            document.body.style.overflow = "hidden";
             mainEl?.setAttribute("inert", "");
             skipLink?.setAttribute("inert", "");
         } else {
-            document.body.style.overflow = "unset";
             mainEl?.removeAttribute("inert");
             skipLink?.removeAttribute("inert");
         }
         return () => {
-            document.body.style.overflow = "unset";
             mainEl?.removeAttribute("inert");
             skipLink?.removeAttribute("inert");
         };

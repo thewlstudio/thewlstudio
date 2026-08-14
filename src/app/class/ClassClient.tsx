@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { urlFor } from "@/sanity/lib/image";
 import { NAVER_MAP_URL } from "@/lib/constants";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 type SanityImage = {
     _type: "image";
@@ -51,51 +52,49 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
         setSelectedInstructor(instructor);
     }, []);
 
-    // Lock body scroll + ESC key to close + focus trap
+    // 배경 스크롤 잠금은 헤더 메뉴·Preloader와 공유하는 useBodyScrollLock이
+    // 담당한다 (각자 body.style.overflow를 직접 건드리면 서로 충돌할 수 있음).
+    useBodyScrollLock(selectedInstructor !== null);
+
+    // ESC key to close + focus trap
     useEffect(() => {
-        if (selectedInstructor) {
-            document.body.style.overflow = "hidden";
+        if (!selectedInstructor) return;
 
-            // 모달 열릴 때 포커스 이동
-            requestAnimationFrame(() => {
-                const closeBtn = modalRef.current?.querySelector<HTMLButtonElement>('[aria-label="Close modal"]');
-                closeBtn?.focus();
-            });
+        // 모달 열릴 때 포커스 이동
+        requestAnimationFrame(() => {
+            const closeBtn = modalRef.current?.querySelector<HTMLButtonElement>('[aria-label="Close modal"]');
+            closeBtn?.focus();
+        });
 
-            const handleKeyDown = (e: KeyboardEvent) => {
-                if (e.key === "Escape") closeModal();
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") closeModal();
 
-                // Focus trap: Tab 키로 모달 밖으로 나가지 못하도록
-                if (e.key === "Tab" && modalRef.current) {
-                    const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                    );
-                    if (focusable.length === 0) return;
-                    const first = focusable[0];
-                    const last = focusable[focusable.length - 1];
+            // Focus trap: Tab 키로 모달 밖으로 나가지 못하도록
+            if (e.key === "Tab" && modalRef.current) {
+                const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                if (focusable.length === 0) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
 
-                    if (e.shiftKey) {
-                        if (document.activeElement === first) {
-                            e.preventDefault();
-                            last.focus();
-                        }
-                    } else {
-                        if (document.activeElement === last) {
-                            e.preventDefault();
-                            first.focus();
-                        }
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
                     }
                 }
-            };
-            document.addEventListener("keydown", handleKeyDown);
-            return () => {
-                document.body.style.overflow = "unset";
-                document.removeEventListener("keydown", handleKeyDown);
-            };
-        } else {
-            document.body.style.overflow = "unset";
-        }
-        return () => { document.body.style.overflow = "unset"; };
+            }
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
     }, [selectedInstructor, closeModal]);
 
     return (

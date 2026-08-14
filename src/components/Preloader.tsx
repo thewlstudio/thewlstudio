@@ -5,6 +5,7 @@ import { useState, useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { usePrefersReducedMotion } from "./SmoothScroll";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 const emptySubscribe = () => () => {};
 
@@ -23,16 +24,21 @@ export default function Preloader() {
     );
     const [step, setStep] = useState(0);
 
+    // 배경 스크롤 잠금은 메뉴·클래스 모달과 공유하는 useBodyScrollLock이 담당한다
+    // (각자 body.style.overflow를 직접 건드리면, Preloader가 실행되는 2초 사이
+    // 메뉴를 열었을 때처럼 한쪽이 끝나면서 다른 쪽의 잠금까지 풀어버릴 수 있다 —
+    // Preloader는 pointer-events-none이라 실제로 뒤 배경 클릭이 통과된다).
+    // Preloader가 화면에 실제로 떠 있는 동안(step 0~1)에만 잠근다.
+    const isPreloaderVisible = !skip && isClient && !alreadySeen && step < 2;
+    useBodyScrollLock(isPreloaderVisible);
+
     useEffect(() => {
         // 관리 화면이거나 동작 줄이기 설정이면 안정성·접근성이 우선이라
-        // 타이머·스크롤 잠금 등 어떤 부수효과도 실행하지 않고 완전히 건너뛴다
+        // 타이머 등 어떤 부수효과도 실행하지 않고 완전히 건너뛴다
         if (skip) return;
         if (!isClient || alreadySeen) return;
 
         sessionStorage.setItem("wls_preloader_seen", "true");
-
-        // Lock scroll while preloading
-        document.body.style.overflow = 'hidden';
 
         // Step 0: PNG transparent logo fades in gracefully
         const timer1 = setTimeout(() => {
@@ -41,14 +47,12 @@ export default function Preloader() {
 
         const timer2 = setTimeout(() => {
             setStep(2); // Hide preloader and reveal the site
-            document.body.style.overflow = 'unset';
             window.scrollTo(0, 0);
         }, 2000);
 
         return () => {
             clearTimeout(timer1);
             clearTimeout(timer2);
-            document.body.style.overflow = 'unset';
         };
     }, [skip, isClient, alreadySeen]);
 
