@@ -56,7 +56,15 @@ function MenuIcon({ isOpen }: { isOpen: boolean }) {
 
 export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
+    // isMenuOpen: 오버레이의 열림/닫힘 "목표 상태" — AnimatePresence가 이 값을 보고
+    // 진입/퇴장 애니메이션을 재생한다. 닫을 때는 즉시 false가 된다(0.6초 퇴장
+    // 애니메이션이 끝나는 걸 기다리지 않음).
+    // isMenuActive: 오버레이가 화면에 "실제로 남아있는 동안"(열려있는 상태 + 퇴장
+    // 애니메이션 재생 중) 전부 true — inert·스크롤 잠금·포커스 트랩은 반드시 이
+    // 값을 기준으로 유지/해제해야, 퇴장 애니메이션이 재생되는 0.6초 동안 배경이
+    // 스크린리더에 노출되거나 포커스가 화면에 안 보이는 곳으로 튀는 걸 막을 수 있다.
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isMenuActive, setIsMenuActive] = useState(false);
     const pathname = usePathname();
     const menuRef = useRef<HTMLDivElement>(null);
     const toggleButtonRef = useRef<HTMLButtonElement>(null);
@@ -80,19 +88,14 @@ export default function Header() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // 메뉴가 열려 있는 동안: 배경 스크롤 잠금 + 페이지 본문을 inert 처리.
-    // inert는 포커스·클릭·스크린리더 가상 커서 접근을 한 번에 막아준다 — 메뉴가
-    // portal로 body에 별도로 그려지므로, 본문(<main id="main-content">)과
-    // 본문 바로가기 링크만 꺼두면 메뉴 자체는 영향받지 않는다.
-    // ⚠️ 순서 중요: 이 effect가 아래 keydown/포커스 effect보다 먼저 선언돼 있어야
-    // 한다 — React는 여러 effect의 클린업을 선언 순서대로 실행하므로, 메뉴를 닫을 때
-    // "inert 해제(이 effect)"가 "토글 버튼으로 포커스 복원(아래 effect)"보다 먼저
-    // 실행되는 게 보장된다. 순서가 바뀌면 아직 inert 상태인 버튼에 포커스를 시도해
-    // 복원이 실패할 수 있다.
+    // 배경 스크롤 잠금 + 페이지 본문 inert 처리는 isMenuActive를 기준으로 한다
+    // (isMenuOpen이 아니라) — 그래야 퇴장 애니메이션이 재생되는 0.6초 동안에도
+    // 배경이 계속 잠겨 있는다. isMenuActive는 onExitComplete가 불릴 때만 false로
+    // 내려간다.
     useEffect(() => {
         const mainEl = document.getElementById("main-content");
         const skipLink = document.getElementById("skip-link");
-        if (isMenuOpen) {
+        if (isMenuActive) {
             document.body.style.overflow = "hidden";
             mainEl?.setAttribute("inert", "");
             skipLink?.setAttribute("inert", "");
@@ -106,11 +109,13 @@ export default function Header() {
             mainEl?.removeAttribute("inert");
             skipLink?.removeAttribute("inert");
         };
-    }, [isMenuOpen]);
+    }, [isMenuActive]);
 
-    // 접근성: 전체화면 메뉴에 Escape 닫기 + 포커스 트랩 + 포커스 복원
+    // 접근성: 전체화면 메뉴에 Escape 닫기 + 포커스 트랩. 이 effect도 isMenuActive
+    // 기준으로 유지한다 — 퇴장 애니메이션 중에도 키보드 트랩이 살아있어야
+    // Tab/Escape가 (아직 화면에 남아있는) 배경으로 새지 않는다.
     useEffect(() => {
-        if (!isMenuOpen) return;
+        if (!isMenuActive) return;
 
         const focusables = () =>
             Array.from(
@@ -120,11 +125,15 @@ export default function Header() {
             );
 
         // 메뉴가 열리면 첫 링크로 포커스 이동 (오버레이 안의 닫기 버튼이 아니라
-        // 실제 내비게이션 링크부터 — 기존 동작과 동일하게 유지)
-        requestAnimationFrame(() => {
-            const firstLink = menuRef.current?.querySelector<HTMLElement>('a[href]');
-            firstLink?.focus();
-        });
+        // 실제 내비게이션 링크부터 — 기존 동작과 동일하게 유지). isMenuOpen이
+        // true일 때(막 열렸을 때)만 실행 — 닫히는 중(퇴장 애니메이션)에는 다시
+        // 포커스를 옮기지 않는다.
+        if (isMenuOpen) {
+            requestAnimationFrame(() => {
+                const firstLink = menuRef.current?.querySelector<HTMLElement>('a[href]');
+                firstLink?.focus();
+            });
+        }
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
@@ -147,19 +156,37 @@ export default function Header() {
             }
         };
 
-        // cleanup 시점에는 ref가 바뀔 수 있으므로 effect 내부에서 값을 캡처해 둔다
-        const triggerButton = toggleButtonRef.current;
-
         document.addEventListener("keydown", handleKeyDown);
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
-            // 메뉴를 닫으면 열었던 버튼으로 포커스 복원 (위 effect가 먼저 inert를
-            // 해제해 두므로 이 시점엔 버튼이 다시 포커스 가능한 상태다)
-            requestAnimationFrame(() => triggerButton?.focus());
         };
-    }, [isMenuOpen]);
+    }, [isMenuActive, isMenuOpen]);
 
+    // 메뉴를 닫은 뒤 열었던 버튼으로 포커스 복원. 반드시 위 inert 해제 effect보다
+    // 아래에 선언돼 있어야 한다 — React는 여러 effect를 선언 순서대로 정리·재실행
+    // 하므로, 이 effect가 실행되는 시점엔 위 effect가 이미 inert를 해제해 버튼이
+    // 다시 포커스 가능한 상태다. (handleMenuExitComplete에서 setIsMenuActive(false)
+    // 직후 바로 focus()를 부르면 inert 해제가 아직 반영 전이라 실패할 수 있어
+    // effect로 분리했다.) hasOpenedRef로 "메뉴를 연 적이 있을 때만" 복원하도록
+    // 막아, 페이지 첫 로딩 시(isMenuActive가 처음부터 false) 포커스를 뺏지 않는다.
+    const hasOpenedRef = useRef(false);
+    useEffect(() => {
+        if (isMenuActive || !hasOpenedRef.current) return;
+        toggleButtonRef.current?.focus();
+    }, [isMenuActive]);
+
+    const openMenu = () => {
+        hasOpenedRef.current = true;
+        setIsMenuActive(true);
+        setIsMenuOpen(true);
+    };
     const closeMenu = () => setIsMenuOpen(false);
+    // 퇴장 애니메이션이 완전히 끝난 뒤에야 배경 잠금 해제 — isMenuActive를 false로
+    // 내리면 위 effect들의 클린업이 실행돼 inert·스크롤 잠금·키다운 리스너가
+    // 이 시점에 정리되고, 포커스 복원 effect도 뒤이어 실행된다.
+    const handleMenuExitComplete = () => {
+        setIsMenuActive(false);
+    };
 
     return (
         <>
@@ -186,7 +213,7 @@ export default function Header() {
                             ref={toggleButtonRef}
                             /* w-11 h-11 = 44x44px — WCAG 2.5.8 최소 터치 타겟 충족 */
                             className={`z-50 w-11 h-11 -mr-1 hover:opacity-60 transition-opacity flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm ${isMenuOpen ? "text-white" : headerTextColor}`}
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            onClick={() => (isMenuOpen ? closeMenu() : openMenu())}
                             aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
                             aria-expanded={isMenuOpen}
                             aria-controls="main-menu-overlay"
@@ -206,7 +233,7 @@ export default function Header() {
               그대로 재현해 기존 헤더가 가려져도 화면은 그대로 보이게 한다.
             */}
             {mounted && createPortal(
-                <AnimatePresence>
+                <AnimatePresence onExitComplete={handleMenuExitComplete}>
                     {isMenuOpen && (
                         <motion.div
                             ref={menuRef}
