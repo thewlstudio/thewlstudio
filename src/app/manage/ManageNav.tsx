@@ -49,7 +49,7 @@ export default function ManageNav({
                     type="submit"
                     className="text-sm font-semibold text-neutral-500 hover:text-black transition-colors underline underline-offset-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
                 >
-                    나가기
+                    로그아웃
                 </button>
             </form>
         </header>

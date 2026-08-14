@@ -507,7 +507,7 @@ function InstructorFormInner({
     const isDirtyRef = useRef(false);
     useEffect(() => {
         isDirtyRef.current = isDirty;
-        // ManageNav(← 관리 허브 / 나가기)도 같은 dirty 상태를 알아야 실수로
+        // ManageNav(← 관리 허브 / 로그아웃)도 같은 dirty 상태를 알아야 실수로
         // 미저장 변경사항을 잃어버리지 않는다 — 공유 저장소에 동기화한다.
         setFormDirty(isDirty);
     }, [isDirty]);

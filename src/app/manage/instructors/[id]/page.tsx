@@ -85,9 +85,9 @@ export default async function EditInstructorPage({
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
                         강사 수정
                     </p>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+                    <h2 className="text-2xl md:text-3xl font-black tracking-tight">
                         {data.instructorName || "이름 없음"}
-                    </h1>
+                    </h2>
                 </div>
 
                 {isTrashed ? (
