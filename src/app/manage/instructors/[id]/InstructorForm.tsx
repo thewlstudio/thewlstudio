@@ -4,6 +4,7 @@ import { useActionState, useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveInstructor, createInstructor, type SaveResult, type FieldError } from "../actions";
+import { setFormDirty } from "@/lib/formDirtyGuard";
 
 export type InstructorFormData = {
     _id: string;
@@ -506,7 +507,14 @@ function InstructorFormInner({
     const isDirtyRef = useRef(false);
     useEffect(() => {
         isDirtyRef.current = isDirty;
+        // ManageNav(← 관리 허브 / 나가기)도 같은 dirty 상태를 알아야 실수로
+        // 미저장 변경사항을 잃어버리지 않는다 — 공유 저장소에 동기화한다.
+        setFormDirty(isDirty);
     }, [isDirty]);
+    // 페이지를 완전히 벗어날 때(언마운트) 공유 dirty 플래그를 반드시 리셋한다.
+    // 클라이언트 사이드 라우팅에서는 모듈이 그대로 남아있으므로, 안 지우면
+    // 다음 화면에서도 "저장 안 한 내용이 있다"고 잘못 경고하게 된다.
+    useEffect(() => () => setFormDirty(false), []);
     const markDirty = () => setIsDirty(true);
 
     // 저장이 성공하면(수정 모드는 페이지 이동 없이 이 화면에 남아있으므로)

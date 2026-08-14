@@ -6,6 +6,7 @@ import InstructorForm, { type InstructorFormData } from "./InstructorForm";
 import DeleteInstructorButton from "./DeleteInstructorButton";
 import DuplicateInstructorButton from "./DuplicateInstructorButton";
 import RestoreButton from "../RestoreButton";
+import ManageNav from "../../ManageNav";
 
 export const metadata = { title: "강사 수정" };
 export const dynamic = "force-dynamic";
@@ -77,7 +78,9 @@ export default async function EditInstructorPage({
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-8 md:py-12">
-            <header className="mb-6 space-y-3">
+            <ManageNav title="강사 수정" />
+
+            <div className="mb-6 space-y-3">
                 <div>
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
                         강사 수정
@@ -100,7 +103,7 @@ export default async function EditInstructorPage({
                         <DeleteInstructorButton documentId={data._id} instructorName={data.instructorName} />
                     </div>
                 )}
-            </header>
+            </div>
 
             <InstructorForm data={data} mode="edit" />
         </main>
