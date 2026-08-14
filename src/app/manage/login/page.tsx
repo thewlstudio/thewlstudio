@@ -13,7 +13,7 @@ async function login(formData: FormData) {
     if (!ok) {
         redirect("/manage/login?error=1");
     }
-    redirect("/manage/instructors");
+    redirect("/manage");
 }
 
 export default async function ManageLoginPage({
@@ -24,7 +24,7 @@ export default async function ManageLoginPage({
     const { error } = await searchParams;
 
     if (await isAuthenticated()) {
-        redirect("/manage/instructors");
+        redirect("/manage");
     }
 
     if (!isManageConfigured()) {

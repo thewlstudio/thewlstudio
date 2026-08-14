@@ -3,8 +3,9 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
-import { isAuthenticated, destroySession } from "@/lib/manage-auth";
+import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
+import ManageNav from "../ManageNav";
 import ReorderButtons from "./ReorderButtons";
 import RestoreButton from "./RestoreButton";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
@@ -30,12 +31,6 @@ const trashedQuery = `*[_type == "instructor" && trashed == true] | order(_updat
     _id, instructorName, category, image
 }`;
 
-async function logout() {
-    "use server";
-    await destroySession();
-    redirect("/manage/login");
-}
-
 export default async function InstructorListPage({
     searchParams,
 }: {
@@ -57,24 +52,7 @@ export default async function InstructorListPage({
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
-            <header className="flex items-start justify-between gap-4 mb-8">
-                <div>
-                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
-                        White Light Studio
-                    </p>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-                        {isTrashView ? "휴지통" : "강사 관리"}
-                    </h1>
-                </div>
-                <form action={logout}>
-                    <button
-                        type="submit"
-                        className="text-sm font-semibold text-neutral-500 hover:text-black transition-colors underline underline-offset-4 py-2"
-                    >
-                        나가기
-                    </button>
-                </form>
-            </header>
+            <ManageNav title={isTrashView ? "휴지통" : "강사 관리"} />
 
             {!writeReady && (
                 <div
