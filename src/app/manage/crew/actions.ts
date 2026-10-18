@@ -68,7 +68,9 @@ async function parseLinks(
         const iconImage =
             uploaded ??
             (keep ? { _type: "image" as const, asset: { _type: "reference" as const, _ref: keep } } : undefined);
-        links.push({ _key: randomUUID().slice(0, 12), url, ...(iconImage ? { iconImage } : {}) });
+        // 기존 행은 원래 _key를 유지한다(새로 추가한 행만 새 키 발급)
+        const prevKey = String(formData.get(`linkKey_${i}`) ?? "").trim();
+        links.push({ _key: prevKey || randomUUID().slice(0, 12), url, ...(iconImage ? { iconImage } : {}) });
     }
     return { links };
 }

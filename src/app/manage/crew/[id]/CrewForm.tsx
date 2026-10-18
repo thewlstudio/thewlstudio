@@ -279,6 +279,9 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                     const known = CREW_ICON_PRESETS.some((p) => p.ref === row.iconRef);
                     return (
                         <div key={row.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
+                            {!row.key.startsWith("new-") && !row.key.startsWith("legacy-") && (
+                                <input type="hidden" name={`linkKey_${i}`} value={row.key} />
+                            )}
                             <div className="flex items-center justify-between gap-3">
                                 <p className="text-sm font-bold">링크 {i + 1}</p>
                                 <button
