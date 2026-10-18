@@ -17,7 +17,7 @@ type Section = {
 // href가 null이면 아직 구현되지 않은 영역 — "준비 중"으로 표시하고 이동은 막는다.
 const SECTIONS: Section[] = [
     { key: "instructors", label: "강사", description: "레슨 강사 정보 관리", href: "/manage/instructors" },
-    { key: "crew", label: "Crew", description: "크루 프로필 관리", href: null },
+    { key: "crew", label: "Crew", description: "크루 프로필 관리", href: "/manage/crew" },
     { key: "works", label: "Works", description: "작업물 페이지 관리", href: null },
     { key: "studio", label: "Studio", description: "스튜디오 방 정보 관리", href: null },
     { key: "contact", label: "Contact", description: "연락처·지도 정보 관리", href: null },
