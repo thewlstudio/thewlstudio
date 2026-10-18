@@ -44,3 +44,6 @@ next-env.d.ts
 # (see node_modules/next/dist/server/lib/generate-agent-files.js) — local-only, not project docs
 /AGENTS.md
 /CLAUDE.md
+
+# 로컬 데이터 백업 (커밋 금지)
+/backups/

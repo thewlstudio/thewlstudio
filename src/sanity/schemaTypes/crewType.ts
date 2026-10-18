@@ -12,6 +12,15 @@ export default defineType({
             description: '크루 목록에 이 멤버를 공개할지 여부를 결정합니다.',
             initialValue: true,
         }),
+        // /manage의 "삭제"는 이 필드를 true로 바꾸는 소프트 삭제다(문서는 지우지 않음).
+        // 기존 문서에는 이 필드가 없을 수 있으며, 없으면 "삭제 안 됨"으로 취급한다.
+        defineField({
+            name: 'trashed',
+            title: '(휴지통) 삭제됨',
+            type: 'boolean',
+            initialValue: false,
+            hidden: true,
+        }),
         defineField({
             name: 'order',
             title: 'Display Order',

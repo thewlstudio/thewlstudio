@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 `*[_type == "work" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
             ),
             client.fetch<SanitySlugEntry[]>(
-                `*[_type == "crew" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+                `*[_type == "crew" && defined(slug.current) && !(trashed == true)]{ "slug": slug.current, _updatedAt }`
             ),
         ]);
     } catch (err) {

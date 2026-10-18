@@ -12,7 +12,7 @@ export const worksQuery = groq`
 `;
 
 export const crewsQuery = groq`
-  *[_type == "crew" && isActive == true] | order(order asc) {
+  *[_type == "crew" && isActive == true && !(trashed == true)] | order(order asc) {
     name,
     koName,
     role,
@@ -48,7 +48,7 @@ export const instructorsQuery = groq`
 `;
 
 export const crewBySlugQuery = groq`
-  *[_type == "crew" && slug.current == $slug][0] {
+  *[_type == "crew" && slug.current == $slug && !(trashed == true)][0] {
     name,
     koName,
     role,
