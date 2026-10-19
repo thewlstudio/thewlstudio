@@ -7,6 +7,7 @@ import { requireAuth } from "@/lib/manage-auth";
 import { uploadImageIfPresent } from "@/lib/manage-upload";
 import { sanitizeSections } from "@/lib/crew-sections-server";
 import { getWriteClient } from "@/sanity/lib/writeClient";
+import { labelsEulReul } from "@/lib/josa";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -34,7 +35,7 @@ function parseBasic(formData: FormData): ParsedBasic | { error: string; missing:
     if (!koName) missing.push({ id: "koName", label: "한글 이름" });
     if (!role) missing.push({ id: "role", label: "직책/역할" });
     if (missing.length > 0) {
-        return { error: `${missing.map((m) => m.label).join(", ")}을(를) 입력해 주세요.`, missing };
+        return { error: `${labelsEulReul(missing)} 입력해 주세요.`, missing };
     }
     return {
         fields: { isActive: String(formData.get("isActive") ?? "true") === "true", name, koName, role },
@@ -146,7 +147,7 @@ export async function createCrew(_prev: SaveResult | null, formData: FormData): 
         const imageFile = formData.get("imageFile") as File | null;
         if (!imageFile || imageFile.size === 0) missing.push({ id: "imageFile", label: "프로필 사진" });
         if (missing.length > 0 || "error" in parsed) {
-            return { ok: false, error: `${missing.map((m) => m.label).join(", ")}을(를) 입력해 주세요.`, fields: missing };
+            return { ok: false, error: `${labelsEulReul(missing)} 입력해 주세요.`, fields: missing };
         }
 
         const dup = await client.fetch<number>(`count(*[_type == "crew" && slug.current == $slug])`, { slug });
@@ -177,7 +178,7 @@ export async function createCrew(_prev: SaveResult | null, formData: FormData): 
         console.error("[createCrew]", err);
         return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
-    redirect(`/manage/crew/${documentId}`);
+    redirect(`/manage/crew/${documentId}?created=1`);
 }
 
 export async function moveCrewOrder(documentId: string, direction: "up" | "down"): Promise<SaveResult> {

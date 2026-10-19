@@ -5,11 +5,13 @@ import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import { mergeInfo } from "@/lib/studio-info";
 import ManageNav from "../../ManageNav";
 import StudioInfoForm from "./StudioInfoForm";
+import UpdatedAt from "../../_components/UpdatedAt";
 
 export const metadata = { title: "스튜디오 안내 관리" };
 export const dynamic = "force-dynamic";
 
 const query = `*[_type == "studioInfo" && _id == "studioInfo"][0]{
+    _updatedAt,
     services[]{ title, price, priceUnit, points },
     equipment[]{ title, items },
     memberships[]{ num, label, sub, price },
@@ -21,7 +23,8 @@ export default async function StudioInfoPage() {
     if (!(await isAuthenticated())) redirect("/manage/login");
 
     // 문서가 없으면 홈페이지가 실제로 쓰는 값(기본값)으로 채워서 보여준다
-    const data = mergeInfo(await client.fetch<Record<string, unknown> | null>(query));
+    const raw = await client.fetch<Record<string, unknown> | null>(query);
+    const data = mergeInfo(raw);
     const writeReady = isWriteConfigured();
 
     return (
@@ -32,6 +35,7 @@ export default async function StudioInfoPage() {
                 <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
                     스튜디오 페이지의 연습실·로비 카드를 뺀 나머지 내용이에요. (연습실·로비는 목록에서 따로 관리해요.)
                 </p>
+                <UpdatedAt iso={raw?._updatedAt as string | undefined} />
             </div>
             {!writeReady && (
                 <div role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed">

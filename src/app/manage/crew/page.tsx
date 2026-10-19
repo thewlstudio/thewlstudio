@@ -10,14 +10,15 @@ import ReorderButtons from "../_components/ReorderButtons";
 import RestoreButton from "../_components/RestoreButton";
 import { moveCrewOrder, restoreCrew } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 
 export const metadata = { title: "크루 관리" };
 export const dynamic = "force-dynamic";
 
-type Row = { _id: string; name?: string; koName?: string; role?: string; image?: SanityImageSource; isActive?: boolean };
+type Row = { _id: string; _updatedAt?: string; name?: string; koName?: string; role?: string; image?: SanityImageSource; isActive?: boolean };
 
-const listQuery = `*[_type == "crew" && !(trashed == true)] | order(order asc) { _id, name, koName, role, image, isActive }`;
-const trashedQuery = `*[_type == "crew" && trashed == true] | order(_updatedAt desc) { _id, name, koName, role, image }`;
+const listQuery = `*[_type == "crew" && !(trashed == true)] | order(order asc) { _id, _updatedAt, name, koName, role, image, isActive }`;
+const trashedQuery = `*[_type == "crew" && trashed == true] | order(_updatedAt desc) { _id, _updatedAt, name, koName, role, image }`;
 
 export default async function CrewListPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
     if (!(await isAuthenticated())) redirect("/manage/login");
@@ -92,7 +93,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                                             <p className="font-bold text-base truncate">{m.koName ?? m.name ?? "(이름 없음)"}</p>
                                             {hidden && !isTrashView && <span className="shrink-0 text-[10px] font-bold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded">비공개</span>}
                                         </div>
-                                        <p className="text-sm text-neutral-500 truncate">{m.role}</p>
+                                        <p className="text-sm text-neutral-500 truncate">{m.role}{formatUpdated(m._updatedAt) && (<> · <time dateTime={m._updatedAt} title={formatAbsolute(m._updatedAt as string)}>{formatUpdated(m._updatedAt)}</time></>)}</p>
                                     </div>
                                     {!isTrashView && <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">›</span>}
                                 </Link>

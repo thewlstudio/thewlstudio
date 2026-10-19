@@ -10,6 +10,7 @@ import ReorderButtons from "../_components/ReorderButtons";
 import RestoreButton from "../_components/RestoreButton";
 import { moveInstructorOrder, restoreInstructor } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 
 export const metadata = { title: "강사 관리" };
 // 관리 화면은 항상 최신 데이터를 보여야 한다
@@ -19,17 +20,18 @@ type InstructorRow = {
     _id: string;
     instructorName?: string;
     category?: string;
+    _updatedAt?: string;
     order?: number;
     image?: SanityImageSource;
     isActive?: boolean;
 };
 
 const listQuery = `*[_type == "instructor" && !(trashed == true)] | order(order asc) {
-    _id, instructorName, category, order, image, isActive
+    _id, _updatedAt, instructorName, category, order, image, isActive
 }`;
 
 const trashedQuery = `*[_type == "instructor" && trashed == true] | order(_updatedAt desc) {
-    _id, instructorName, category, image
+    _id, _updatedAt, instructorName, category, image
 }`;
 
 export default async function InstructorListPage({
@@ -153,7 +155,7 @@ export default async function InstructorListPage({
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-sm text-neutral-500 truncate">{instructor.category}</p>
+                                        <p className="text-sm text-neutral-500 truncate">{instructor.category}{formatUpdated(instructor._updatedAt) && (<> · <time dateTime={instructor._updatedAt} title={formatAbsolute(instructor._updatedAt as string)}>{formatUpdated(instructor._updatedAt)}</time></>)}</p>
                                     </div>
                                     {!isTrashView && (
                                         <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">

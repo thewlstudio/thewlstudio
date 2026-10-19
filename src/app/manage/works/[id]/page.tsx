@@ -7,12 +7,13 @@ import DeleteWorkButton from "./DeleteWorkButton";
 import RestoreButton from "../../_components/RestoreButton";
 import { restoreWork } from "../actions";
 import ManageNav from "../../ManageNav";
+import UpdatedAt from "../../_components/UpdatedAt";
 
 export const metadata = { title: "작업물 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "work" && _id == $id][0]{
-    _id, trashed, title, artist, "slug": slug.current, releaseDate,
+    _id, _updatedAt, trashed, title, artist, "slug": slug.current, releaseDate,
     youtubeUrl, instagramId, instagramUrl,
     "imageUrl": coverImage.asset->url,
     contentBlocks[]{
@@ -72,6 +73,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
             <div className="mb-6 space-y-3">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">{data.title || "제목 없음"}</h2>
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
                 </div>
 
                 {isTrashed ? (

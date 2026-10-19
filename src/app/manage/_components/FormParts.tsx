@@ -1,6 +1,23 @@
 "use client";
 
+import { cloneElement, createContext, isValidElement, useContext } from "react";
+
 type FieldError = { id: string; label: string };
+
+/** 폼이 제출 전에 찾아낸 칸별 오류(칸 id → 안내 문구). Field가 칸 바로 아래에 보여 준다. */
+const FieldErrorsContext = createContext<Record<string, string>>({});
+export const FieldErrorsProvider = FieldErrorsContext.Provider;
+
+/** Field로 감싸기 어려운 칸(사진 선택 등)의 오류 안내를 원하는 자리에 보여 준다 */
+export function InlineError({ id }: { id: string }) {
+    const error = useContext(FieldErrorsContext)[id];
+    if (!error) return null;
+    return (
+        <p id={`${id}-error`} role="alert" className="text-sm font-semibold text-red-600 mt-2">
+            {error}
+        </p>
+    );
+}
 
 /** /manage 폼들이 공유하는 화면 조각 (강사·크루). 스타일은 강사 화면 기준. */
 
@@ -47,22 +64,33 @@ export function Field({
     children: React.ReactNode;
     htmlFor: string;
 }) {
+    const error = useContext(FieldErrorsContext)[htmlFor];
+    // 입력칸에 오류 상태와 안내 문구 연결 (스크린 리더용) — 칸이 하나일 때만
+    const control =
+        error && isValidElement<Record<string, unknown>>(children)
+            ? cloneElement(children, { "aria-invalid": true, "aria-describedby": `${htmlFor}-error` })
+            : children;
     return (
-        <div>
+        <div data-field-required={required ? "true" : undefined} data-field-for={htmlFor} data-field-label={label}>
             <label htmlFor={htmlFor} className="block text-sm font-bold mb-1.5">
                 {label}
                 {required && <span className="text-red-600 ml-1">*</span>}
             </label>
             {hint && <p className="text-sm text-neutral-600 mb-2 leading-relaxed">{hint}</p>}
-            {children}
+            {control}
+            {error && (
+                <p id={`${htmlFor}-error`} role="alert" className="text-sm font-semibold text-red-600 mt-1.5">
+                    {error}
+                </p>
+            )}
         </div>
     );
 }
 
 export const inputClass =
-    "w-full h-12 px-4 rounded-xl border border-neutral-300 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
+    "w-full h-12 px-4 rounded-xl border border-neutral-300 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-black aria-[invalid=true]:border-red-500 aria-[invalid=true]:bg-red-50";
 export const textareaClass =
-    "w-full px-4 py-3 rounded-xl border border-neutral-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
+    "w-full px-4 py-3 rounded-xl border border-neutral-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-black focus:border-black aria-[invalid=true]:border-red-500 aria-[invalid=true]:bg-red-50";
 
 /** 저장 실패 시 상단에 뜨는 오류 요약. 각 항목을 누르면 해당 입력칸으로 이동한다. */
 export function ErrorSummary({
@@ -72,6 +100,7 @@ export function ErrorSummary({
     fields: FieldError[];
     summaryRef: React.RefObject<HTMLDivElement | null>;
 }) {
+    if (fields.length === 0) return null;
     return (
         <div
             ref={summaryRef}

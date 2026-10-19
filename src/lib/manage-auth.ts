@@ -91,6 +91,14 @@ export async function isAuthenticated(): Promise<boolean> {
     return safeEqual(signature, sign(expiresAt, secret));
 }
 
+/** 유효한 세션이면 만료 시각(ms)을, 아니면 null을 돌려준다 — 화면에서 "곧 만료" 안내에 쓴다. */
+export async function getSessionExpiry(): Promise<number | null> {
+    if (!(await isAuthenticated())) return null;
+    const raw = (await cookies()).get(COOKIE_NAME)?.value ?? "";
+    const expiresAt = Number(raw.split(".")[0]);
+    return expiresAt || null;
+}
+
 /** 서버 액션 진입점에서 호출. 인증 안 됐으면 예외를 던진다. */
 export async function requireAuth(): Promise<void> {
     if (!(await isAuthenticated())) {

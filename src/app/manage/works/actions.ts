@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/manage-auth";
 import { uploadImageIfPresent } from "@/lib/manage-upload";
 import { sanitizeBlocks } from "@/lib/work-blocks-server";
 import { getWriteClient } from "@/sanity/lib/writeClient";
+import { labelsEulReul } from "@/lib/josa";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -48,7 +49,7 @@ function parseBasic(formData: FormData): Parsed | { error: string; fields: Field
     if (!artist) missing.push({ id: "artist", label: "아티스트" });
     if (!dateRaw) missing.push({ id: "releaseDate", label: "발매일" });
     if (missing.length > 0) {
-        return { error: `${missing.map((m) => m.label).join(", ")}을(를) 입력해 주세요.`, fields: missing };
+        return { error: `${labelsEulReul(missing)} 입력해 주세요.`, fields: missing };
     }
 
     const m = ISO_DATE_RE.exec(dateRaw);
@@ -148,7 +149,7 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
             return { ok: false, error: parsed.error, fields: missing };
         }
         if (missing.length > 0) {
-            return { ok: false, error: `${missing.map((m) => m.label).join(", ")}을(를) 입력해 주세요.`, fields: missing };
+            return { ok: false, error: `${labelsEulReul(missing)} 입력해 주세요.`, fields: missing };
         }
 
         const dup = await client.fetch<number>(`count(*[_type == "work" && slug.current == $slug])`, { slug });
@@ -170,7 +171,7 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
         console.error("[createWork]", err);
         return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
-    redirect(`/manage/works/${documentId}`);
+    redirect(`/manage/works/${documentId}?created=1`);
 }
 
 async function setTrashed(documentId: string, trashed: boolean): Promise<SaveResult> {

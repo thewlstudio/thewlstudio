@@ -39,6 +39,16 @@ export default function ManageNav({
                 </p>
                 <h1 className="text-2xl md:text-3xl font-black tracking-tight">{title}</h1>
             </div>
+            <div className="flex items-center gap-3 shrink-0">
+            <Link
+                href="/manage/help"
+                onClick={(e) => {
+                    if (!confirmLeaveIfDirty()) e.preventDefault();
+                }}
+                className="text-sm font-semibold text-neutral-500 hover:text-black transition-colors underline underline-offset-4 min-h-11 px-1 flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
+            >
+                사용 안내
+            </Link>
             <form
                 action={logout}
                 onSubmit={(e) => {
@@ -52,6 +62,7 @@ export default function ManageNav({
                     로그아웃
                 </button>
             </form>
+            </div>
         </header>
     );
 }

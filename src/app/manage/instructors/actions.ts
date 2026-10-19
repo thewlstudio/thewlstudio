@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
+import { labelsEulReul } from "@/lib/josa";
 
 /** 오류가 난 필드의 DOM id와 사람이 읽을 이름 — 상단 오류 요약에서 해당 칸으로 이동할 때 쓴다 */
 export type FieldError = { id: string; label: string };
@@ -80,7 +81,7 @@ function parseAndValidateFields(
     if (process.length === 0) missing.push({ id: "process", label: "커리큘럼" });
     if (missing.length > 0) {
         return {
-            error: `${missing.map((m) => m.label).join(", ")}을(를) 입력해 주세요.`,
+            error: `${labelsEulReul(missing)} 입력해 주세요.`,
             missingFields: missing,
         };
     }
@@ -186,7 +187,7 @@ export async function createInstructor(
         if (missingImages.length > 0) {
             return {
                 ok: false,
-                error: `${missingImages.map((m) => m.label).join(", ")}을(를) 선택해 주세요.`,
+                error: `${labelsEulReul(missingImages)} 선택해 주세요.`,
                 fields: missingImages,
             };
         }
@@ -225,7 +226,7 @@ export async function createInstructor(
     revalidatePath("/class");
     revalidatePath("/manage/instructors");
     // 방금 만든 강사의 수정 화면으로 이동 — 미리보기로 바로 확인할 수 있도록
-    redirect(`/manage/instructors/${documentId}`);
+    redirect(`/manage/instructors/${documentId}?created=1`);
 }
 
 /**

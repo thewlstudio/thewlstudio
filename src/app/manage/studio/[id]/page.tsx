@@ -7,12 +7,13 @@ import DeleteSpaceButton from "./DeleteSpaceButton";
 import RestoreButton from "../../_components/RestoreButton";
 import { restoreSpace } from "../actions";
 import ManageNav from "../../ManageNav";
+import UpdatedAt from "../../_components/UpdatedAt";
 
 export const metadata = { title: "공간 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "studioSpace" && _id == $id][0]{
-    _id, kind, trashed, isActive, name, subtitle, description, features, notes,
+    _id, _updatedAt, kind, trashed, isActive, name, subtitle, description, features, notes,
     "prices": prices[]{ _key, label, value, unit },
     "images": images[]{ _key, "url": asset->url }
 }`;
@@ -63,6 +64,7 @@ export default async function EditSpacePage({ params }: { params: Promise<{ id: 
                 <div>
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">{data.kind === "lobby" ? "로비 수정" : "연습실 수정"}</p>
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">{data.name || "이름 없음"}</h2>
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
                 </div>
 
                 {isTrashed ? (

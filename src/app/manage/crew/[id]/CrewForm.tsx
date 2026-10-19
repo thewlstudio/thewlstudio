@@ -4,8 +4,9 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveCrew, createCrew, type SaveResult, type FieldError } from "../actions";
-import { Section, Field, ErrorSummary, inputClass } from "../../_components/FormParts";
+import { Section, Field, ErrorSummary, inputClass, FieldErrorsProvider, InlineError } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import SaveStatus from "../../_components/SaveStatus";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { CREW_ICON_PRESETS } from "@/lib/crew-icons";
 import { toState } from "@/lib/crew-sections";
@@ -42,7 +43,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
     const shownPhoto = photoPreview ?? data.imageUrl;
 
     // 미저장 변경사항 추적·탭 닫기 경고·저장 성공 처리·오류 요약 포커스는 공통 훅이 담당한다
-    const { isDirty, markDirty, summaryRef, handleListClick: handleListClick } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, handleListClick: handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
 
     const updateRow = (i: number, patch: Partial<CrewLinkRow>) => {
         setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
@@ -50,12 +51,13 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
     };
 
     return (
-        <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">
+        <FieldErrorsProvider value={clientErrors}>
+        <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
             <input type="hidden" name="linkCount" value={rows.length} />
 
-            {state && !state.ok && state.fields && state.fields.length > 0 && <ErrorSummary fields={state.fields} summaryRef={summaryRef} />}
+            <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
             {!isActive && (
                 <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
@@ -181,6 +183,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                         )}
                     </div>
                 </div>
+            <InlineError id="imageFile" />
             </Section>
 
             <Section step={3} title="소셜 링크" hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워 둬도 돼요.">
@@ -295,13 +298,10 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                         {isPending ? (isCreate ? "추가하는 중…" : "저장하는 중…") : isCreate ? "추가하기" : "저장하기"}
                     </button>
                 </div>
-                {state && (
-                    <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
-                    </div>
-                )}
+                <SaveStatus state={state} />
             </div>
         </form>
+        </FieldErrorsProvider>
     );
 }
 

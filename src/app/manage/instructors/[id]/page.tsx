@@ -8,12 +8,14 @@ import DuplicateInstructorButton from "./DuplicateInstructorButton";
 import RestoreButton from "../../_components/RestoreButton";
 import { restoreInstructor } from "../actions";
 import ManageNav from "../../ManageNav";
+import UpdatedAt from "../../_components/UpdatedAt";
 
 export const metadata = { title: "강사 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "instructor" && _id == $id][0]{
     _id,
+    _updatedAt,
     isActive,
     trashed,
     instructorName,
@@ -86,6 +88,7 @@ export default async function EditInstructorPage({
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">
                         {data.instructorName || "이름 없음"}
                     </h2>
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
                 </div>
 
                 {isTrashed ? (

@@ -3,8 +3,9 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { saveSpace, createSpace, type SaveResult } from "../actions";
-import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../../_components/FormParts";
+import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import SaveStatus from "../../_components/SaveStatus";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { LinesEditor, dangerBtn, dashedBtn, move, smallBtn } from "../../_components/listUi";
 
@@ -110,7 +111,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
     const [notes, setNotes] = useState<string[]>(data.notes);
     const [images, setImages] = useState<ImageRow[]>(data.images);
 
-    const { isDirty, markDirty, summaryRef, handleListClick } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
     const isLobby = kind === "lobby";
 
     const listsJson = JSON.stringify({
@@ -130,13 +131,14 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
     };
 
     return (
-        <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">
+        <FieldErrorsProvider value={clientErrors}>
+        <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="kind" value={kind} />
             <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
             <input type="hidden" name="listsJson" value={listsJson} />
 
-            {state && !state.ok && state.fields && state.fields.length > 0 && <ErrorSummary fields={state.fields} summaryRef={summaryRef} />}
+            <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
             {!isActive && (
                 <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
@@ -291,13 +293,10 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                         {isPending ? (isCreate ? "추가하는 중…" : "저장하는 중…") : isCreate ? "추가하기" : "저장하기"}
                     </button>
                 </div>
-                {state && (
-                    <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
-                    </div>
-                )}
+                <SaveStatus state={state} />
             </div>
         </form>
+        </FieldErrorsProvider>
     );
 }
 

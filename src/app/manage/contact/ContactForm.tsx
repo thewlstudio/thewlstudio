@@ -3,19 +3,21 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { saveSettings, type SaveResult } from "./actions";
-import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../_components/FormParts";
+import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider } from "../_components/FormParts";
 import { useGuardedForm } from "../_components/useGuardedForm";
+import SaveStatus from "../_components/SaveStatus";
 import { mapEmbedUrl, type SiteSettings } from "@/lib/site-settings";
 
 function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: () => void }) {
     const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(saveSettings, null);
     const [mapQuery, setMapQuery] = useState(data.mapQuery);
     const [shownQuery, setShownQuery] = useState(data.mapQuery);
-    const { isDirty, markDirty, summaryRef, handleListClick } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
 
     return (
-        <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">
-            {state && !state.ok && state.fields && state.fields.length > 0 && <ErrorSummary fields={state.fields} summaryRef={summaryRef} />}
+        <FieldErrorsProvider value={clientErrors}>
+        <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
+            <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
             <Section step={1} title="위치·연락처" hint="Contact 페이지에 나오는 정보예요. 모든 칸을 채워 주세요.">
                 <Field label="전화번호" htmlFor="phone" required hint="예: 0507-1331-7285 (누르면 전화가 걸려요)">
@@ -102,13 +104,10 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                         {isPending ? "저장하는 중…" : "저장하기"}
                     </button>
                 </div>
-                {state && (
-                    <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
-                    </div>
-                )}
+                <SaveStatus state={state} />
             </div>
         </form>
+        </FieldErrorsProvider>
     );
 }
 

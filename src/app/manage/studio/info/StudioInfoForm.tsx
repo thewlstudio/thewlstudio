@@ -3,10 +3,12 @@
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { saveStudioInfo, type SaveResult } from "./actions";
-import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../../_components/FormParts";
+import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import SaveStatus from "../../_components/SaveStatus";
 import { LinesEditor, dangerBtn, dashedBtn, move, smallBtn } from "../../_components/listUi";
 import { ExpandControls, Summary, ToggleButton, snippet, useOpenKeys } from "../../_components/Collapse";
+import { eulReul } from "@/lib/josa";
 import type { StudioInfo } from "@/lib/studio-info";
 
 let seq = 0;
@@ -26,7 +28,7 @@ function RowTools({ name, i, count, onMove, onRemove, toggle }: { name: string; 
                 type="button"
                 aria-label={`${name} ${i + 1} 지우기`}
                 onClick={() => {
-                    if (window.confirm(`${name} ${i + 1}을(를) 지울까요? 저장하기 전에는 홈페이지에 반영되지 않고, '변경 버리기'로 되돌릴 수 있어요.`)) onRemove();
+                    if (window.confirm(`${name} ${i + 1}${eulReul(name)} 지울까요? 저장하기 전에는 홈페이지에 반영되지 않고, '변경 버리기'로 되돌릴 수 있어요.`)) onRemove();
                 }}
                 className={dangerBtn}
             >
@@ -38,7 +40,7 @@ function RowTools({ name, i, count, onMove, onRemove, toggle }: { name: string; 
 
 function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard: () => void }) {
     const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(saveStudioInfo, null);
-    const { isDirty, markDirty, summaryRef, handleListClick } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
 
     const [services, setServices] = useState(() => withKeys(data.services, "svc"));
     const [equipment, setEquipment] = useState(() => withKeys(data.equipment, "eq"));
@@ -82,9 +84,10 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
     });
 
     return (
-        <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">
+        <FieldErrorsProvider value={clientErrors}>
+        <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
             <input type="hidden" name="dataJson" value={dataJson} />
-            {state && !state.ok && state.fields && state.fields.length > 0 && <ErrorSummary fields={state.fields} summaryRef={summaryRef} />}
+            <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
             <ExpandControls
                 onOpenAll={() => col.openAll([...services, ...equipment, ...memberships].map((x) => x.key))}
@@ -273,13 +276,10 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                         {isPending ? "저장하는 중…" : "저장하기"}
                     </button>
                 </div>
-                {state && (
-                    <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
-                    </div>
-                )}
+                <SaveStatus state={state} />
             </div>
         </form>
+        </FieldErrorsProvider>
     );
 }
 

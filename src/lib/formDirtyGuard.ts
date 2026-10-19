@@ -23,7 +23,7 @@ export function isFormDirty(): boolean {
 
 /** dirty 상태면 confirm으로 물어보고, 사용자가 "취소"하면 false를 반환한다 */
 export function confirmLeaveIfDirty(
-    message = "저장하지 않은 내용이 있어요. 그래도 나가시겠어요?",
+    message = "저장하지 않은 내용이 있어요. 그래도 나갈까요?",
 ): boolean {
     if (!dirty) return true;
     return window.confirm(message);

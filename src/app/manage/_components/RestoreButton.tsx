@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "./Toast";
 type Result = { ok: true } | { ok: false; error: string };
 
 export default function RestoreButton({
@@ -12,6 +13,7 @@ export default function RestoreButton({
     restore: (documentId: string) => Promise<Result>;
 }) {
     const router = useRouter();
+    const toast = useToast();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +29,7 @@ export default function RestoreButton({
                         const result = await restore(documentId);
                         if (result.ok) {
                             setError(null);
+                            toast.show({ message: "복원했어요. 목록에서 다시 볼 수 있어요." });
                             router.refresh();
                         } else {
                             setError(result.error);

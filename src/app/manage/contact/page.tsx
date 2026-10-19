@@ -5,11 +5,12 @@ import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import { FALLBACK_SETTINGS, mergeSettings } from "@/lib/site-settings";
 import ManageNav from "../ManageNav";
 import ContactForm from "./ContactForm";
+import UpdatedAt from "../_components/UpdatedAt";
 
 export const metadata = { title: "연락처·링크 관리" };
 export const dynamic = "force-dynamic";
 
-const query = `*[_type == "siteSettings" && _id == "siteSettings"][0]{ phone, addressKo, addressEn, mapQuery, naverMapPlaceUrl, naverReservationUrl, instagramUrl, blogUrl, homeHeadline, homeIntro }`;
+const query = `*[_type == "siteSettings" && _id == "siteSettings"][0]{ _updatedAt, phone, addressKo, addressEn, mapQuery, naverMapPlaceUrl, naverReservationUrl, instagramUrl, blogUrl, homeHeadline, homeIntro }`;
 
 export default async function ManageContactPage() {
     if (!(await isAuthenticated())) redirect("/manage/login");
@@ -25,6 +26,7 @@ export default async function ManageContactPage() {
             <div className="mb-6">
                 <h2 className="text-2xl md:text-3xl font-black tracking-tight">연락처·링크</h2>
                 <p className="text-sm text-neutral-600 mt-2 leading-relaxed">Contact 페이지, 헤더의 인스타그램, 예약·멤버십 버튼, 블로그 링크, 홈페이지 소개 문구에 쓰이는 정보예요.</p>
+                <UpdatedAt iso={raw?._updatedAt as string | undefined} />
             </div>
             {!writeReady && (
                 <div role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed">

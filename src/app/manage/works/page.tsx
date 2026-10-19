@@ -9,15 +9,16 @@ import ManageNav from "../ManageNav";
 import RestoreButton from "../_components/RestoreButton";
 import { restoreWork } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 
 export const metadata = { title: "작업물 관리" };
 export const dynamic = "force-dynamic";
 
-type Row = { _id: string; title?: string; artist?: string; releaseDate?: string; coverImage?: SanityImageSource };
+type Row = { _id: string; _updatedAt?: string; title?: string; artist?: string; releaseDate?: string; coverImage?: SanityImageSource };
 
 // 공개 목록(worksQuery)과 같은 정렬 — 발매일 최신순
-const listQuery = `*[_type == "work" && !(trashed == true)] | order(releaseDate desc) { _id, title, artist, releaseDate, coverImage }`;
-const trashedQuery = `*[_type == "work" && trashed == true] | order(_updatedAt desc) { _id, title, artist, releaseDate, coverImage }`;
+const listQuery = `*[_type == "work" && !(trashed == true)] | order(releaseDate desc) { _id, _updatedAt, title, artist, releaseDate, coverImage }`;
+const trashedQuery = `*[_type == "work" && trashed == true] | order(_updatedAt desc) { _id, _updatedAt, title, artist, releaseDate, coverImage }`;
 
 export default async function WorksListPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
     if (!(await isAuthenticated())) redirect("/manage/login");
@@ -83,6 +84,7 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
                                     <p className="text-sm text-neutral-500 truncate">
                                         {w.artist}
                                         {w.releaseDate ? ` · ${w.releaseDate}` : ""}
+                                        {formatUpdated(w._updatedAt) && (<> · <time dateTime={w._updatedAt} title={formatAbsolute(w._updatedAt as string)}>{formatUpdated(w._updatedAt)}</time></>)}
                                     </p>
                                 </div>
                                 {!isTrashView && <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">›</span>}

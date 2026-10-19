@@ -10,13 +10,14 @@ import ReorderButtons from "../_components/ReorderButtons";
 import RestoreButton from "../_components/RestoreButton";
 import { moveSpaceOrder, restoreSpace } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 
 export const metadata = { title: "스튜디오 공간 관리" };
 export const dynamic = "force-dynamic";
 
-type Row = { _id: string; kind?: string; name?: string; isActive?: boolean; cover?: SanityImageSource; photoCount?: number };
+type Row = { _id: string; _updatedAt?: string; kind?: string; name?: string; isActive?: boolean; cover?: SanityImageSource; photoCount?: number };
 
-const fields = `_id, kind, name, isActive, "cover": images[0], "photoCount": count(images)`;
+const fields = `_id, _updatedAt, kind, name, isActive, "cover": images[0], "photoCount": count(images)`;
 // 공개 화면과 같은 순서: 연습실이 먼저, 로비는 그 뒤
 const listQuery = `*[_type == "studioSpace" && !(trashed == true)] | order(select(kind == "lobby" => 1, 0) asc, order asc) { ${fields} }`;
 const trashedQuery = `*[_type == "studioSpace" && trashed == true] | order(_updatedAt desc) { ${fields} }`;
@@ -108,7 +109,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                                             {hidden && !isTrashView && <span className="shrink-0 text-[10px] font-bold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded">비공개</span>}
                                         </div>
                                         <p className="text-sm text-neutral-500 truncate">
-                                            {isLobby ? "로비" : "연습실"} · 사진 {sp.photoCount ?? 0}장
+                                            {isLobby ? "로비" : "연습실"} · 사진 {sp.photoCount ?? 0}장{formatUpdated(sp._updatedAt) && (<> · <time dateTime={sp._updatedAt} title={formatAbsolute(sp._updatedAt as string)}>{formatUpdated(sp._updatedAt)}</time></>)}
                                         </p>
                                     </div>
                                     {!isTrashView && <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">›</span>}

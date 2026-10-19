@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/manage-auth";
 import ManageNav from "./ManageNav";
+import FirstTimeGuide from "./FirstTimeGuide";
 
 // title.template 상속이 이 세그먼트(레이아웃과 같은 위치의 page.tsx)에서는
 // 이상하게 루트 레이아웃 쪽 템플릿을 타는 현상이 있어, 최종 문자열을 직접 지정
@@ -31,6 +32,8 @@ export default async function ManageHubPage() {
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
             <ManageNav title="관리 허브" showHubLink={false} />
+
+            <FirstTimeGuide />
 
             <div className="flex items-center justify-between gap-4 mb-4">
                 <p className="text-sm text-neutral-600">관리할 항목을 선택해 주세요.</p>

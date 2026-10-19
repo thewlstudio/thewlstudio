@@ -4,8 +4,9 @@ import { useActionState, useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveInstructor, createInstructor, type SaveResult, type FieldError } from "../actions";
-import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../../_components/FormParts";
+import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider, InlineError } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import SaveStatus from "../../_components/SaveStatus";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { Eye, MapPin, Image as ImageIcon } from "lucide-react";
 
@@ -172,6 +173,7 @@ function PhotoInput({
                                   : "고르지 않으면 지금 사진이 그대로 유지돼요."}
                         </p>
                     )}
+                    <InlineError id={id} />
                 </div>
             </div>
         </div>
@@ -391,17 +393,16 @@ function InstructorFormInner({
     );
 
     // 미저장 변경사항 추적·탭 닫기 경고·저장 성공 처리·오류 요약 포커스는 공통 훅이 담당한다
-    const { isDirty, markDirty, summaryRef: errorSummaryRef, handleListClick: handleListLinkClick } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef: errorSummaryRef, handleListClick: handleListLinkClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
 
     return (
-        <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">
+        <FieldErrorsProvider value={clientErrors}>
+        <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="imagePosition" value={photoPosition} />
             <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
 
-            {state && !state.ok && state.fields && state.fields.length > 0 && (
-                <ErrorSummary fields={state.fields} summaryRef={errorSummaryRef} />
-            )}
+            <ErrorSummary fields={summaryFields} summaryRef={errorSummaryRef} />
 
             {!isActive && (
                 <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
@@ -557,6 +558,7 @@ function InstructorFormInner({
                                           : "고르지 않으면 지금 사진이 유지돼요."}
                                 </p>
                             )}
+                            <InlineError id="imageFile" />
                         </div>
                     </div>
                 </div>
@@ -762,19 +764,10 @@ function InstructorFormInner({
                     </button>
                 </div>
 
-                {state && (
-                    <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? (
-                            <p className="text-sm font-bold text-green-700">
-                                저장했어요. 홈페이지에 바로 반영돼요.
-                            </p>
-                        ) : (
-                            <p className="text-sm font-bold text-red-600">{state.error}</p>
-                        )}
-                    </div>
-                )}
+                <SaveStatus state={state} />
             </div>
         </form>
+        </FieldErrorsProvider>
     );
 }
 

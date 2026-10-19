@@ -2,6 +2,8 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { flashToast } from "../../_components/Toast";
+import { eulReul } from "@/lib/josa";
 import { deleteInstructor } from "../actions";
 
 export default function DeleteInstructorButton({
@@ -56,7 +58,7 @@ export default function DeleteInstructorButton({
     return (
         <div role="alertdialog" aria-label="삭제 확인" className="rounded-xl border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-bold text-red-700 mb-3 break-keep">
-                &quot;{instructorName || "이 강사"}&quot;을(를) 휴지통으로 옮길까요? 사이트와 목록에서 바로 사라지지만,
+                &quot;{instructorName || "이 강사"}&quot;{eulReul(instructorName || "이 강사")} 휴지통으로 옮길까요? 사이트와 목록에서 바로 사라지지만,
                 나중에 휴지통에서 복원할 수 있어요.
             </p>
 
@@ -86,6 +88,7 @@ export default function DeleteInstructorButton({
                         startTransition(async () => {
                             const result = await deleteInstructor(documentId);
                             if (result.ok) {
+                                flashToast({ message: `"${instructorName || "이 강사"}"${eulReul(instructorName || "이 강사")} 휴지통으로 옮겼어요.`, undo: { area: "instructors", id: documentId } });
                                 router.push("/manage/instructors");
                             } else {
                                 setError(result.error);

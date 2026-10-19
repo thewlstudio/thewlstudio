@@ -148,7 +148,7 @@ export async function createSpace(_prev: SaveResult | null, formData: FormData):
         console.error("[createSpace]", err);
         return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
-    redirect(`/manage/studio/${documentId}`);
+    redirect(`/manage/studio/${documentId}?created=1`);
 }
 
 /** 같은 종류(연습실끼리, 로비끼리) 안에서 위/아래로 한 칸 이동 */

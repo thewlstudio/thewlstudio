@@ -7,12 +7,13 @@ import RestoreButton from "../../_components/RestoreButton";
 import { restoreCrew } from "../actions";
 import CrewForm, { type CrewFormData } from "./CrewForm";
 import DeleteCrewButton from "./DeleteCrewButton";
+import UpdatedAt from "../../_components/UpdatedAt";
 
 export const metadata = { title: "크루 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "crew" && _id == $id][0]{
-    _id, isActive, trashed, name, koName, role,
+    _id, _updatedAt, isActive, trashed, name, koName, role,
     "slug": slug.current,
     "imageUrl": image.asset->url,
     "links": links[]{ _key, url, "iconRef": iconImage.asset._ref },
@@ -66,6 +67,7 @@ export default async function EditCrewPage({ params }: { params: Promise<{ id: s
             <div className="mb-6 space-y-3">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">{data.koName || data.name || "이름 없음"}</h2>
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
                 </div>
                 {isTrashed ? (
                     <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">

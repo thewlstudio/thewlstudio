@@ -2,6 +2,8 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { flashToast } from "../../_components/Toast";
+import { eulReul } from "@/lib/josa";
 import { deleteCrew } from "../actions";
 
 export default function DeleteCrewButton({
@@ -56,7 +58,7 @@ export default function DeleteCrewButton({
     return (
         <div role="alertdialog" aria-label="삭제 확인" className="rounded-xl border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-bold text-red-700 mb-3 break-keep">
-                &quot;{memberName || "이 크루"}&quot;을(를) 휴지통으로 옮길까요? 사이트와 목록에서 바로 사라지지만,
+                &quot;{memberName || "이 크루"}&quot;{eulReul(memberName || "이 크루")} 휴지통으로 옮길까요? 사이트와 목록에서 바로 사라지지만,
                 나중에 휴지통에서 복원할 수 있어요.
             </p>
 
@@ -86,6 +88,7 @@ export default function DeleteCrewButton({
                         startTransition(async () => {
                             const result = await deleteCrew(documentId);
                             if (result.ok) {
+                                flashToast({ message: `"${memberName || "이 크루"}"${eulReul(memberName || "이 크루")} 휴지통으로 옮겼어요.`, undo: { area: "crew", id: documentId } });
                                 router.push("/manage/crew");
                             } else {
                                 setError(result.error);

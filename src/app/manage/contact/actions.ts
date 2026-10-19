@@ -3,6 +3,7 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
+import { labelsEulReul } from "@/lib/josa";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -43,7 +44,7 @@ export async function saveSettings(_prev: SaveResult | null, formData: FormData)
             values[r.id] = v;
         }
         if (missing.length > 0) {
-            return { ok: false, error: `${missing.map((m) => m.label).join(", ")}을(를) 입력해 주세요.`, fields: missing };
+            return { ok: false, error: `${labelsEulReul(missing)} 입력해 주세요.`, fields: missing };
         }
 
         for (const r of RULES) {
