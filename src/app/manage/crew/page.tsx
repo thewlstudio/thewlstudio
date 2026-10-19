@@ -7,8 +7,9 @@ import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
 import ReorderButtons from "../_components/ReorderButtons";
+import ManagedList, { DragHandle } from "../_components/ManagedList";
 import RestoreButton from "../_components/RestoreButton";
-import { moveCrewOrder, restoreCrew } from "./actions";
+import { moveCrewOrder, restoreCrew, reorderCrew } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 
@@ -73,14 +74,21 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
             )}
             {isTrashView && members.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
 
-            <ul className="space-y-3">
-                {members.map((m, index) => {
+            <ManagedList
+                reorder={!isTrashView && writeReady ? reorderCrew : undefined}
+                searchPlaceholder="이름·직책으로 찾기"
+                statusFilter
+                items={members.map((m, index) => {
                     const hidden = m.isActive === false;
-                    return (
-                        <li key={m._id}>
+                    return {
+                        id: m._id,
+                        search: [m.koName, m.name, m.role].filter(Boolean).join(" "),
+                            status: hidden ? "hidden" : "public",
+                        node: (
                             <div className={`flex items-stretch gap-3 bg-white rounded-2xl border border-neutral-200 hover:border-black hover:shadow-sm transition-all ${hidden ? "opacity-50" : ""}`}>
                                 {!isTrashView && writeReady && (
                                     <div className="flex items-center pl-2">
+                                        <DragHandle id={m._id} />
                                         <ReorderButtons documentId={m._id} disableUp={index === 0} disableDown={index === members.length - 1} move={moveCrewOrder} />
                                     </div>
                                 )}
@@ -103,10 +111,11 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                                     </div>
                                 )}
                             </div>
-                        </li>
-                    );
+                        
+                        ),
+                    };
                 })}
-            </ul>
+            />
 
             <p className="text-sm text-neutral-500 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
                 저장 실수로 내용이 잘못됐다면, 개발자에게 요청해 <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을 확인할 수 있어요.

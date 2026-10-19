@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
 import { uploadImageIfPresent } from "@/lib/manage-upload";
 import { getWriteClient } from "@/sanity/lib/writeClient";
+import { applyOrder } from "@/lib/manage-reorder";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -198,4 +199,17 @@ export async function deleteSpace(documentId: string): Promise<SaveResult> {
 
 export async function restoreSpace(documentId: string): Promise<SaveResult> {
     return setTrashed(documentId, false);
+}
+
+/** 목록에서 끌어서 정한 새 순서를 저장한다 (연습실끼리·로비끼리는 화면에서 이미 묶여 있다) */
+export async function reorderSpaces(ids: string[]): Promise<SaveResult> {
+    try {
+        await requireAuth();
+        const result = await applyOrder(getWriteClient(), `*[_type == "studioSpace" && !(trashed == true)]{ _id, order }`, {}, ids);
+        if (result.ok) refresh();
+        return result;
+    } catch (err) {
+        console.error("[reorderSpaces]", err);
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
+    }
 }

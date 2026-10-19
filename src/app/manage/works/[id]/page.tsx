@@ -73,7 +73,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
             <div className="mb-6 space-y-3">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">{data.title || "제목 없음"}</h2>
-                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} historyHref={`/manage/history/works/${raw._id}`} />
                 </div>
 
                 {isTrashed ? (

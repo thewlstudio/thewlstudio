@@ -64,7 +64,7 @@ export default async function EditSpacePage({ params }: { params: Promise<{ id: 
                 <div>
                     <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">{data.kind === "lobby" ? "로비 수정" : "연습실 수정"}</p>
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">{data.name || "이름 없음"}</h2>
-                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} historyHref={`/manage/history/studio/${raw._id}`} />
                 </div>
 
                 {isTrashed ? (

@@ -67,7 +67,7 @@ export default async function EditCrewPage({ params }: { params: Promise<{ id: s
             <div className="mb-6 space-y-3">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">{data.koName || data.name || "이름 없음"}</h2>
-                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} historyHref={`/manage/history/crew/${raw._id}`} />
                 </div>
                 {isTrashed ? (
                     <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">

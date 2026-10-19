@@ -88,7 +88,7 @@ export default async function EditInstructorPage({
                     <h2 className="text-2xl md:text-3xl font-black tracking-tight">
                         {data.instructorName || "이름 없음"}
                     </h2>
-                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} />
+                    <UpdatedAt iso={(raw as { _updatedAt?: string })._updatedAt} historyHref={`/manage/history/instructors/${raw._id}`} />
                 </div>
 
                 {isTrashed ? (

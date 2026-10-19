@@ -26,7 +26,7 @@ export default async function ManageContactPage() {
             <div className="mb-6">
                 <h2 className="text-2xl md:text-3xl font-black tracking-tight">연락처·링크</h2>
                 <p className="text-sm text-neutral-600 mt-2 leading-relaxed">Contact 페이지, 헤더의 인스타그램, 예약·멤버십 버튼, 블로그 링크, 홈페이지 소개 문구에 쓰이는 정보예요.</p>
-                <UpdatedAt iso={raw?._updatedAt as string | undefined} />
+                <UpdatedAt iso={raw?._updatedAt as string | undefined} historyHref={`/manage/history/contact/siteSettings`} />
             </div>
             {!writeReady && (
                 <div role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed">

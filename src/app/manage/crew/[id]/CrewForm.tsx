@@ -12,6 +12,7 @@ import { CREW_ICON_PRESETS } from "@/lib/crew-icons";
 import { toState } from "@/lib/crew-sections";
 import CrewSectionsEditor from "./CrewSectionsEditor";
 import { Eye } from "lucide-react";
+import CropButton from "../../_components/ImageCropper";
 
 export type CrewLinkRow = { key: string; url: string; iconRef: string };
 
@@ -174,6 +175,9 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                                 setPhotoPreview(URL.createObjectURL(prepared.file));
                             }}
                         />
+                        <span className="inline-block ml-2 align-top">
+                            <CropButton inputId={"imageFile"} currentUrl={data.imageUrl} defaultRatio={3 / 4} />
+                        </span>
                         {photoError ? (
                             <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{photoError}</p>
                         ) : (

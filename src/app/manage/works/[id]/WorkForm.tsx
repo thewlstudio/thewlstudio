@@ -10,6 +10,7 @@ import { prepareImageFile, replaceInputFile } from "../../_components/imageUploa
 import { toState } from "@/lib/work-blocks";
 import WorkBlocksEditor from "./WorkBlocksEditor";
 import { Eye } from "lucide-react";
+import CropButton from "../../_components/ImageCropper";
 
 export type WorkFormData = {
     _id: string;
@@ -132,6 +133,9 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                                 setPhotoPreview(URL.createObjectURL(prepared.file));
                             }}
                         />
+                        <span className="inline-block ml-2 align-top">
+                            <CropButton inputId={"imageFile"} currentUrl={data.imageUrl} defaultRatio={1} />
+                        </span>
                         {photoError ? (
                             <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{photoError}</p>
                         ) : (

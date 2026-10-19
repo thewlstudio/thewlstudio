@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { labelsEulReul } from "@/lib/josa";
+import { applyOrder } from "@/lib/manage-reorder";
 
 /** 오류가 난 필드의 DOM id와 사람이 읽을 이름 — 상단 오류 요약에서 해당 칸으로 이동할 때 쓴다 */
 export type FieldError = { id: string; label: string };
@@ -385,5 +386,22 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
         const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
         console.error("[restoreInstructor]", err);
         return { ok: false, error: message };
+    }
+}
+
+/** 목록에서 끌어서 정한 새 순서를 저장한다 */
+export async function reorderInstructors(ids: string[]): Promise<SaveResult> {
+    try {
+        await requireAuth();
+        const result = await applyOrder(getWriteClient(), `*[_type == "instructor" && !(trashed == true)]{ _id, order }`, {}, ids);
+        if (result.ok) {
+            updateTag("instructor");
+            revalidatePath("/class");
+            revalidatePath("/manage/instructors");
+        }
+        return result;
+    } catch (err) {
+        console.error("[reorderInstructors]", err);
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }

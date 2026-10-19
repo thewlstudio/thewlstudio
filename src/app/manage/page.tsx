@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/manage-auth";
 import ManageNav from "./ManageNav";
 import FirstTimeGuide from "./FirstTimeGuide";
+import { client } from "@/sanity/lib/client";
+import { formatAbsolute, formatUpdated } from "@/lib/format-updated";
 
 // title.template 상속이 이 세그먼트(레이아웃과 같은 위치의 page.tsx)에서는
 // 이상하게 루트 레이아웃 쪽 템플릿을 타는 현상이 있어, 최종 문자열을 직접 지정
@@ -24,10 +26,29 @@ const SECTIONS: Section[] = [
     { key: "contact", label: "Contact", description: "전화·주소·지도, 예약·SNS 링크, 홈페이지 소개 문구", href: "/manage/contact" },
 ];
 
+type Recent = { _id: string; _type: string; _updatedAt: string; title?: string };
+
+const RECENT_QUERY = `*[_type in ["instructor","crew","work","studioSpace","studioInfo","siteSettings"]] | order(_updatedAt desc)[0...6]{
+    _id, _type, _updatedAt,
+    "title": coalesce(instructorName, koName, title, name)
+}`;
+
+const RECENT_META: Record<string, { area: string; href: (id: string) => string; fallback: string }> = {
+    instructor: { area: "강사", href: (id) => `/manage/instructors/${id}`, fallback: "강사" },
+    crew: { area: "Crew", href: (id) => `/manage/crew/${id}`, fallback: "크루" },
+    work: { area: "Works", href: (id) => `/manage/works/${id}`, fallback: "작업물" },
+    studioSpace: { area: "Studio", href: (id) => `/manage/studio/${id}`, fallback: "공간" },
+    studioInfo: { area: "Studio", href: () => "/manage/studio/info", fallback: "서비스·장비·멤버십·이용 안내" },
+    siteSettings: { area: "Contact", href: () => "/manage/contact", fallback: "연락처·링크·홈페이지 소개" },
+};
+
 export default async function ManageHubPage() {
     if (!(await isAuthenticated())) {
         redirect("/manage/login");
     }
+
+    // 최근 수정은 보조 정보라, 읽기에 실패해도 허브 자체는 그대로 보여 준다
+    const recent = await client.fetch<Recent[]>(RECENT_QUERY).catch(() => [] as Recent[]);
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
@@ -80,6 +101,34 @@ export default async function ManageHubPage() {
                     </li>
                 ))}
             </ul>
+
+            {recent.length > 0 && (
+                <section aria-labelledby="recent" className="mt-10">
+                    <h2 id="recent" className="text-sm font-black tracking-tight mb-3">최근 수정</h2>
+                    <ul className="rounded-2xl border border-neutral-200 bg-white divide-y divide-neutral-100">
+                        {recent.map((r) => {
+                            const meta = RECENT_META[r._type];
+                            if (!meta) return null;
+                            return (
+                                <li key={r._id}>
+                                    <Link
+                                        href={meta.href(r._id)}
+                                        className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-neutral-50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-black first:rounded-t-2xl last:rounded-b-2xl"
+                                    >
+                                        <span className="min-w-0">
+                                            <span className="block text-sm font-bold truncate">{r.title || meta.fallback}</span>
+                                            <span className="block text-xs text-neutral-500">{meta.area}</span>
+                                        </span>
+                                        <time dateTime={r._updatedAt} title={formatAbsolute(r._updatedAt)} className="shrink-0 text-xs text-neutral-500">
+                                            {formatUpdated(r._updatedAt)}
+                                        </time>
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </section>
+            )}
         </main>
     );
 }

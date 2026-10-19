@@ -7,6 +7,7 @@ import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
 import RestoreButton from "../_components/RestoreButton";
+import ManagedList from "../_components/ManagedList";
 import { restoreWork } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
@@ -71,9 +72,14 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
             )}
             {isTrashView && works.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
 
-            <ul className="space-y-3">
-                {works.map((w) => (
-                    <li key={w._id}>
+            <ManagedList
+                searchPlaceholder="제목·아티스트로 찾기"
+                items={works.map((w) => {
+
+                    return {
+                        id: w._id,
+                        search: [w.title, w.artist, w.releaseDate].filter(Boolean).join(" "),
+                        node: (
                         <div className="flex items-stretch gap-3 bg-white rounded-2xl border border-neutral-200 hover:border-black hover:shadow-sm transition-all">
                             <Link href={`/manage/works/${encodeURIComponent(w._id)}`} className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                                 <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
@@ -95,9 +101,11 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
                                 </div>
                             )}
                         </div>
-                    </li>
-                ))}
-            </ul>
+                    
+                        ),
+                    };
+                })}
+            />
 
             <p className="text-sm text-neutral-500 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
                 저장 실수로 내용이 잘못됐다면, 개발자에게 요청해 <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을 확인할 수 있어요.

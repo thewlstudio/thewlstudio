@@ -35,7 +35,7 @@ export default async function StudioInfoPage() {
                 <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
                     스튜디오 페이지의 연습실·로비 카드를 뺀 나머지 내용이에요. (연습실·로비는 목록에서 따로 관리해요.)
                 </p>
-                <UpdatedAt iso={raw?._updatedAt as string | undefined} />
+                <UpdatedAt iso={raw?._updatedAt as string | undefined} historyHref={`/manage/history/studio-info/studioInfo`} />
             </div>
             {!writeReady && (
                 <div role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed">

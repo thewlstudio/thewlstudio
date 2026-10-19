@@ -8,6 +8,7 @@ import { useGuardedForm } from "../../_components/useGuardedForm";
 import SaveStatus from "../../_components/SaveStatus";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { LinesEditor, dangerBtn, dashedBtn, move, smallBtn } from "../../_components/listUi";
+import CropButton from "../../_components/ImageCropper";
 
 type PriceRow = { key: string; label: string; value: string; unit: string };
 type ImageRow = { key: string; url: string | null };
@@ -88,6 +89,9 @@ function ImageItem({ row, index, count, onMove, onRemove, onPicked }: { row: Ima
                         onPicked();
                     }}
                 />
+                <span className="inline-block ml-2 align-top">
+                    <CropButton inputId={id} currentUrl={row.url} defaultRatio={4 / 3} />
+                </span>
                 {error ? (
                     <p role="alert" className="text-sm font-semibold text-red-600 mt-1.5">{error}</p>
                 ) : (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { ExpandControls, Summary, ToggleButton, snippet, useOpenKeys } from "../../_components/Collapse";
+import CropButton from "../../_components/ImageCropper";
 import {
     BLOCK_META,
     ADDABLE_TYPES,
@@ -158,6 +159,9 @@ function ImageBlockEditor({ b, onChange }: { b: Extract<BlockState, { type: "ima
                             onChange({ ...b }); // 변경됨 표시
                         }}
                     />
+                    <span className="inline-block ml-2 align-top">
+                        <CropButton inputId={id} currentUrl={b.imageUrl} defaultRatio={null} />
+                    </span>
                     {error ? (
                         <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{error}</p>
                     ) : (

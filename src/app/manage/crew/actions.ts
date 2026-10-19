@@ -8,6 +8,7 @@ import { uploadImageIfPresent } from "@/lib/manage-upload";
 import { sanitizeSections } from "@/lib/crew-sections-server";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { labelsEulReul } from "@/lib/josa";
+import { applyOrder } from "@/lib/manage-reorder";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -229,4 +230,17 @@ export async function deleteCrew(documentId: string): Promise<SaveResult> {
 
 export async function restoreCrew(documentId: string): Promise<SaveResult> {
     return setTrashed(documentId, false);
+}
+
+/** 목록에서 끌어서 정한 새 순서를 저장한다 */
+export async function reorderCrew(ids: string[]): Promise<SaveResult> {
+    try {
+        await requireAuth();
+        const result = await applyOrder(getWriteClient(), `*[_type == "crew" && !(trashed == true)]{ _id, order }`, {}, ids);
+        if (result.ok) refresh();
+        return result;
+    } catch (err) {
+        console.error("[reorderCrew]", err);
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
+    }
 }

@@ -7,8 +7,9 @@ import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
 import ReorderButtons from "../_components/ReorderButtons";
+import ManagedList, { DragHandle } from "../_components/ManagedList";
 import RestoreButton from "../_components/RestoreButton";
-import { moveSpaceOrder, restoreSpace } from "./actions";
+import { moveSpaceOrder, restoreSpace, reorderSpaces } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 
@@ -83,19 +84,27 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
             )}
             {isTrashView && spaces.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
 
-            <ul className="space-y-3">
-                {spaces.map((sp, index) => {
+            <ManagedList
+                reorder={!isTrashView && writeReady ? reorderSpaces : undefined}
+                searchPlaceholder="이름으로 찾기"
+                statusFilter
+                items={spaces.map((sp, index) => {
                     const hidden = sp.isActive === false;
                     const isLobby = sp.kind === "lobby";
                     // 순서 이동은 같은 종류끼리만 — 이웃이 다른 종류면 그쪽으로는 이동할 수 없다
                     const sameKind = (other?: Row) => !!other && (other.kind === "lobby") === isLobby;
                     const prevSame = sameKind(spaces[index - 1]);
                     const nextSame = sameKind(spaces[index + 1]);
-                    return (
-                        <li key={sp._id}>
+                    return {
+                        id: sp._id,
+                        search: [sp.name, isLobby ? "로비" : "연습실"].filter(Boolean).join(" "),
+                            status: hidden ? "hidden" : "public",
+                            group: isLobby ? "lobby" : "room",
+                        node: (
                             <div className={`flex items-stretch gap-3 bg-white rounded-2xl border border-neutral-200 hover:border-black hover:shadow-sm transition-all ${hidden ? "opacity-50" : ""}`}>
                                 {!isTrashView && writeReady && (
                                     <div className="flex items-center pl-2">
+                                        <DragHandle id={sp._id} />
                                         <ReorderButtons documentId={sp._id} disableUp={!prevSame} disableDown={!nextSame} move={moveSpaceOrder} />
                                     </div>
                                 )}
@@ -120,10 +129,11 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                                     </div>
                                 )}
                             </div>
-                        </li>
-                    );
+                        
+                        ),
+                    };
                 })}
-            </ul>
+            />
 
             <p className="text-sm text-neutral-500 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
                 위 목록은 연습실·로비 카드예요. 서비스 가격·장비·멤버십·이용 안내는 위의 &quot;서비스·장비·멤버십·이용 안내&quot;에서 고쳐요. 로비는 한 곳만 화면에 나와요.

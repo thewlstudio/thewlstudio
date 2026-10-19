@@ -7,8 +7,9 @@ import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
 import ReorderButtons from "../_components/ReorderButtons";
+import ManagedList, { DragHandle } from "../_components/ManagedList";
 import RestoreButton from "../_components/RestoreButton";
-import { moveInstructorOrder, restoreInstructor } from "./actions";
+import { moveInstructorOrder, restoreInstructor, reorderInstructors } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 
@@ -111,16 +112,23 @@ export default async function InstructorListPage({
                 <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>
             )}
 
-            <ul className="space-y-3">
-                {instructors.map((instructor, index) => {
+            <ManagedList
+                reorder={!isTrashView && writeReady ? reorderInstructors : undefined}
+                searchPlaceholder="이름·분야로 찾기"
+                statusFilter
+                items={instructors.map((instructor, index) => {
                     const isHidden = instructor.isActive === false;
-                    return (
-                        <li key={instructor._id}>
+                    return {
+                        id: instructor._id,
+                        search: [instructor.instructorName, instructor.category].filter(Boolean).join(" "),
+                            status: isHidden ? "hidden" : "public",
+                        node: (
                             <div
                                 className={`flex items-stretch gap-3 bg-white rounded-2xl border border-neutral-200 hover:border-black hover:shadow-sm transition-all ${isHidden ? "opacity-50" : ""}`}
                             >
                                 {!isTrashView && writeReady && (
                                     <div className="flex items-center pl-2">
+                                        <DragHandle id={instructor._id} />
                                         <ReorderButtons
                                             documentId={instructor._id}
                                             disableUp={index === 0}
@@ -169,10 +177,11 @@ export default async function InstructorListPage({
                                     </div>
                                 )}
                             </div>
-                        </li>
-                    );
+                        
+                        ),
+                    };
                 })}
-            </ul>
+            />
 
             {isTrashView && instructors.length > 0 && (
                 <p className="text-sm text-neutral-500 mt-6 leading-relaxed">

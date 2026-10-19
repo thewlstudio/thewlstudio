@@ -9,6 +9,7 @@ import { useGuardedForm } from "../../_components/useGuardedForm";
 import SaveStatus from "../../_components/SaveStatus";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { Eye, MapPin, Image as ImageIcon } from "lucide-react";
+import CropButton from "../../_components/ImageCropper";
 
 export type InstructorFormData = {
     _id: string;
@@ -160,6 +161,9 @@ function PhotoInput({
                             onPreviewUrl?.(url);
                         }}
                     />
+                    <span className="inline-block ml-2 align-top">
+                        <CropButton inputId={id} currentUrl={currentUrl} defaultRatio={null} />
+                    </span>
                     {fileError ? (
                         <p role="alert" className="text-sm font-semibold text-red-600 mt-2 leading-relaxed">
                             {fileError}
@@ -602,6 +606,9 @@ function InstructorFormInner({
                     aspect="aspect-[3/4]"
                     onPreviewUrl={setModalPreview}
                 />
+                <span className="inline-block ml-2 align-top">
+                    <CropButton inputId={"imageFile"} currentUrl={data.imageUrl} defaultRatio={null} />
+                </span>
 
                 <PhotoInput
                     name="bgImageFile"
