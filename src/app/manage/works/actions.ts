@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
 import { uploadImageIfPresent } from "@/lib/manage-upload";
+import { sanitizeBlocks } from "@/lib/work-blocks-server";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 
 export type FieldError = { id: string; label: string };
@@ -88,10 +89,27 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
             if (value) patch[key] = value;
             else unset.push(key);
         }
+        // 상세 내용 블록: 폼이 blocksJson을 보낸 경우에만 배열 전체를 교체한다.
+        // (보내지 않으면 patch에 넣지 않아 기존 블록이 그대로 보존된다)
+        const blocksJson = formData.get("blocksJson");
+        if (typeof blocksJson === "string" && blocksJson) {
+            let payload: unknown;
+            try {
+                payload = JSON.parse(blocksJson);
+            } catch {
+                return { ok: false, error: "상세 내용 정보를 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요." };
+            }
+            const existing = await client.fetch<Record<string, unknown>[] | null>(`*[_id == $id][0].contentBlocks`, { id: documentId });
+            const cleaned = sanitizeBlocks(payload, existing ?? []);
+            if ("error" in cleaned) {
+                return { ok: false, error: cleaned.error, fields: [{ id: "blocks", label: "상세 페이지 내용" }] };
+            }
+            patch.contentBlocks = cleaned.blocks;
+        }
         const uploaded = await uploadImageIfPresent(client, formData.get("imageFile") as File | null);
         if (uploaded) patch.coverImage = uploaded;
 
-        // contentBlocks 등 이 화면이 다루지 않는 필드는 patch에 넣지 않아 그대로 보존된다
+        // 이 화면이 다루지 않는 필드는 patch에 넣지 않아 그대로 보존된다
         let p = client.patch(documentId).set(patch);
         if (unset.length > 0) p = p.unset(unset);
         await p.commit();

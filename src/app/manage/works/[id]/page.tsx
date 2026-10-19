@@ -15,7 +15,7 @@ const detailQuery = `*[_type == "work" && _id == $id][0]{
     _id, trashed, title, artist, "slug": slug.current, releaseDate,
     youtubeUrl, instagramId, instagramUrl,
     "imageUrl": coverImage.asset->url,
-    "blockTypes": contentBlocks[]._type
+    contentBlocks
 }`;
 
 type Raw = {
@@ -29,7 +29,7 @@ type Raw = {
     instagramId?: string;
     instagramUrl?: string;
     imageUrl?: string;
-    blockTypes?: string[];
+    contentBlocks?: unknown[];
 };
 
 /** 저장돼 있는 "YYYY. MM. DD." → 달력 입력용 "YYYY-MM-DD" (형식이 다르면 빈 값) */
@@ -58,7 +58,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
         youtubeUrl: raw.youtubeUrl ?? "",
         instagramId: raw.instagramId ?? "",
         instagramUrl: raw.instagramUrl ?? "",
-        blockSummary: raw.blockTypes ?? [],
+        blocks: raw.contentBlocks ?? [],
     };
 
     return (

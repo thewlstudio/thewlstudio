@@ -19,7 +19,7 @@ export default async function NewWorkPage() {
         youtubeUrl: "",
         instagramId: "",
         instagramUrl: "",
-        blockSummary: [],
+        blocks: [],
     };
 
     return (

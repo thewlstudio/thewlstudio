@@ -5,6 +5,8 @@ import Link from "next/link";
 import { saveWork, createWork, type SaveResult } from "../actions";
 import { Section, Field, ErrorSummary, inputClass } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { toState } from "@/lib/work-blocks";
+import WorkBlocksEditor from "./WorkBlocksEditor";
 
 export type WorkFormData = {
     _id: string;
@@ -17,22 +19,11 @@ export type WorkFormData = {
     youtubeUrl: string;
     instagramId: string;
     instagramUrl: string;
-    /** 상세 페이지 콘텐츠 블록의 _type 목록 (이 단계에서는 읽기 전용 안내용) */
-    blockSummary: string[];
+    /** 서버에서 읽은 상세 페이지 콘텐츠 블록 원본 (생성 화면에서는 빈 배열) */
+    blocks: unknown[];
 };
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
-const BLOCK_LABELS: Record<string, string> = {
-    descriptionBlock: "설명",
-    creditGridBlock: "크레딧",
-    tracklistBlock: "트랙리스트",
-    signatureMessageBlock: "인사말",
-    imageBlock: "이미지",
-    videoEmbedBlock: "유튜브 영상",
-    freeformTextBlock: "자유 서식",
-    audioBlock: "오디오",
-};
 
 function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "create" | "edit"; onDiscard: () => void }) {
     const isCreate = mode === "create";
@@ -159,15 +150,13 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
             </Section>
 
             {!isCreate && (
-                <Section step={4} title="상세 페이지 내용" hint="설명·크레딧·트랙리스트 같은 상세 페이지 블록이에요. 이 화면에서는 아직 편집할 수 없고, 저장해도 그대로 유지됩니다.">
-                    <p className="text-sm text-neutral-700 leading-relaxed">
-                        {data.blockSummary.length === 0
-                            ? "등록된 블록이 없습니다."
-                            : `현재 ${data.blockSummary.length}개: ${data.blockSummary.map((t) => BLOCK_LABELS[t] ?? t).join(" → ")}`}
-                    </p>
-                    <a href={`/works/${data.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4">
-                        진짜 화면 보기 ↗ (저장한 내용 기준)
-                    </a>
+                <Section step={4} title="상세 페이지 내용" hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
+                    <div className="flex justify-end -mt-2">
+                        <a href={`/works/${data.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4">
+                            진짜 화면 보기 ↗ (저장한 내용 기준)
+                        </a>
+                    </div>
+                    <WorkBlocksEditor initial={toState(data.blocks)} onDirty={markDirty} />
                 </Section>
             )}
 
