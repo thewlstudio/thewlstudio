@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
 import { uploadImageIfPresent } from "@/lib/manage-upload";
+import { sanitizeSections } from "@/lib/crew-sections-server";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 
 export type FieldError = { id: string; label: string };
@@ -90,8 +91,28 @@ export async function saveCrew(_prev: SaveResult | null, formData: FormData): Pr
             return { ok: false, error: parsedLinks.error, fields: [parsedLinks.field] };
         }
 
-        // sections(프로필 섹션)는 이 화면에서 다루지 않으므로 patch에 절대 넣지 않는다 — 기존 내용 보존
         const patch: Record<string, unknown> = { ...parsed.fields, links: parsedLinks.links };
+
+        // 프로필 섹션: 폼이 sectionsJson을 보낸 경우에만 배열 전체를 교체한다.
+        // (보내지 않으면 patch에 넣지 않아 기존 섹션이 그대로 보존된다)
+        const sectionsJson = formData.get("sectionsJson");
+        if (typeof sectionsJson === "string" && sectionsJson) {
+            let payload: unknown;
+            try {
+                payload = JSON.parse(sectionsJson);
+            } catch {
+                return { ok: false, error: "섹션 정보를 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요." };
+            }
+            const existing = await client.fetch<Record<string, unknown>[] | null>(
+                `*[_id == $id][0].sections`,
+                { id: documentId },
+            );
+            const cleaned = sanitizeSections(payload, existing ?? []);
+            if ("error" in cleaned) {
+                return { ok: false, error: cleaned.error, fields: [{ id: "sections", label: "프로필 섹션" }] };
+            }
+            patch.sections = cleaned.sections;
+        }
         const uploaded = await uploadImageIfPresent(client, formData.get("imageFile") as File | null);
         if (uploaded) patch.image = uploaded;
 

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { saveCrew, createCrew, type SaveResult, type FieldError } from "../actions";
 import { setFormDirty } from "@/lib/formDirtyGuard";
 import { CREW_ICON_PRESETS } from "@/lib/crew-icons";
+import { toState } from "@/lib/crew-sections";
+import CrewSectionsEditor from "./CrewSectionsEditor";
 
 export type CrewLinkRow = { key: string; url: string; iconRef: string };
 
@@ -18,6 +20,8 @@ export type CrewFormData = {
     slug: string;
     imageUrl: string | null;
     links: CrewLinkRow[];
+    /** 서버에서 읽은 프로필 섹션 원본 (생성 화면에서는 빈 배열) */
+    sections: unknown[];
 };
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -346,9 +350,18 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
             </Section>
 
             {!isCreate && (
-                <p className="text-sm text-neutral-500 leading-relaxed">
-                    소개·경력 같은 프로필 섹션은 아직 이 화면에서 수정할 수 없어요(저장해도 그대로 유지됩니다). 지금은 개발자에게 요청해 /admin에서 수정해 주세요.
-                </p>
+                <Section
+                    step={4}
+                    title="프로필 섹션"
+                    hint="크루 상세 페이지에 나오는 소개·경력 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요."
+                >
+                    <div className="flex justify-end -mt-2">
+                        <a href={`/crew/${data.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4">
+                            진짜 화면 보기 ↗ (저장한 내용 기준)
+                        </a>
+                    </div>
+                    <CrewSectionsEditor initial={toState(data.sections)} onDirty={markDirty} />
+                </Section>
             )}
 
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">

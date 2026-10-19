@@ -18,6 +18,7 @@ export default async function NewCrewPage() {
         slug: "",
         imageUrl: null,
         links: [],
+        sections: [],
     };
 
     return (

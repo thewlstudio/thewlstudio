@@ -14,7 +14,8 @@ const detailQuery = `*[_type == "crew" && _id == $id][0]{
     _id, isActive, trashed, name, koName, role,
     "slug": slug.current,
     "imageUrl": image.asset->url,
-    "links": links[]{ _key, url, "iconRef": iconImage.asset._ref }
+    "links": links[]{ _key, url, "iconRef": iconImage.asset._ref },
+    sections
 }`;
 
 type Raw = {
@@ -27,6 +28,7 @@ type Raw = {
     slug?: string;
     imageUrl?: string | null;
     links?: Array<{ _key?: string; url?: string; iconRef?: string }> | null;
+    sections?: unknown[] | null;
 };
 
 export default async function EditCrewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -53,6 +55,7 @@ export default async function EditCrewPage({ params }: { params: Promise<{ id: s
             url: l.url ?? "",
             iconRef: l.iconRef ?? "",
         })),
+        sections: raw.sections ?? [],
     };
 
     return (
