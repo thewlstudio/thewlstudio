@@ -23,6 +23,8 @@ export const siteSettingsType = defineType({
         defineField({ name: "naverReservationUrl", title: "Naver Reservation URL", type: "url", description: "예약·멤버십 버튼" }),
         defineField({ name: "instagramUrl", title: "Instagram URL", type: "url" }),
         defineField({ name: "blogUrl", title: "Blog URL", type: "url" }),
+        defineField({ name: "homeHeadline", title: "Home Headline (홈페이지 소개 제목)", type: "string", description: "줄을 나누려면 Enter가 아니라 관리 화면(/manage/contact)에서 입력하세요." }),
+        defineField({ name: "homeIntro", title: "Home Intro (홈페이지 소개 본문)", type: "text", description: "빈 줄로 문단을 나눕니다." }),
     ],
     preview: { prepare: () => ({ title: "Site Settings (연락처·링크)" }) },
 });

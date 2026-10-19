@@ -6,23 +6,9 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
+import Lines from "@/components/Lines";
 import type { StudioSpaceData } from "@/lib/studio-spaces";
 import type { StudioInfo } from "@/lib/studio-info";
-
-/** 문자열의 줄바꿈("\n")을 화면 줄바꿈으로 바꾼다. always가 아니면 데스크톱에서만 줄이 바뀐다. */
-function Lines({ text, always = false }: { text: string; always?: boolean }) {
-    const parts = text.split("\n");
-    return (
-        <>
-            {parts.map((part, i) => (
-                <span key={i}>
-                    {part}
-                    {i < parts.length - 1 && (always ? <br /> : <>{" "}<br className="hidden md:block" /></>)}
-                </span>
-            ))}
-        </>
-    );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RoomCarousel — single-image carousel with ‹ › navigation

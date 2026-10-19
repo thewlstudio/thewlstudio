@@ -20,7 +20,7 @@ const SECTIONS: Section[] = [
     { key: "crew", label: "Crew", description: "크루 프로필·경력·소셜 링크", href: "/manage/crew" },
     { key: "works", label: "Works", description: "작업물 목록과 상세 페이지 내용", href: "/manage/works" },
     { key: "studio", label: "Studio", description: "연습실·로비, 서비스·장비·멤버십·이용 안내", href: "/manage/studio" },
-    { key: "contact", label: "Contact", description: "전화·주소·지도, 예약·인스타그램·블로그 링크", href: "/manage/contact" },
+    { key: "contact", label: "Contact", description: "전화·주소·지도, 예약·SNS 링크, 홈페이지 소개 문구", href: "/manage/contact" },
 ];
 
 export default async function ManageHubPage() {

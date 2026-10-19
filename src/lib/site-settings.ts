@@ -10,6 +10,10 @@ export type SiteSettings = {
     naverReservationUrl: string;
     instagramUrl: string;
     blogUrl: string;
+    /** 홈페이지 소개 제목 (줄바꿈은 화면 줄바꿈) */
+    homeHeadline: string;
+    /** 홈페이지 소개 본문: 빈 줄로 문단을 나누고, 문단 안의 줄바꿈은 데스크톱 줄바꿈 */
+    homeIntro: string;
 };
 
 /** 5/7단계 이전 시점의 하드코딩 값과 같다 */
@@ -22,6 +26,9 @@ export const FALLBACK_SETTINGS: SiteSettings = {
     naverReservationUrl: NAVER_MAP_URL,
     instagramUrl: "https://www.instagram.com/wl_musicstudio/",
     blogUrl: "https://blog.naver.com/bkh__official",
+    homeHeadline: "당신의 이야기가\n음악이 되는 곳",
+    homeIntro:
+        "W.L Studio는 단순히 소리를 녹음하는 것을 넘어,\n아티스트가 전하고자 하는 진심과 감정을\n가장 순수한 형태로 담아내는 공간입니다.\n\n최상의 장비와 쾌적한 환경,\n그리고 프로페셔널한 크루들이\n당신만의 특별한 작품을 완성할 수 있도록 함께합니다.",
 };
 
 type Partial_ = Partial<Record<keyof SiteSettings, unknown>> | null | undefined;

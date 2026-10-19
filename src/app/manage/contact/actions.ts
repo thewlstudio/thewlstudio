@@ -21,6 +21,8 @@ const RULES: Rule[] = [
     { id: "naverReservationUrl", label: "네이버 예약 주소", kind: "url", hosts: ["naver.com", "naver.me"], max: 1000 },
     { id: "instagramUrl", label: "인스타그램 주소", kind: "url", hosts: ["instagram.com"], max: 500 },
     { id: "blogUrl", label: "블로그 주소", kind: "url", max: 500 },
+    { id: "homeHeadline", label: "홈페이지 소개 제목", kind: "text", max: 100 },
+    { id: "homeIntro", label: "홈페이지 소개 본문", kind: "text", max: 2000 },
 ];
 
 function hostMatches(hostname: string, hosts: string[]) {
@@ -36,7 +38,7 @@ export async function saveSettings(_prev: SaveResult | null, formData: FormData)
         const values: Record<string, string> = {};
         const missing: FieldError[] = [];
         for (const r of RULES) {
-            const v = String(formData.get(r.id) ?? "").trim();
+            const v = String(formData.get(r.id) ?? "").replace(/\r\n/g, "\n").trim();
             if (!v) missing.push({ id: r.id, label: r.label });
             values[r.id] = v;
         }

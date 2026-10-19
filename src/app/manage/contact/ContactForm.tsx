@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { saveSettings, type SaveResult } from "./actions";
-import { Section, Field, ErrorSummary, inputClass } from "../_components/FormParts";
+import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../_components/FormParts";
 import { useGuardedForm } from "../_components/useGuardedForm";
 import { mapEmbedUrl, type SiteSettings } from "@/lib/site-settings";
 
@@ -64,6 +64,15 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                 </Field>
                 <Field label="블로그 주소" htmlFor="blogUrl" required hint="스튜디오 페이지 아래의 블로그 링크">
                     <input id="blogUrl" name="blogUrl" type="url" inputMode="url" defaultValue={data.blogUrl} className={inputClass} />
+                </Field>
+            </Section>
+
+            <Section step={4} title="홈페이지 소개 문구" hint="홈페이지 첫 화면 아래 'WHITE LIGHT STUDIO' 소개 영역의 제목과 설명이에요. Enter로 줄을 나누면 데스크톱에서 줄이 바뀌고, 모바일에서는 이어서 나옵니다.">
+                <Field label="소개 제목" htmlFor="homeHeadline" required hint="Enter로 줄을 나누면 항상 줄이 바뀝니다. (예: 두 줄)">
+                    <textarea id="homeHeadline" name="homeHeadline" rows={2} defaultValue={data.homeHeadline} className={textareaClass} />
+                </Field>
+                <Field label="소개 본문" htmlFor="homeIntro" required hint="빈 줄(Enter 두 번)로 문단을 나눠요. 문단 안에서 Enter를 한 번 누르면 데스크톱에서 줄이 바뀝니다.">
+                    <textarea id="homeIntro" name="homeIntro" rows={9} defaultValue={data.homeIntro} className={textareaClass} />
                 </Field>
             </Section>
 
