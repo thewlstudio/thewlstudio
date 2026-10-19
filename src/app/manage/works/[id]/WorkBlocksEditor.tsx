@@ -69,7 +69,7 @@ function ParagraphsEditor({ paras, onChange, label }: { paras: Para[]; onChange:
                 </div>
             ))}
             <button type="button" onClick={() => onChange([...paras, emptyPara()])} className={dashedBtn}>+ {label} 추가</button>
-            <p className="text-sm text-neutral-500 leading-relaxed">Enter로 줄을 바꾸면 홈페이지에서도 줄이 바뀝니다. 비워둔 {label}은 저장할 때 빠집니다.</p>
+            <p className="text-sm text-neutral-500 leading-relaxed">Enter로 줄을 바꾸면 홈페이지에서도 줄이 바뀌어요. 비워 둔 {label}은 저장할 때 빠져요.</p>
         </div>
     );
 }
@@ -95,7 +95,7 @@ function CreditsEditor({ sections, onChange }: { sections: CreditSection[]; onCh
                                     <p className="text-sm font-bold">크레딧 {ii + 1}</p>
                                     <RowTools name={`묶음 ${si + 1} 크레딧`} i={ii} count={sec.items.length} onMove={(to) => upd(si, { items: move(sec.items, ii, to) })} onRemove={() => upd(si, { items: sec.items.filter((_, i) => i !== ii) })} />
                                 </div>
-                                <input aria-label={`${n} 역할`} placeholder="역할 (예: Composed by) — 비우면 한 줄 전체 글이 됩니다" value={it.role} onChange={(e) => updItem({ role: e.target.value })} className={input} />
+                                <input aria-label={`${n} 역할`} placeholder="역할 (예: Composed by) — 비우면 한 줄 전체 글이 돼요" value={it.role} onChange={(e) => updItem({ role: e.target.value })} className={input} />
                                 <textarea aria-label={`${n} 이름·내용`} rows={2} placeholder="이름·내용 (예: 백광흠)" value={it.value} onChange={(e) => updItem({ value: e.target.value })} className={area} />
                                 <input aria-label={`${n} 링크 글자`} placeholder="링크 글자 (선택, 예: @shcord_re)" value={it.linkText} onChange={(e) => updItem({ linkText: e.target.value })} className={input} />
                                 <input aria-label={`${n} 링크 주소`} type="url" inputMode="url" placeholder="링크 주소 (선택, https://...)" value={it.linkUrl} onChange={(e) => updItem({ linkUrl: e.target.value })} className={input} />
@@ -162,7 +162,7 @@ function ImageBlockEditor({ b, onChange }: { b: Extract<BlockState, { type: "ima
                         <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{error}</p>
                     ) : (
                         <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
-                            {preview ? "새 이미지가 선택되었어요. 저장하면 바뀝니다." : b.imageUrl ? "고르지 않으면 지금 이미지가 유지됩니다." : "이미지를 선택해 주세요. 없으면 저장할 때 이 블록은 빠집니다."}
+                            {preview ? "새 이미지를 골랐어요. 저장하면 바뀌어요." : b.imageUrl ? "고르지 않으면 지금 이미지가 유지돼요." : "이미지를 선택해 주세요. 없으면 저장할 때 이 블록은 빠져요."}
                         </p>
                     )}
                 </div>
@@ -210,7 +210,7 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
             return (
                 <div className="space-y-2">
                     <input aria-label="유튜브 주소" type="url" inputMode="url" placeholder="https://www.youtube.com/watch?v=..." value={b.url} onChange={(e) => onChange({ ...b, url: e.target.value })} className={input} />
-                    <p className="text-sm text-neutral-500 leading-relaxed">유튜브 영상 주소를 붙여넣으세요. 주소가 올바르지 않으면 저장되지 않습니다.</p>
+                    <p className="text-sm text-neutral-500 leading-relaxed">유튜브 영상 주소를 붙여넣어 주세요. 주소가 올바르지 않으면 저장되지 않아요.</p>
                 </div>
             );
         case "audioBlock":
@@ -219,7 +219,7 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
                     {b.audioUrl ? (
                         <audio controls preload="none" src={b.audioUrl} className="w-full" aria-label="오디오 미리 듣기" />
                     ) : (
-                        <p className="text-sm text-red-600">오디오 파일을 찾을 수 없어요.</p>
+                        <p className="text-sm text-red-600">오디오 파일이 연결돼 있지 않아요. /admin에서 파일을 다시 올려 주세요.</p>
                     )}
                     <input aria-label="오디오 제목" placeholder="곡 제목" value={b.title} onChange={(e) => onChange({ ...b, title: e.target.value })} className={input} />
                     <input aria-label="오디오 아티스트" placeholder="아티스트" value={b.artist} onChange={(e) => onChange({ ...b, artist: e.target.value })} className={input} />
@@ -229,7 +229,7 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
         case "preserved":
             return (
                 <p className="text-sm text-neutral-600 bg-neutral-100 border border-neutral-200 rounded-lg p-3 leading-relaxed">
-                    이 블록은 아직 이 화면에서 고칠 수 없어요. 내용은 그대로 유지되고, 순서만 바꿀 수 있습니다. (수정은 /admin에서)
+                    이 블록은 /admin에서 고칠 수 있어요. 여기서는 내용이 그대로 유지되고, 순서만 바꿀 수 있어요.
                 </p>
             );
     }
@@ -356,7 +356,7 @@ export default function WorkBlocksEditor({ initial, onDirty, failedState }: { in
             </div>
 
             <p className="text-sm text-neutral-500 leading-relaxed">
-                내용이 비어 있는 블록·항목은 저장할 때 자동으로 빠집니다. 같은 작업물을 /admin에서 동시에 고치고 있으면 저장 시 덮어써질 수 있으니 한 곳에서만 편집해 주세요.
+                내용이 비어 있는 블록·항목은 저장할 때 자동으로 빠져요. 같은 작업물을 /admin에서 동시에 고치고 있으면 저장 시 덮어써질 수 있으니 한 곳에서만 편집해 주세요.
             </p>
         </div>
     );

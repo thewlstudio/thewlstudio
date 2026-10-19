@@ -29,7 +29,7 @@ function rows(v: unknown, opts: { date?: boolean; desc?: boolean }) {
  * - 그 밖의 종류(예전 형식 등): 클라이언트 값은 무시하고 기존 문서의 같은 _key 섹션을 그대로 유지한다.
  */
 export function sanitizeSections(payload: unknown, existing: Raw[]): { sections: unknown[] } | { error: string } {
-    if (!Array.isArray(payload)) return { error: "섹션 정보를 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요." };
+    if (!Array.isArray(payload)) return { error: "섹션 정보를 읽지 못했어요. 화면을 새로고침한 뒤 다시 시도해 주세요." };
     if (payload.length > LIMITS.sections) return { error: `섹션은 최대 ${LIMITS.sections}개까지 만들 수 있어요.` };
 
     const out: unknown[] = [];

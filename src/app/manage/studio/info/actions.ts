@@ -30,7 +30,7 @@ export async function saveStudioInfo(_prev: SaveResult | null, formData: FormDat
             if (!isObj(parsed)) throw new Error();
             p = parsed;
         } catch {
-            return { ok: false, error: "입력 내용을 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요." };
+            return { ok: false, error: "입력 내용을 읽지 못했어요. 화면을 새로고침한 뒤 다시 시도해 주세요." };
         }
 
         const services = list(p.services, LIMITS.rows).filter(isObj).map((s) => ({
@@ -84,6 +84,6 @@ export async function saveStudioInfo(_prev: SaveResult | null, formData: FormDat
         return { ok: true };
     } catch (err) {
         console.error("[saveStudioInfo]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }

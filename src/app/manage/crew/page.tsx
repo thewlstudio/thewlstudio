@@ -37,9 +37,9 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
 
             {!writeReady && (
                 <div role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed">
-                    <p className="font-bold mb-1">아직 저장 기능이 켜지지 않았습니다</p>
+                    <p className="font-bold mb-1">아직 저장 기능이 켜지지 않았어요</p>
                     <p className="text-neutral-700">
-                        내용을 보는 것은 되지만, 저장하려면 Sanity 쓰기 토큰 설정이 필요합니다. 개발자에게{" "}
+                        내용은 볼 수 있지만, 저장하려면 Sanity 쓰기 토큰 설정이 필요해요. 개발자에게{" "}
                         <code className="bg-white/70 px-1 rounded">SANITY_API_WRITE_TOKEN</code> 설정을 요청해 주세요.
                     </p>
                 </div>
@@ -48,7 +48,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
             {isTrashView ? (
                 <>
                     <p className="text-sm text-neutral-600 mb-4">
-                        삭제된 크루 {members.length}명. 복원하면 기존 목록에 원래 순서 그대로 다시 나타납니다.
+                        삭제된 크루 {members.length}명. 복원하면 기존 목록에 원래 순서 그대로 다시 나타나요.
                     </p>
                     <Link href="/manage/crew" className="inline-block mb-4 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4">
                         ← 크루 목록으로
@@ -56,7 +56,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                 </>
             ) : (
                 <div className="flex items-center justify-between gap-4 mb-2">
-                    <p className="text-sm text-neutral-600">수정할 크루를 눌러주세요. 총 {members.length}명이 등록되어 있습니다.</p>
+                    <p className="text-sm text-neutral-600">수정할 크루를 눌러 주세요. 총 {members.length}명이 등록되어 있어요.</p>
                     {writeReady && (
                         <Link href="/manage/crew/new" className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             + 새 크루
@@ -70,7 +70,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                     휴지통 보기 ({trashedCount})
                 </Link>
             )}
-            {isTrashView && members.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어있습니다.</p>}
+            {isTrashView && members.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
 
             <ul className="space-y-3">
                 {members.map((m, index) => {
@@ -108,7 +108,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
             </ul>
 
             <p className="text-sm text-neutral-400 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
-                저장 실수로 내용이 잘못됐다면, 개발자에게 요청해 <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을 확인할 수 있습니다.
+                저장 실수로 내용이 잘못됐다면, 개발자에게 요청해 <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을 확인할 수 있어요.
             </p>
         </main>
     );

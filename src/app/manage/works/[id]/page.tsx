@@ -76,7 +76,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
 
                 {isTrashed ? (
                     <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
-                        <p className="text-sm font-bold text-amber-800 mb-3">이 작업물은 휴지통에 있습니다. 사이트와 목록에 보이지 않습니다.</p>
+                        <p className="text-sm font-bold text-amber-800 mb-3">이 작업물은 휴지통에 있어요. 사이트와 목록에 보이지 않아요.</p>
                         {writeReady && <RestoreButton documentId={data._id} restore={restoreWork} />}
                     </div>
                 ) : (

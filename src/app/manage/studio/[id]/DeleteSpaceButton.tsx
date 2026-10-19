@@ -57,7 +57,7 @@ export default function DeleteSpaceButton({
         <div role="alertdialog" aria-label="삭제 확인" className="rounded-xl border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-bold text-red-700 mb-3 break-keep">
                 &quot;{spaceName || "이 공간"}&quot;을(를) 휴지통으로 옮길까요? 사이트와 목록에서 바로 사라지지만,
-                나중에 휴지통에서 복원할 수 있습니다.
+                나중에 휴지통에서 복원할 수 있어요.
             </p>
 
             {error && (

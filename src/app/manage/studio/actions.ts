@@ -37,7 +37,7 @@ function parseCommon(formData: FormData):
         const parsed = JSON.parse(String(formData.get("listsJson") ?? "{}"));
         if (isObj(parsed)) payload = parsed;
     } catch {
-        return { ok: false, error: "입력 내용을 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.", fields: [] };
+        return { ok: false, error: "입력 내용을 읽지 못했어요. 화면을 새로고침한 뒤 다시 시도해 주세요.", fields: [] };
     }
 
     const prices = (Array.isArray(payload.prices) ? payload.prices.slice(0, LIMITS.prices) : [])
@@ -63,13 +63,13 @@ export async function saveSpace(_prev: SaveResult | null, formData: FormData): P
         await requireAuth();
         const client = getWriteClient();
         const documentId = String(formData.get("documentId") ?? "").trim();
-        if (!documentId) return { ok: false, error: "수정할 공간을 찾을 수 없습니다." };
+        if (!documentId) return { ok: false, error: "수정할 공간을 찾지 못했어요. 목록에서 다시 골라 주세요." };
 
         const c = parseCommon(formData);
         if (!c.ok) return c;
 
         const existing = await client.fetch<{ images?: Raw[] } | null>(`*[_id == $id][0]{ images }`, { id: documentId });
-        if (!existing) return { ok: false, error: "수정할 공간을 찾을 수 없습니다." };
+        if (!existing) return { ok: false, error: "수정할 공간을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const prevImages = Array.isArray(existing.images) ? existing.images : [];
 
         // 사진: 기존 _key는 기존 이미지를 그대로 유지(핫스팟 등 포함), 새 사진은 업로드된 파일이 있어야 한다
@@ -105,7 +105,7 @@ export async function saveSpace(_prev: SaveResult | null, formData: FormData): P
         return { ok: true };
     } catch (err) {
         console.error("[saveSpace]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 
@@ -146,7 +146,7 @@ export async function createSpace(_prev: SaveResult | null, formData: FormData):
         refresh();
     } catch (err) {
         console.error("[createSpace]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
     redirect(`/manage/studio/${documentId}`);
 }
@@ -157,16 +157,16 @@ export async function moveSpaceOrder(documentId: string, direction: "up" | "down
         await requireAuth();
         const client = getWriteClient();
         const target = await client.fetch<{ kind?: string } | null>(`*[_id == $id][0]{ kind }`, { id: documentId });
-        if (!target) return { ok: false, error: "공간을 찾을 수 없습니다." };
+        if (!target) return { ok: false, error: "공간을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const kind = target.kind === "lobby" ? "lobby" : "room";
         const all = await client.fetch<Array<{ _id: string; order: number }>>(
             `*[_type == "studioSpace" && !(trashed == true) && select(kind == "lobby" => "lobby", "room") == $kind] | order(order asc) { _id, order }`,
             { kind },
         );
         const index = all.findIndex((s) => s._id === documentId);
-        if (index === -1) return { ok: false, error: "공간을 찾을 수 없습니다." };
+        if (index === -1) return { ok: false, error: "공간을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const swapIndex = direction === "up" ? index - 1 : index + 1;
-        if (swapIndex < 0 || swapIndex >= all.length) return { ok: false, error: "더 이상 이동할 수 없습니다." };
+        if (swapIndex < 0 || swapIndex >= all.length) return { ok: false, error: "더 옮길 곳이 없어요." };
         const a = all[index];
         const b = all[swapIndex];
         await client.transaction().patch(a._id, { set: { order: b.order } }).patch(b._id, { set: { order: a.order } }).commit();
@@ -174,20 +174,20 @@ export async function moveSpaceOrder(documentId: string, direction: "up" | "down
         return { ok: true };
     } catch (err) {
         console.error("[moveSpaceOrder]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 
 async function setTrashed(documentId: string, trashed: boolean): Promise<SaveResult> {
     try {
         await requireAuth();
-        if (!documentId) return { ok: false, error: "공간을 찾을 수 없습니다." };
+        if (!documentId) return { ok: false, error: "공간을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         await getWriteClient().patch(documentId).set({ trashed }).commit();
         refresh();
         return { ok: true };
     } catch (err) {
         console.error("[setTrashed:space]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 

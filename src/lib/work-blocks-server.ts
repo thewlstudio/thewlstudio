@@ -98,7 +98,7 @@ export async function sanitizeBlocks(
                 const url = body(p.url, 1000).trim();
                 if (!url) break;
                 if (!isHttpUrl(url) || !youTubeId(url)) {
-                    return { error: `유튜브 주소가 올바르지 않습니다: ${url.slice(0, 60)} — https://www.youtube.com/watch?v=… 형태로 넣어 주세요.` };
+                    return { error: `유튜브 주소가 올바르지 않아요: ${url.slice(0, 60)} — 유튜브 영상 화면의 주소창에서 주소를 복사해 붙여넣어 주세요.` };
                 }
                 out.push({ _key, _type: type, url });
                 break;
@@ -123,7 +123,7 @@ export async function sanitizeBlocks(
                         const linkText = body(it.linkText, LIMITS.line).trim();
                         const linkUrl = body(it.linkUrl, 1000).trim();
                         if (linkUrl && !isHttpUrl(linkUrl)) {
-                            return { error: `크레딧 링크 주소가 올바르지 않습니다: ${linkUrl.slice(0, 60)} — https://로 시작하는 주소를 넣어 주세요.` };
+                            return { error: `크레딧 링크 주소가 올바르지 않아요: ${linkUrl.slice(0, 60)} — 브라우저 주소창의 주소를 복사해 붙여넣어 주세요.` };
                         }
                         if (!role && !filled(value) && !linkText) continue;
                         items.push({

@@ -165,10 +165,10 @@ function PhotoInput({
                     ) : (
                         <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
                             {preview
-                                ? "새 사진이 선택되었습니다. 저장하면 바뀝니다."
+                                ? "새 사진을 골랐어요. 저장하면 바뀌어요."
                                 : required
                                   ? "사진을 선택해 주세요."
-                                  : "고르지 않으면 지금 사진이 그대로 유지됩니다."}
+                                  : "고르지 않으면 지금 사진이 그대로 유지돼요."}
                         </p>
                     )}
                 </div>
@@ -299,7 +299,7 @@ function LivePreview({
         <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
             <div className="flex items-center justify-between gap-3 mb-3">
                 <p className="text-sm font-bold text-neutral-600">
-                    👀 실제로 이렇게 보여요 (입력하면 바로 바뀝니다)
+                    👀 실제로 이렇게 보여요 (입력하면 바로 바뀌어요)
                 </p>
                 <Link
                     href="/class"
@@ -404,7 +404,7 @@ function InstructorFormInner({
 
             {!isActive && (
                 <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
-                    지금 비공개 상태예요. 저장해도 홈페이지 목록에는 나오지 않습니다.
+                    지금 비공개 상태예요. 저장해도 홈페이지 목록에는 나오지 않아요.
                 </div>
             )}
 
@@ -420,7 +420,7 @@ function InstructorFormInner({
                 <fieldset>
                     <legend className="text-sm font-bold mb-1.5">공개 상태</legend>
                     <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
-                        휴직이나 개인 사정으로 잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔주세요. 나중에 다시 공개로 되돌릴 수 있습니다.
+                        휴직이나 개인 사정으로 잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔 주세요. 나중에 다시 공개로 되돌릴 수 있어요.
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                         <button
@@ -450,7 +450,7 @@ function InstructorFormInner({
                     </div>
                 </fieldset>
 
-                <Field label="강사 이름" htmlFor="instructorName" required hint="한글 이름만 적어주세요. (예: 박인국)">
+                <Field label="강사 이름" htmlFor="instructorName" required hint="한글 이름만 적어 주세요. (예: 박인국)">
                     <input
                         id="instructorName"
                         name="instructorName"
@@ -461,7 +461,7 @@ function InstructorFormInner({
                     />
                 </Field>
 
-                <Field label="클래스 이름" htmlFor="category" required hint="영문 대문자로 적어주세요. (예: FLUTE CLASS)">
+                <Field label="클래스 이름" htmlFor="category" required hint="영문 대문자로 적어 주세요. (예: FLUTE CLASS)">
                     <input
                         id="category"
                         name="category"
@@ -473,7 +473,7 @@ function InstructorFormInner({
                 </Field>
 
                 <p className="text-sm text-neutral-600 leading-relaxed">
-                    보여지는 순서는 여기서 바꾸지 않아요. 목록 화면에서 화살표 버튼으로 옮길 수 있습니다.
+                    보이는 순서는 여기서 바꾸지 않아요. 목록 화면에서 화살표 버튼으로 옮길 수 있어요.
                 </p>
             </Section>
 
@@ -481,7 +481,7 @@ function InstructorFormInner({
             <Section
                 step={2}
                 title="사진"
-                hint="사진은 총 3장이 필요합니다. 바꾸고 싶은 것만 고르시면 됩니다. 위 미리보기에서 바로 확인하세요."
+                hint="사진은 총 3장이 필요해요. 바꾸고 싶은 것만 고르면 돼요. 위 미리보기에서 바로 확인하세요."
             >
                 <div>
                     <p className="text-sm font-bold mb-1.5">
@@ -550,10 +550,10 @@ function InstructorFormInner({
                             ) : (
                                 <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
                                     {thumbPreview
-                                        ? "새 사진이 선택되었습니다."
+                                        ? "새 사진을 골랐어요."
                                         : isCreate
                                           ? "사진을 선택해 주세요."
-                                          : "고르지 않으면 지금 사진이 유지됩니다."}
+                                          : "고르지 않으면 지금 사진이 유지돼요."}
                                 </p>
                             )}
                         </div>
@@ -564,7 +564,7 @@ function InstructorFormInner({
                 <fieldset>
                     <legend className="text-sm font-bold mb-1.5">사진에서 보여줄 부분</legend>
                     <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
-                        얼굴이 잘리거나 너무 작으면 아래에서 골라보세요. 위 미리보기가 바로 바뀝니다.
+                        얼굴이 잘리거나 너무 작으면 아래에서 골라 보세요. 위 미리보기가 바로 바뀌어요.
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                         {PHOTO_PRESETS.map((preset) => {
@@ -618,7 +618,7 @@ function InstructorFormInner({
                     label="한 줄 소개"
                     htmlFor="subtitle"
                     required
-                    hint="팝업창 제목 아래에 들어가는 짧은 문구입니다."
+                    hint="팝업창 제목 아래에 들어가는 짧은 문구예요."
                 >
                     <input
                         id="subtitle"
@@ -649,7 +649,7 @@ function InstructorFormInner({
                     label="레슨 소개"
                     htmlFor="about"
                     required
-                    hint="줄을 바꾸면 문단이 나뉩니다. 엔터를 눌러 여러 문단을 쓰세요."
+                    hint="줄을 바꾸면 문단이 나뉘어요. 엔터를 눌러 여러 문단을 쓰세요."
                 >
                     <textarea
                         id="about"
@@ -666,7 +666,7 @@ function InstructorFormInner({
                     label="커리큘럼"
                     htmlFor="process"
                     required
-                    hint="한 줄에 하나씩 적어주세요."
+                    hint="한 줄에 하나씩 적어 주세요."
                 >
                     <textarea
                         id="process"
@@ -684,7 +684,7 @@ function InstructorFormInner({
             <Section
                 step={4}
                 title="작업물 링크"
-                hint="없으면 비워두셔도 됩니다."
+                hint="없으면 비워 둬도 돼요."
             >
                 <Field label="링크 주소" htmlFor="portfolioUrl" hint="유튜브, 인스타그램 등 주소를 붙여넣으세요.">
                     <input
@@ -728,7 +728,7 @@ function InstructorFormInner({
                     </p>
                 )}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">
-                    {isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영됩니다.
+                    {isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.
                 </p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link
@@ -743,7 +743,7 @@ function InstructorFormInner({
                             type="button"
                             onClick={() => {
                                 const confirmed = window.confirm(
-                                    "변경한 내용을 모두 버릴까요? 되돌릴 수 없습니다.",
+                                    "변경한 내용을 모두 버릴까요? 되돌릴 수 없어요.",
                                 );
                                 if (confirmed) onDiscard();
                             }}
@@ -765,7 +765,7 @@ function InstructorFormInner({
                     <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
                         {state.ok ? (
                             <p className="text-sm font-bold text-green-700">
-                                저장했습니다. 홈페이지에 바로 반영됩니다.
+                                저장했어요. 홈페이지에 바로 반영돼요.
                             </p>
                         ) : (
                             <p className="text-sm font-bold text-red-600">{state.error}</p>

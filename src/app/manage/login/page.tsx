@@ -31,10 +31,10 @@ export default async function ManageLoginPage({
         return (
             <main id="main-content" className="min-h-screen bg-neutral-50 text-black flex items-center justify-center px-6">
                 <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-neutral-200 p-8">
-                    <h1 className="text-xl font-bold mb-3">설정이 필요합니다</h1>
+                    <h1 className="text-xl font-bold mb-3">설정이 필요해요</h1>
                     <p className="text-sm text-neutral-600 leading-relaxed">
                         관리자 화면을 쓰려면 환경변수 <code className="bg-neutral-100 px-1.5 py-0.5 rounded">MANAGE_PASSWORD</code> 와{" "}
-                        <code className="bg-neutral-100 px-1.5 py-0.5 rounded">MANAGE_SECRET</code> 이 필요합니다.
+                        <code className="bg-neutral-100 px-1.5 py-0.5 rounded">MANAGE_SECRET</code> 이 필요해요.
                         설정 방법은 개발자에게 문의해 주세요.
                     </p>
                 </div>
@@ -73,7 +73,7 @@ export default async function ManageLoginPage({
 
                     {error && (
                         <p role="alert" className="text-sm font-semibold text-red-600">
-                            비밀번호가 맞지 않습니다.
+                            비밀번호가 맞지 않아요. 다시 확인해 주세요.
                         </p>
                     )}
 

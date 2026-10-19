@@ -111,7 +111,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                                 <Field label="가격" htmlFor={`svc-price-${s.key}`} hint="예: 100,000 KRW 또는 Contact for Quote">
                                     <input id={`svc-price-${s.key}`} value={s.price} onChange={(e) => upd({ price: e.target.value })} className={inputClass} />
                                 </Field>
-                                <Field label="가격 단위" htmlFor={`svc-unit-${s.key}`} hint="가격 옆에 작게 나와요. 예: / 2 Hours (없으면 비워두세요)">
+                                <Field label="가격 단위" htmlFor={`svc-unit-${s.key}`} hint="가격 옆에 작게 나와요. 예: / 2 Hours (없으면 비워 두세요)">
                                     <input id={`svc-unit-${s.key}`} value={s.priceUnit} onChange={(e) => upd({ priceUnit: e.target.value })} className={inputClass} />
                                 </Field>
                                 <div>
@@ -199,13 +199,13 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                         col.open(key);
                     }} className={dashedBtn}>+ 회원권 추가</button>
                 </div>
-                <Field label="멤버십 안내 문구" htmlFor="membershipNote" hint="카드 아래에 나와요. Enter로 줄을 나누면 데스크톱에서 줄이 바뀝니다.">
+                <Field label="멤버십 안내 문구" htmlFor="membershipNote" hint="카드 아래에 나와요. Enter로 줄을 나누면 데스크톱에서 줄이 바뀌어요.">
                     <textarea id="membershipNote" rows={3} value={text.membershipNote} onChange={setT("membershipNote")} className={textareaClass} />
                 </Field>
             </Section>
 
             <Section step={4} title="이용 안내" hint="GUIDELINES & AMENITIES 영역이에요.">
-                <Field label="소개 문구" htmlFor="guidelinesIntro" hint="Enter로 줄을 나누면 데스크톱에서 줄이 바뀝니다.">
+                <Field label="소개 문구" htmlFor="guidelinesIntro" hint="Enter로 줄을 나누면 데스크톱에서 줄이 바뀌어요.">
                     <textarea id="guidelinesIntro" rows={5} value={text.guidelinesIntro} onChange={setT("guidelinesIntro")} className={textareaClass} />
                 </Field>
 
@@ -214,7 +214,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                     <Field label="붉은 강조 문구" htmlFor="parkingWarning" hint="예: 주차가 불가합니다.">
                         <input id="parkingWarning" value={text.parkingWarning} onChange={setT("parkingWarning")} className={inputClass} />
                     </Field>
-                    <Field label="안내 문구" htmlFor="parkingDetail" hint="Enter로 줄을 나누면 줄이 바뀝니다.">
+                    <Field label="안내 문구" htmlFor="parkingDetail" hint="Enter로 줄을 나누면 줄이 바뀌어요.">
                         <textarea id="parkingDetail" rows={3} value={text.parkingDetail} onChange={setT("parkingDetail")} className={textareaClass} />
                     </Field>
                     <Field label="요금 라벨" htmlFor="parkingFeeLabel" hint="예: 요금">
@@ -249,7 +249,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
 
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
-                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">저장하면 홈페이지에 바로 반영됩니다.</p>
+                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">저장하면 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link href="/manage/studio" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
@@ -258,7 +258,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                         <button
                             type="button"
                             onClick={() => {
-                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없습니다.")) onDiscard();
+                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없어요.")) onDiscard();
                             }}
                             className="h-12 px-4 rounded-xl border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                         >
@@ -275,7 +275,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </div>
                 {state && (
                     <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했습니다. 홈페이지에 바로 반영됩니다.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
+                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
                     </div>
                 )}
             </div>

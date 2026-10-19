@@ -94,7 +94,7 @@ export async function isAuthenticated(): Promise<boolean> {
 /** 서버 액션 진입점에서 호출. 인증 안 됐으면 예외를 던진다. */
 export async function requireAuth(): Promise<void> {
     if (!(await isAuthenticated())) {
-        throw new Error("인증이 필요합니다. 다시 로그인해 주세요.");
+        throw new Error("인증이 필요해요. 다시 로그인해 주세요.");
     }
 }
 

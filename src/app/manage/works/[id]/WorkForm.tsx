@@ -45,7 +45,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
 
             {/* 미리보기 */}
             <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
-                <p className="text-sm font-bold text-neutral-600 mb-3">👀 목록에서 이렇게 보여요 (입력하면 바로 바뀝니다)</p>
+                <p className="text-sm font-bold text-neutral-600 mb-3">👀 목록에서 이렇게 보여요 (입력하면 바로 바뀌어요)</p>
                 <div className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center gap-4">
                     <div className="relative w-24 aspect-square rounded-lg overflow-hidden bg-neutral-100 shrink-0">
                         {shownPhoto ? (
@@ -70,19 +70,19 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 <Field label="아티스트" htmlFor="artist" required>
                     <input id="artist" name="artist" defaultValue={data.artist} onChange={(e) => setPreview((p) => ({ ...p, artist: e.target.value }))} className={inputClass} />
                 </Field>
-                <Field label="발매일" htmlFor="releaseDate" required hint="달력에서 골라 주세요. 목록은 이 날짜로 최신순 정렬됩니다.">
+                <Field label="발매일" htmlFor="releaseDate" required hint="달력에서 골라 주세요. 목록은 이 날짜로 최신순 정렬돼요.">
                     <input id="releaseDate" name="releaseDate" type="date" defaultValue={data.releaseDate} onChange={(e) => setPreview((p) => ({ ...p, releaseDate: e.target.value }))} className={inputClass} />
                 </Field>
 
                 {isCreate ? (
-                    <Field label="주소(영문)" htmlFor="slug" required hint="홈페이지 주소에 들어가는 이름이에요. 영문 소문자, 숫자, 하이픈(-), 밑줄(_)만 가능합니다. 만든 뒤에는 바꿀 수 없어요. (예: folkfolio-2)">
+                    <Field label="주소(영문)" htmlFor="slug" required hint="홈페이지 주소에 들어가는 이름이에요. 영문 소문자, 숫자, 하이픈(-), 밑줄(_)만 가능해요. 만든 뒤에는 고정돼요. (예: folkfolio-2)">
                         <input id="slug" name="slug" defaultValue="" autoCapitalize="none" spellCheck={false} className={inputClass} />
                     </Field>
                 ) : (
                     <div>
                         <p className="text-sm font-bold mb-1.5">홈페이지 주소</p>
                         <p className="text-sm text-neutral-600 leading-relaxed">
-                            /works/<span className="font-mono">{data.slug}</span> — 주소를 바꾸면 기존 링크가 끊겨서 여기서는 바꿀 수 없어요.
+                            /works/<span className="font-mono">{data.slug}</span> — 주소를 바꾸면 기존 링크가 끊겨서 여기서는 고정돼 있어요.
                         </p>
                     </div>
                 )}
@@ -133,21 +133,21 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                             <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{photoError}</p>
                         ) : (
                             <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
-                                {photoPreview ? "새 이미지가 선택되었어요. 저장하면 바뀝니다." : isCreate ? "이미지를 선택해 주세요." : "고르지 않으면 지금 이미지가 그대로 유지됩니다."}
+                                {photoPreview ? "새 이미지를 골랐어요. 저장하면 바뀌어요." : isCreate ? "이미지를 선택해 주세요." : "고르지 않으면 지금 이미지가 그대로 유지돼요."}
                             </p>
                         )}
                     </div>
                 </div>
             </Section>
 
-            <Section step={3} title="링크" hint="모두 선택 사항이에요. 비워두면 사이트에서 해당 버튼이 나오지 않을 수 있습니다.">
-                <Field label="유튜브 주소 (커버를 눌렀을 때 열림)" htmlFor="youtubeUrl" hint="https://로 시작하는 주소">
+            <Section step={3} title="링크" hint="모두 선택 사항이에요. 비워 두면 사이트에서 해당 버튼이 나오지 않을 수 있어요.">
+                <Field label="유튜브 주소 (커버를 눌렀을 때 열림)" htmlFor="youtubeUrl" hint="브라우저 주소창의 주소를 복사해 붙여넣어 주세요.">
                     <input id="youtubeUrl" name="youtubeUrl" type="url" inputMode="url" placeholder="https://..." defaultValue={data.youtubeUrl} className={inputClass} />
                 </Field>
                 <Field label="인스타그램 아이디" htmlFor="instagramId" hint="예: @warobaru">
                     <input id="instagramId" name="instagramId" defaultValue={data.instagramId} autoCapitalize="none" spellCheck={false} className={inputClass} />
                 </Field>
-                <Field label="인스타그램 프로필 주소" htmlFor="instagramUrl" hint="https://로 시작하는 주소">
+                <Field label="인스타그램 프로필 주소" htmlFor="instagramUrl" hint="브라우저 주소창의 주소를 복사해 붙여넣어 주세요.">
                     <input id="instagramUrl" name="instagramUrl" type="url" inputMode="url" placeholder="https://..." defaultValue={data.instagramUrl} className={inputClass} />
                 </Field>
             </Section>
@@ -165,7 +165,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
 
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
-                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영됩니다.</p>
+                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link href="/manage/works" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
@@ -174,7 +174,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                         <button
                             type="button"
                             onClick={() => {
-                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없습니다.")) onDiscard();
+                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없어요.")) onDiscard();
                             }}
                             className="h-12 px-4 rounded-xl border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                         >
@@ -191,7 +191,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 </div>
                 {state && (
                     <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했습니다. 홈페이지에 바로 반영됩니다.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
+                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
                     </div>
                 )}
             </div>

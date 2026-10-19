@@ -60,9 +60,9 @@ export default async function InstructorListPage({
                     role="alert"
                     className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed"
                 >
-                    <p className="font-bold mb-1">아직 저장 기능이 켜지지 않았습니다</p>
+                    <p className="font-bold mb-1">아직 저장 기능이 켜지지 않았어요</p>
                     <p className="text-neutral-700">
-                        내용을 보는 것은 되지만, 저장하려면 Sanity 쓰기 토큰 설정이 필요합니다.
+                        내용은 볼 수 있지만, 저장하려면 Sanity 쓰기 토큰 설정이 필요해요.
                         개발자에게 <code className="bg-white/70 px-1 rounded">SANITY_API_WRITE_TOKEN</code> 설정을 요청해 주세요.
                     </p>
                 </div>
@@ -71,7 +71,7 @@ export default async function InstructorListPage({
             {isTrashView ? (
                 <>
                     <p className="text-sm text-neutral-600 mb-4">
-                        삭제된 강사 {instructors.length}명. 복원하면 기존 목록에 원래 순서 그대로 다시 나타납니다.
+                        삭제된 강사 {instructors.length}명. 복원하면 기존 목록에 원래 순서 그대로 다시 나타나요.
                     </p>
                     <Link
                         href="/manage/instructors"
@@ -83,7 +83,7 @@ export default async function InstructorListPage({
             ) : (
                 <div className="flex items-center justify-between gap-4 mb-2">
                     <p className="text-sm text-neutral-600">
-                        수정할 강사를 눌러주세요. 총 {instructors.length}명이 등록되어 있습니다.
+                        수정할 강사를 눌러 주세요. 총 {instructors.length}명이 등록되어 있어요.
                     </p>
                     {writeReady && (
                         <Link
@@ -106,7 +106,7 @@ export default async function InstructorListPage({
             )}
 
             {isTrashView && instructors.length === 0 && (
-                <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어있습니다.</p>
+                <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>
             )}
 
             <ul className="space-y-3">
@@ -174,7 +174,7 @@ export default async function InstructorListPage({
 
             {isTrashView && instructors.length > 0 && (
                 <p className="text-sm text-neutral-500 mt-6 leading-relaxed">
-                    완전 삭제는 아직 지원하지 않습니다. 꼭 필요하면 개발자에게{" "}
+                    완전 삭제는 아직 지원하지 않아요. 꼭 필요하면 개발자에게{" "}
                     <code className="bg-neutral-100 px-1 rounded">/admin</code>에서 직접 삭제해 달라고 요청하세요.
                 </p>
             )}
@@ -182,7 +182,7 @@ export default async function InstructorListPage({
             <p className="text-sm text-neutral-400 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
                 저장 실수로 내용이 잘못됐다면, 개발자에게 요청해{" "}
                 <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을
-                확인할 수 있습니다.
+                확인할 수 있어요.
             </p>
         </main>
     );

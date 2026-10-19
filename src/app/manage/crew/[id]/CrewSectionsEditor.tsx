@@ -86,7 +86,7 @@ function SectionBody({ st, onChange, onMigrate }: { st: SectionState; onChange: 
                     rows={6}
                     value={st.text}
                     onChange={(e) => onChange({ ...st, text: e.target.value })}
-                    placeholder="소개 글을 적어주세요. 줄을 바꾸면 문단이 나뉩니다."
+                    placeholder="소개 글을 적어 주세요. 줄을 바꾸면 문단이 나뉘어요."
                     className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                 />
             );
@@ -137,8 +137,8 @@ function SectionBody({ st, onChange, onMigrate }: { st: SectionState; onChange: 
             return (
                 <div className="space-y-3">
                     <p className="text-sm text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-3 leading-relaxed">
-                        예전 형식의 &quot;{name}&quot; 섹션이에요. 내용은 그대로 보존되지만 <b>지금은 홈페이지에 나오지 않습니다.</b>
-                        {canMigrate && " 아래 버튼으로 새 형식(수상·대외활동)으로 옮기면 홈페이지에 나타납니다."}
+                        예전 형식의 &quot;{name}&quot; 섹션이에요. 내용은 그대로 보존되지만 <b>지금은 홈페이지에 나오지 않아요.</b>
+                        {canMigrate && " 아래 버튼으로 새 형식(수상·대외활동)으로 옮기면 홈페이지에 나타나요."}
                     </p>
                     <ul className="text-sm text-neutral-600 space-y-1 max-h-40 overflow-y-auto">
                         {items.map((it, i) => (
@@ -146,7 +146,7 @@ function SectionBody({ st, onChange, onMigrate }: { st: SectionState; onChange: 
                         ))}
                     </ul>
                     {canMigrate && (
-                        <button type="button" onClick={() => { if (window.confirm("새 형식으로 옮길까요? 저장하면 홈페이지에 수상·활동이 나타납니다. (저장 전에는 '변경 버리기'로 되돌릴 수 있어요)")) onMigrate(); }} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                        <button type="button" onClick={() => { if (window.confirm("새 형식으로 옮길까요? 저장하면 홈페이지에 수상·활동이 나타나요. (저장 전에는 '변경 버리기'로 되돌릴 수 있어요)")) onMigrate(); }} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             새 형식으로 옮기기
                         </button>
                     )}
@@ -281,7 +281,7 @@ export default function CrewSectionsEditor({ initial, onDirty, failedState }: { 
             )}
 
             <p className="text-sm text-neutral-500 leading-relaxed">
-                내용이 비어 있는 섹션·항목은 저장할 때 자동으로 빠집니다. 같은 크루를 /admin에서 동시에 고치고 있으면 저장 시 섹션이 덮어써질 수 있으니 한 곳에서만 편집해 주세요.
+                내용이 비어 있는 섹션·항목은 저장할 때 자동으로 빠져요. 같은 크루를 /admin에서 동시에 고치고 있으면 저장 시 섹션이 덮어써질 수 있으니 한 곳에서만 편집해 주세요.
             </p>
         </div>
     );

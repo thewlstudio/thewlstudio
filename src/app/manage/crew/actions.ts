@@ -60,7 +60,7 @@ async function parseLinks(
             if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error();
         } catch {
             return {
-                error: `링크 ${i + 1}번의 주소가 올바르지 않습니다. https://로 시작하는 주소를 넣어 주세요.`,
+                error: `링크 ${i + 1}번의 주소가 올바르지 않아요. 브라우저 주소창의 주소를 복사해 붙여넣어 주세요.`,
                 field: { id: `linkUrl_${i}`, label: `링크 ${i + 1}번 주소` },
             };
         }
@@ -81,7 +81,7 @@ export async function saveCrew(_prev: SaveResult | null, formData: FormData): Pr
         await requireAuth();
         const client = getWriteClient();
         const documentId = String(formData.get("documentId") ?? "").trim();
-        if (!documentId) return { ok: false, error: "수정할 크루를 찾을 수 없습니다." };
+        if (!documentId) return { ok: false, error: "수정할 크루를 찾지 못했어요. 목록에서 다시 골라 주세요." };
 
         const parsed = parseBasic(formData);
         if ("error" in parsed) return { ok: false, error: parsed.error, fields: parsed.missing };
@@ -101,7 +101,7 @@ export async function saveCrew(_prev: SaveResult | null, formData: FormData): Pr
             try {
                 payload = JSON.parse(sectionsJson);
             } catch {
-                return { ok: false, error: "섹션 정보를 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요." };
+                return { ok: false, error: "섹션 정보를 읽지 못했어요. 화면을 새로고침한 뒤 다시 시도해 주세요." };
             }
             const existing = await client.fetch<Record<string, unknown>[] | null>(
                 `*[_id == $id][0].sections`,
@@ -122,7 +122,7 @@ export async function saveCrew(_prev: SaveResult | null, formData: FormData): Pr
         return { ok: true };
     } catch (err) {
         console.error("[saveCrew]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 
@@ -175,7 +175,7 @@ export async function createCrew(_prev: SaveResult | null, formData: FormData): 
         refresh(slug);
     } catch (err) {
         console.error("[createCrew]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
     redirect(`/manage/crew/${documentId}`);
 }
@@ -188,9 +188,9 @@ export async function moveCrewOrder(documentId: string, direction: "up" | "down"
             `*[_type == "crew" && !(trashed == true)] | order(order asc) { _id, order }`,
         );
         const index = all.findIndex((c) => c._id === documentId);
-        if (index === -1) return { ok: false, error: "크루를 찾을 수 없습니다." };
+        if (index === -1) return { ok: false, error: "크루를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const swapIndex = direction === "up" ? index - 1 : index + 1;
-        if (swapIndex < 0 || swapIndex >= all.length) return { ok: false, error: "더 이상 이동할 수 없습니다." };
+        if (swapIndex < 0 || swapIndex >= all.length) return { ok: false, error: "더 옮길 곳이 없어요." };
         const a = all[index];
         const b = all[swapIndex];
         await client
@@ -202,14 +202,14 @@ export async function moveCrewOrder(documentId: string, direction: "up" | "down"
         return { ok: true };
     } catch (err) {
         console.error("[moveCrewOrder]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 
 async function setTrashed(documentId: string, trashed: boolean): Promise<SaveResult> {
     try {
         await requireAuth();
-        if (!documentId) return { ok: false, error: "크루를 찾을 수 없습니다." };
+        if (!documentId) return { ok: false, error: "크루를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const client = getWriteClient();
         await client.patch(documentId).set({ trashed }).commit();
         const slug = await client.fetch<string | null>(`*[_id == $id][0].slug.current`, { id: documentId });
@@ -217,7 +217,7 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         return { ok: true };
     } catch (err) {
         console.error("[setTrashed]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 

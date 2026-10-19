@@ -41,13 +41,13 @@ async function uploadImageIfPresent(
     if (!file || file.size === 0) return null;
 
     if (!file.type.startsWith("image/")) {
-        throw new Error(`이미지 파일만 올릴 수 있습니다. (받은 형식: ${file.type || "알 수 없음"})`);
+        throw new Error(`이미지 파일만 올릴 수 있어요. (받은 형식: ${file.type || "알 수 없음"})`);
     }
     // 과도한 용량 방지 (Sanity 업로드 실패 및 비용 폭증 예방)
     const MAX_BYTES = 10 * 1024 * 1024;
     if (file.size > MAX_BYTES) {
         throw new Error(
-            `사진 용량이 너무 큽니다 (${(file.size / 1024 / 1024).toFixed(1)}MB). 10MB 이하로 줄여서 올려주세요.`,
+            `사진 용량이 너무 커요 (${(file.size / 1024 / 1024).toFixed(1)}MB). 3MB 이하로 줄여서 올려 주세요.`,
         );
     }
 
@@ -116,7 +116,7 @@ export async function saveInstructor(
 
         const documentId = String(formData.get("documentId") ?? "").trim();
         if (!documentId) {
-            return { ok: false, error: "수정할 강사를 찾을 수 없습니다." };
+            return { ok: false, error: "수정할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
 
         const parsed = parseAndValidateFields(formData);
@@ -153,7 +153,7 @@ export async function saveInstructor(
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
         console.error("[saveInstructor]", err);
         return { ok: false, error: message };
     }
@@ -214,7 +214,7 @@ export async function createInstructor(
         });
         documentId = created._id;
     } catch (err) {
-        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
         console.error("[createInstructor]", err);
         return { ok: false, error: message };
     }
@@ -248,12 +248,12 @@ export async function moveInstructorOrder(
 
         const index = all.findIndex((i) => i._id === documentId);
         if (index === -1) {
-            return { ok: false, error: "강사를 찾을 수 없습니다." };
+            return { ok: false, error: "강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
 
         const swapIndex = direction === "up" ? index - 1 : index + 1;
         if (swapIndex < 0 || swapIndex >= all.length) {
-            return { ok: false, error: "더 이상 이동할 수 없습니다." };
+            return { ok: false, error: "더 옮길 곳이 없어요." };
         }
 
         const current = all[index];
@@ -271,7 +271,7 @@ export async function moveInstructorOrder(
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
         console.error("[moveInstructorOrder]", err);
         return { ok: false, error: message };
     }
@@ -293,7 +293,7 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
             { id: documentId },
         );
         if (!original) {
-            return { ok: false, error: "복제할 강사를 찾을 수 없습니다." };
+            return { ok: false, error: "복제할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
 
         const existingOrders = await client.fetch<number[]>(
@@ -331,7 +331,7 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
 
         return { ok: true, newId: created._id };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
         console.error("[duplicateInstructor]", err);
         return { ok: false, error: message };
     }
@@ -348,7 +348,7 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
     try {
         await requireAuth();
         if (!documentId) {
-            return { ok: false, error: "삭제할 강사를 찾을 수 없습니다." };
+            return { ok: false, error: "삭제할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
         const client = getWriteClient();
         await client.patch(documentId).set({ trashed: true }).commit();
@@ -359,7 +359,7 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
         console.error("[deleteInstructor]", err);
         return { ok: false, error: message };
     }
@@ -370,7 +370,7 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
     try {
         await requireAuth();
         if (!documentId) {
-            return { ok: false, error: "복원할 강사를 찾을 수 없습니다." };
+            return { ok: false, error: "복원할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
         const client = getWriteClient();
         await client.patch(documentId).set({ trashed: false }).commit();
@@ -381,7 +381,7 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
         console.error("[restoreInstructor]", err);
         return { ok: false, error: message };
     }

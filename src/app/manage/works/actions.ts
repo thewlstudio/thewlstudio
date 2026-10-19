@@ -54,7 +54,7 @@ function parseBasic(formData: FormData): Parsed | { error: string; fields: Field
     const m = ISO_DATE_RE.exec(dateRaw);
     const parsed = m ? new Date(`${dateRaw}T00:00:00Z`) : null;
     if (!m || !parsed || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== dateRaw) {
-        return { error: "발매일이 올바르지 않습니다. 달력에서 날짜를 골라 주세요.", fields: [{ id: "releaseDate", label: "발매일" }] };
+        return { error: "발매일이 올바르지 않아요. 달력에서 날짜를 골라 주세요.", fields: [{ id: "releaseDate", label: "발매일" }] };
     }
 
     for (const [id, label, value] of [
@@ -62,7 +62,7 @@ function parseBasic(formData: FormData): Parsed | { error: string; fields: Field
         ["instagramUrl", "인스타그램 주소", instagramUrl],
     ] as const) {
         if (value && !isHttpUrl(value)) {
-            return { error: `${label}가 올바르지 않습니다. https://로 시작하는 주소를 넣어 주세요.`, fields: [{ id, label }] };
+            return { error: `${label}가 올바르지 않아요. 브라우저 주소창의 주소를 복사해 붙여넣어 주세요.`, fields: [{ id, label }] };
         }
     }
 
@@ -77,7 +77,7 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
         await requireAuth();
         const client = getWriteClient();
         const documentId = String(formData.get("documentId") ?? "").trim();
-        if (!documentId) return { ok: false, error: "수정할 작품을 찾을 수 없습니다." };
+        if (!documentId) return { ok: false, error: "수정할 작품을 찾지 못했어요. 목록에서 다시 골라 주세요." };
 
         const parsed = parseBasic(formData);
         if ("error" in parsed) return { ok: false, error: parsed.error, fields: parsed.fields };
@@ -97,7 +97,7 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
             try {
                 payload = JSON.parse(blocksJson);
             } catch {
-                return { ok: false, error: "상세 내용 정보를 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요." };
+                return { ok: false, error: "상세 내용 정보를 읽지 못했어요. 화면을 새로고침한 뒤 다시 시도해 주세요." };
             }
             const existing = await client.fetch<Record<string, unknown>[] | null>(`*[_id == $id][0].contentBlocks`, { id: documentId });
             const cleaned = await sanitizeBlocks(payload, existing ?? [], (clientKey) =>
@@ -121,7 +121,7 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
         return { ok: true };
     } catch (err) {
         console.error("[saveWork]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 
@@ -168,7 +168,7 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
         refresh(slug);
     } catch (err) {
         console.error("[createWork]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
     redirect(`/manage/works/${documentId}`);
 }
@@ -176,7 +176,7 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
 async function setTrashed(documentId: string, trashed: boolean): Promise<SaveResult> {
     try {
         await requireAuth();
-        if (!documentId) return { ok: false, error: "작품을 찾을 수 없습니다." };
+        if (!documentId) return { ok: false, error: "작품을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const client = getWriteClient();
         await client.patch(documentId).set({ trashed }).commit();
         const slug = await client.fetch<string | null>(`*[_id == $id][0].slug.current`, { id: documentId });
@@ -184,7 +184,7 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         return { ok: true };
     } catch (err) {
         console.error("[setTrashed:work]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다." };
+        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
     }
 }
 

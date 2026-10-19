@@ -39,9 +39,9 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
 
             {!writeReady && (
                 <div role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed">
-                    <p className="font-bold mb-1">아직 저장 기능이 켜지지 않았습니다</p>
+                    <p className="font-bold mb-1">아직 저장 기능이 켜지지 않았어요</p>
                     <p className="text-neutral-700">
-                        내용을 보는 것은 되지만, 저장하려면 Sanity 쓰기 토큰 설정이 필요합니다. 개발자에게{" "}
+                        내용은 볼 수 있지만, 저장하려면 Sanity 쓰기 토큰 설정이 필요해요. 개발자에게{" "}
                         <code className="bg-white/70 px-1 rounded">SANITY_API_WRITE_TOKEN</code> 설정을 요청해 주세요.
                     </p>
                 </div>
@@ -49,14 +49,14 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
 
             {isTrashView ? (
                 <>
-                    <p className="text-sm text-neutral-600 mb-4">삭제된 공간 {spaces.length}개. 복원하면 원래 순서 그대로 다시 나타납니다.</p>
+                    <p className="text-sm text-neutral-600 mb-4">삭제된 공간 {spaces.length}개. 복원하면 원래 순서 그대로 다시 나타나요.</p>
                     <Link href="/manage/studio" className="inline-block mb-4 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4">
                         ← 공간 목록으로
                     </Link>
                 </>
             ) : (
                 <div className="flex items-center justify-between gap-4 mb-2">
-                    <p className="text-sm text-neutral-600">수정할 공간을 눌러주세요. 총 {spaces.length}개입니다.</p>
+                    <p className="text-sm text-neutral-600">수정할 공간을 눌러 주세요. 총 {spaces.length}개예요.</p>
                     {writeReady && (
                         <Link href="/manage/studio/new" className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             + 새 공간
@@ -80,7 +80,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                     휴지통 보기 ({trashedCount})
                 </Link>
             )}
-            {isTrashView && spaces.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어있습니다.</p>}
+            {isTrashView && spaces.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
 
             <ul className="space-y-3">
                 {spaces.map((sp, index) => {
@@ -125,7 +125,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
             </ul>
 
             <p className="text-sm text-neutral-400 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
-                위 목록은 연습실·로비 카드예요. 서비스 가격·장비·멤버십·이용 안내는 위의 &quot;서비스·장비·멤버십·이용 안내&quot;에서 고칩니다. 로비는 한 곳만 화면에 나옵니다.
+                위 목록은 연습실·로비 카드예요. 서비스 가격·장비·멤버십·이용 안내는 위의 &quot;서비스·장비·멤버십·이용 안내&quot;에서 고쳐요. 로비는 한 곳만 화면에 나와요.
             </p>
         </main>
     );

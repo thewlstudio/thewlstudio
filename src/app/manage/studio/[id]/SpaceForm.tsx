@@ -91,7 +91,7 @@ function ImageItem({ row, index, count, onMove, onRemove, onPicked }: { row: Ima
                     <p role="alert" className="text-sm font-semibold text-red-600 mt-1.5">{error}</p>
                 ) : (
                     <p className="text-sm text-neutral-600 mt-1.5 leading-relaxed">
-                        {preview ? "새 사진이 선택되었어요. 저장하면 바뀝니다." : isNew ? "사진을 선택해 주세요. 없으면 저장할 때 빠집니다." : "고르지 않으면 지금 사진이 유지됩니다."}
+                        {preview ? "새 사진을 골랐어요. 저장하면 바뀌어요." : isNew ? "사진을 선택해 주세요. 없으면 저장할 때 빠져요." : "고르지 않으면 지금 사진이 유지돼요."}
                     </p>
                 )}
             </div>
@@ -140,7 +140,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
 
             {!isActive && (
                 <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-                    지금 비공개 상태예요. 저장해도 홈페이지 스튜디오 페이지에는 나오지 않습니다.
+                    지금 비공개 상태예요. 저장해도 홈페이지 스튜디오 페이지에는 나오지 않아요.
                 </div>
             )}
 
@@ -164,13 +164,13 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                                 </button>
                             ))}
                         </div>
-                        <p className="text-sm text-neutral-600 mt-2 leading-relaxed">로비는 홈페이지에 한 곳만 나옵니다. 만든 뒤에는 종류를 바꿀 수 없어요.</p>
+                        <p className="text-sm text-neutral-600 mt-2 leading-relaxed">로비는 홈페이지에 한 곳만 나와요. 만든 뒤에는 종류가 고정돼요.</p>
                     </div>
                 )}
 
                 <div>
                     <p className="text-sm font-bold mb-1.5">공개 상태</p>
-                    <p className="text-sm text-neutral-600 mb-2 leading-relaxed">잠시 빼고 싶을 때는 삭제 대신 비공개로 바꿔주세요.</p>
+                    <p className="text-sm text-neutral-600 mb-2 leading-relaxed">잠시 빼고 싶을 때는 삭제 대신 비공개로 바꿔 주세요.</p>
                     <div className="grid grid-cols-2 gap-2">
                         {[true, false].map((v) => (
                             <button
@@ -193,24 +193,24 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                     label="이름"
                     htmlFor="name"
                     required
-                    hint={isLobby ? "큰 제목으로 나옵니다." : '꼭 "W.L Studio [A Room]" 형태로 적어 주세요. 대괄호 안이 큰 제목("A ROOM")이 됩니다.'}
+                    hint={isLobby ? "큰 제목으로 나와요." : '꼭 "W.L Studio [A Room]" 형태로 적어 주세요. 대괄호 안이 큰 제목("A ROOM")이 돼요.'}
                 >
                     <input id="name" name="name" defaultValue={data.name} className={inputClass} />
                 </Field>
 
                 {isLobby && (
                     <>
-                        <Field label="소제목" htmlFor="subtitle" hint="이름 위에 작게 나옵니다. 예: 로비 & 1인 데스크">
+                        <Field label="소제목" htmlFor="subtitle" hint="이름 위에 작게 나와요. 예: 로비 & 1인 데스크">
                             <input id="subtitle" name="subtitle" defaultValue={data.subtitle} className={inputClass} />
                         </Field>
-                        <Field label="소개글" htmlFor="description" hint="따옴표로 감싸져 기울임체로 나옵니다.">
+                        <Field label="소개글" htmlFor="description" hint="따옴표로 감싸져 기울임체로 나와요.">
                             <textarea id="description" name="description" rows={6} defaultValue={data.description} className={textareaClass} />
                         </Field>
                     </>
                 )}
             </Section>
 
-            <Section step={2} title="사진" hint="홈페이지 사진 넘기기에 이 순서대로 나옵니다. 첫 번째 사진이 처음에 보여요.">
+            <Section step={2} title="사진" hint="홈페이지 사진 넘기기에 이 순서대로 나와요. 첫 번째 사진이 처음에 보여요.">
                 {images.length === 0 && <p className="text-sm text-neutral-500">아직 사진이 없어요. 아래에서 추가해 주세요.</p>}
                 {images.map((im, i) => (
                     <ImageItem
@@ -230,7 +230,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section step={3} title="가격" hint="예: 라벨 '기본' / 금액 '6,000' / 단위 '원 / 1H'. 라벨과 금액이 모두 비면 저장할 때 빠집니다.">
+            <Section step={3} title="가격" hint="예: 라벨 '기본' / 금액 '6,000' / 단위 '원 / 1H'. 라벨과 금액이 모두 비면 저장할 때 빠져요.">
                 {prices.map((p, i) => (
                     <div key={p.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
                         <div className="flex items-center justify-between gap-3">
@@ -257,17 +257,17 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section step={4} title={isLobby ? "이용 규칙·특징" : "장비·특징"} hint="한 줄씩 적어 주세요. 홈페이지에 줄 앞에 — 표시와 함께 나옵니다. 비워둔 줄은 저장할 때 빠집니다.">
+            <Section step={4} title={isLobby ? "이용 규칙·특징" : "장비·특징"} hint="한 줄씩 적어 주세요. 홈페이지에 줄 앞에 — 표시와 함께 나와요. 비워 둔 줄은 저장할 때 빠져요.">
                 <LinesEditor lines={features} onChange={apply(setFeatures)} label="특징" placeholder="예: 삼익 업라이트 피아노" />
             </Section>
 
-            <Section step={5} title="안내 문구" hint="붉은 글씨로 맨 아래에 나옵니다. 없으면 비워두세요. (예: * 방음문 사용 안내)">
+            <Section step={5} title="안내 문구" hint="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요. (예: * 방음문 사용 안내)">
                 <LinesEditor lines={notes} onChange={apply(setNotes)} label="안내 문구" placeholder="예: * 방음문: 열때는 아래로…" />
             </Section>
 
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
-                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영됩니다.</p>
+                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link href="/manage/studio" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
@@ -276,7 +276,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                         <button
                             type="button"
                             onClick={() => {
-                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없습니다.")) onDiscard();
+                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없어요.")) onDiscard();
                             }}
                             className="h-12 px-4 rounded-xl border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                         >
@@ -293,7 +293,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 </div>
                 {state && (
                     <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했습니다. 홈페이지에 바로 반영됩니다.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
+                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
                     </div>
                 )}
             </div>

@@ -58,13 +58,13 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
 
             {!isActive && (
                 <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-                    지금 비공개 상태예요. 저장해도 홈페이지 크루 목록에는 나오지 않습니다.
+                    지금 비공개 상태예요. 저장해도 홈페이지 크루 목록에는 나오지 않아요.
                 </div>
             )}
 
             {/* 미리보기 */}
             <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
-                <p className="text-sm font-bold text-neutral-600 mb-3">👀 목록에서 이렇게 보여요 (입력하면 바로 바뀝니다)</p>
+                <p className="text-sm font-bold text-neutral-600 mb-3">👀 목록에서 이렇게 보여요 (입력하면 바로 바뀌어요)</p>
                 <div className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center gap-4">
                     <div className="relative w-20 aspect-[3/4] rounded-lg overflow-hidden bg-neutral-100 shrink-0">
                         {shownPhoto ? (
@@ -86,7 +86,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 <div>
                     <p className="text-sm font-bold mb-1.5">공개 상태</p>
                     <p className="text-sm text-neutral-600 mb-2 leading-relaxed">
-                        잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔주세요.
+                        잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔 주세요.
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                         {[true, false].map((v) => (
@@ -117,14 +117,14 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 </Field>
 
                 {isCreate ? (
-                    <Field label="주소(영문)" htmlFor="slug" required hint="홈페이지 주소에 들어가는 이름이에요. 영문 소문자, 숫자, 하이픈(-)만 가능합니다. 만든 뒤에는 바꿀 수 없어요. (예: vocal-scon)">
+                    <Field label="주소(영문)" htmlFor="slug" required hint="홈페이지 주소에 들어가는 이름이에요. 영문 소문자, 숫자, 하이픈(-)만 가능해요. 만든 뒤에는 고정돼요. (예: vocal-scon)">
                         <input id="slug" name="slug" defaultValue="" autoCapitalize="none" spellCheck={false} className={inputClass} />
                     </Field>
                 ) : (
                     <div>
                         <p className="text-sm font-bold mb-1.5">홈페이지 주소</p>
                         <p className="text-sm text-neutral-600 leading-relaxed">
-                            /crew/<span className="font-mono">{data.slug}</span> — 주소를 바꾸면 기존 링크가 끊겨서 여기서는 바꿀 수 없어요.
+                            /crew/<span className="font-mono">{data.slug}</span> — 주소를 바꾸면 기존 링크가 끊겨서 여기서는 고정돼 있어요.
                         </p>
                     </div>
                 )}
@@ -175,14 +175,14 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                             <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{photoError}</p>
                         ) : (
                             <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
-                                {photoPreview ? "새 사진이 선택되었어요. 저장하면 바뀝니다." : isCreate ? "사진을 선택해 주세요." : "고르지 않으면 지금 사진이 그대로 유지됩니다."}
+                                {photoPreview ? "새 사진을 골랐어요. 저장하면 바뀌어요." : isCreate ? "사진을 선택해 주세요." : "고르지 않으면 지금 사진이 그대로 유지돼요."}
                             </p>
                         )}
                     </div>
                 </div>
             </Section>
 
-            <Section step={3} title="소셜 링크" hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워두셔도 됩니다.">
+            <Section step={3} title="소셜 링크" hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워 둬도 돼요.">
                 {rows.map((row, i) => {
                     const known = CREW_ICON_PRESETS.some((p) => p.ref === row.iconRef);
                     return (
@@ -223,7 +223,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                                     <input id={`linkIconFile_${i}`} name={`linkIconFile_${i}`} type="file" accept="image/*" className="text-sm" />
                                 </Field>
                             )}
-                            <Field label="링크 주소" htmlFor={`linkUrl_${i}`} hint="https://로 시작하는 주소를 붙여넣으세요.">
+                            <Field label="링크 주소" htmlFor={`linkUrl_${i}`} hint="브라우저 주소창의 주소를 복사해 붙여넣어 주세요.">
                                 <input
                                     id={`linkUrl_${i}`}
                                     name={`linkUrl_${i}`}
@@ -270,7 +270,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
 
             <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
-                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영됩니다.</p>
+                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link href="/manage/crew" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
@@ -279,7 +279,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                         <button
                             type="button"
                             onClick={() => {
-                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없습니다.")) onDiscard();
+                                if (window.confirm("변경한 내용을 모두 버릴까요? 되돌릴 수 없어요.")) onDiscard();
                             }}
                             className="h-12 px-4 rounded-xl border border-neutral-300 font-bold text-sm hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                         >
@@ -296,7 +296,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 </div>
                 {state && (
                     <div className="max-w-2xl mx-auto mt-2" role="status" aria-live="polite">
-                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했습니다. 홈페이지에 바로 반영됩니다.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
+                        {state.ok ? <p className="text-sm font-bold text-green-700">저장했어요. 홈페이지에 바로 반영돼요.</p> : <p className="text-sm font-bold text-red-600">{state.error}</p>}
                     </div>
                 )}
             </div>
