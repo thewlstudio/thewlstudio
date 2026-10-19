@@ -15,7 +15,10 @@ const detailQuery = `*[_type == "work" && _id == $id][0]{
     _id, trashed, title, artist, "slug": slug.current, releaseDate,
     youtubeUrl, instagramId, instagramUrl,
     "imageUrl": coverImage.asset->url,
-    contentBlocks
+    contentBlocks[]{
+        ...,
+        _type == "imageBlock" => { ..., "imageUrl": image.asset->url }
+    }
 }`;
 
 type Raw = {

@@ -14,6 +14,11 @@ const scriptSrc = isDev
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    // /manage 폼은 사진을 서버 액션으로 올린다. 기본 한도(1MB)로는 일반 사진이 거부되므로 올린다.
+    // (Vercel 함수 요청 한도가 4.5MB라 그보다 낮게 둔다. 큰 사진은 업로드 전에 화면에서 줄인다)
+    experimental: {
+        serverActions: { bodySizeLimit: "4mb" },
+    },
     images: {
         remotePatterns: [
             {

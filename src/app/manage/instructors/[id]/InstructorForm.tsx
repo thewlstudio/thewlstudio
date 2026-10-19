@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { saveInstructor, createInstructor, type SaveResult, type FieldError } from "../actions";
 import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 
 export type InstructorFormData = {
     _id: string;
@@ -56,20 +57,6 @@ function linesToArray(value: string): string[] {
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
-}
-
-// 서버(actions.ts)와 같은 기준. 사진을 고르는 즉시 확인해서
-// 전체 폼을 다 채운 뒤 저장 버튼을 눌러야 알게 되는 일이 없도록 한다.
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
-function validateImageFile(file: File): string | null {
-    if (!file.type.startsWith("image/")) {
-        return `이미지 파일만 선택할 수 있어요. (${file.type || "알 수 없는 형식"})`;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-        return `사진 용량이 너무 커요 (${(file.size / 1024 / 1024).toFixed(1)}MB). 10MB 이하로 줄여서 다시 선택해 주세요.`;
-    }
-    return null;
 }
 
 // ── 재사용 UI 조각 ────────────────────────────────────────────────────────────
@@ -147,24 +134,26 @@ function PhotoInput({
                         accept="image/*"
                         required={required && !currentUrl}
                         className="sr-only"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) {
+                        onChange={async (e) => {
+                            const input = e.target;
+                            const picked = input.files?.[0];
+                            if (!picked) {
                                 setFileError(null);
                                 setPreview(null);
                                 onPreviewUrl?.(null);
                                 return;
                             }
-                            const error = validateImageFile(file);
-                            if (error) {
-                                setFileError(error);
-                                e.target.value = ""; // 잘못된 선택은 제출되지 않도록 비운다
+                            const prepared = await prepareImageFile(picked);
+                            if ("error" in prepared) {
+                                setFileError(prepared.error);
+                                input.value = ""; // 잘못된 선택은 제출되지 않도록 비운다
                                 setPreview(null);
                                 onPreviewUrl?.(null);
                                 return;
                             }
+                            replaceInputFile(input, prepared.file);
                             setFileError(null);
-                            const url = URL.createObjectURL(file);
+                            const url = URL.createObjectURL(prepared.file);
                             setPreview(url);
                             onPreviewUrl?.(url);
                         }}
@@ -534,22 +523,24 @@ function InstructorFormInner({
                                 accept="image/*"
                                 required={isCreate}
                                 className="sr-only"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) {
+                                onChange={async (e) => {
+                                    const input = e.target;
+                                    const picked = input.files?.[0];
+                                    if (!picked) {
                                         setThumbFileError(null);
                                         setThumbPreview(null);
                                         return;
                                     }
-                                    const error = validateImageFile(file);
-                                    if (error) {
-                                        setThumbFileError(error);
-                                        e.target.value = "";
+                                    const prepared = await prepareImageFile(picked);
+                                    if ("error" in prepared) {
+                                        setThumbFileError(prepared.error);
+                                        input.value = "";
                                         setThumbPreview(null);
                                         return;
                                     }
+                                    replaceInputFile(input, prepared.file);
                                     setThumbFileError(null);
-                                    setThumbPreview(URL.createObjectURL(file));
+                                    setThumbPreview(URL.createObjectURL(prepared.file));
                                 }}
                             />
                             {thumbFileError ? (

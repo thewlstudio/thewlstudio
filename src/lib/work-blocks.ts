@@ -1,13 +1,15 @@
 /**
  * 작업물 상세 페이지 콘텐츠 블록의 공통 모델. 편집 화면(클라이언트)과 저장(서버)이 같은 정의를 쓴다.
  * 블록 종류는 sanity/schemaTypes/workType.ts, 화면 표시는 works/[slug]/WorkDetailClient.tsx와 맞춰져 있다.
- * 2차 편집 대상은 텍스트형 4종. 나머지(이미지·영상·자유서식·오디오)는 "보존 블록"으로 두고 순서만 바꿀 수 있다.
+ * 편집 대상은 텍스트형 4종 + 이미지·영상. 나머지(자유서식·오디오)는 "보존 블록"으로 두고 순서만 바꿀 수 있다.
  */
 export const BLOCK_META = {
     descriptionBlock: { label: "설명" },
     creditGridBlock: { label: "크레딧" },
     tracklistBlock: { label: "트랙리스트" },
     signatureMessageBlock: { label: "인사말" },
+    imageBlock: { label: "이미지" },
+    videoEmbedBlock: { label: "유튜브 영상" },
 } as const;
 
 export type EditableType = keyof typeof BLOCK_META;
@@ -18,8 +20,6 @@ export function isEditableType(t: unknown): t is EditableType {
 
 /** 보존 블록의 화면 표시용 이름 (3차에서 편집 지원 예정) */
 export const PRESERVED_LABELS: Record<string, string> = {
-    imageBlock: "이미지",
-    videoEmbedBlock: "유튜브 영상",
     freeformTextBlock: "자유 서식",
     audioBlock: "오디오",
 };
@@ -36,6 +36,8 @@ export type BlockState =
     | { key: string; type: "signatureMessageBlock"; paragraphs: Para[]; signature: string }
     | { key: string; type: "creditGridBlock"; sections: CreditSection[] }
     | { key: string; type: "tracklistBlock"; tracks: Track[] }
+    | { key: string; type: "imageBlock"; imageUrl: string | null; caption: string }
+    | { key: string; type: "videoEmbedBlock"; url: string }
     | { key: string; type: "preserved"; rawType: string };
 
 let seq = 0;
@@ -61,6 +63,10 @@ export function emptyBlock(type: EditableType): BlockState {
             return { key, type, sections: [emptyCreditSection()] };
         case "tracklistBlock":
             return { key, type, tracks: [emptyTrack()] };
+        case "imageBlock":
+            return { key, type, imageUrl: null, caption: "" };
+        case "videoEmbedBlock":
+            return { key, type, url: "" };
     }
 }
 
@@ -104,6 +110,10 @@ export function toState(raw: unknown): BlockState[] {
                     type,
                     tracks: arr(b.tracks).map((t) => ({ key: s(t._key) || newKey(), title: s(t.title), description: s(t.description) })),
                 };
+            case "imageBlock":
+                return { key, type, imageUrl: s(b.imageUrl) || null, caption: s(b.caption) };
+            case "videoEmbedBlock":
+                return { key, type, url: s(b.url) };
             default:
                 return { key, type: "preserved", rawType: type };
         }
@@ -130,6 +140,11 @@ export function toPayload(states: BlockState[]) {
                 };
             case "tracklistBlock":
                 return { _key: b.key, _type: b.type, tracks: b.tracks.map((t) => ({ _key: t.key, title: t.title, description: t.description })) };
+            case "imageBlock":
+                // 사진은 파일 입력(blockImage_<key>)으로 따로 올라오고, 기존 사진은 서버가 기존 문서에서 유지한다
+                return { _key: b.key, _type: b.type, caption: b.caption };
+            case "videoEmbedBlock":
+                return { _key: b.key, _type: b.type, url: b.url };
             default:
                 // 내용은 서버가 기존 문서에서 직접 다시 읽는다 (클라이언트가 보낸 값은 쓰지 않음)
                 return { _key: b.key, _type: b.rawType, preserved: true };

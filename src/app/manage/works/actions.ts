@@ -100,7 +100,9 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
                 return { ok: false, error: "상세 내용 정보를 읽지 못했습니다. 화면을 새로고침한 뒤 다시 시도해 주세요." };
             }
             const existing = await client.fetch<Record<string, unknown>[] | null>(`*[_id == $id][0].contentBlocks`, { id: documentId });
-            const cleaned = sanitizeBlocks(payload, existing ?? []);
+            const cleaned = await sanitizeBlocks(payload, existing ?? [], (clientKey) =>
+                uploadImageIfPresent(client, formData.get(`blockImage_${clientKey}`) as File | null),
+            );
             if ("error" in cleaned) {
                 return { ok: false, error: cleaned.error, fields: [{ id: "blocks", label: "상세 페이지 내용" }] };
             }

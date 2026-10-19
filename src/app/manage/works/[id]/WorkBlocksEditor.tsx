@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import {
     BLOCK_META,
     EDITABLE_TYPES,
@@ -108,6 +109,68 @@ function CreditsEditor({ sections, onChange }: { sections: CreditSection[]; onCh
     );
 }
 
+/** 이미지 블록: 사진은 파일 입력(blockImage_<key>)으로 폼에 실려 서버가 올린다 */
+function ImageBlockEditor({ b, onChange }: { b: Extract<BlockState, { type: "imageBlock" }>; onChange: (b: BlockState) => void }) {
+    const [preview, setPreview] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const shown = preview ?? b.imageUrl;
+    const id = `img-${b.key}`;
+    return (
+        <div className="space-y-3">
+            <div className="flex items-start gap-4">
+                <div className="relative w-32 aspect-[4/3] shrink-0 rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200">
+                    {shown ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={shown} alt="이미지 미리보기" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">이미지 없음</div>
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <label htmlFor={id} className="inline-flex items-center justify-center h-10 px-4 rounded-lg border-2 border-black bg-white text-sm font-bold cursor-pointer hover:bg-black hover:text-white transition-colors focus-within:outline-2 focus-within:outline-offset-2">
+                        이미지 고르기
+                    </label>
+                    <input
+                        id={id}
+                        name={`blockImage_${b.key}`}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={async (e) => {
+                            const input = e.target;
+                            const picked = input.files?.[0];
+                            if (!picked) {
+                                setPreview(null);
+                                setError(null);
+                                return;
+                            }
+                            const prepared = await prepareImageFile(picked);
+                            if ("error" in prepared) {
+                                setError(prepared.error);
+                                input.value = "";
+                                setPreview(null);
+                                return;
+                            }
+                            replaceInputFile(input, prepared.file);
+                            setError(null);
+                            setPreview(URL.createObjectURL(prepared.file));
+                            onChange({ ...b }); // 변경됨 표시
+                        }}
+                    />
+                    {error ? (
+                        <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{error}</p>
+                    ) : (
+                        <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
+                            {preview ? "새 이미지가 선택되었어요. 저장하면 바뀝니다." : b.imageUrl ? "고르지 않으면 지금 이미지가 유지됩니다." : "이미지를 선택해 주세요. 없으면 저장할 때 이 블록은 빠집니다."}
+                        </p>
+                    )}
+                </div>
+            </div>
+            <input aria-label="이미지 설명(캡션)" placeholder="이미지 설명 (선택)" value={b.caption} onChange={(e) => onChange({ ...b, caption: e.target.value })} className={input} />
+        </div>
+    );
+}
+
 function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) => void }) {
     switch (b.type) {
         case "descriptionBlock":
@@ -138,6 +201,15 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
                         </div>
                     ))}
                     <button type="button" onClick={() => onChange({ ...b, tracks: [...b.tracks, emptyTrack()] })} className={dashedBtn}>+ 트랙 추가</button>
+                </div>
+            );
+        case "imageBlock":
+            return <ImageBlockEditor b={b} onChange={onChange} />;
+        case "videoEmbedBlock":
+            return (
+                <div className="space-y-2">
+                    <input aria-label="유튜브 주소" type="url" inputMode="url" placeholder="https://www.youtube.com/watch?v=..." value={b.url} onChange={(e) => onChange({ ...b, url: e.target.value })} className={input} />
+                    <p className="text-sm text-neutral-500 leading-relaxed">유튜브 영상 주소를 붙여넣으세요. 주소가 올바르지 않으면 저장되지 않습니다.</p>
                 </div>
             );
         case "preserved":

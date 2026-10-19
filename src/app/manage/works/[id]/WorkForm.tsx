@@ -5,6 +5,7 @@ import Link from "next/link";
 import { saveWork, createWork, type SaveResult } from "../actions";
 import { Section, Field, ErrorSummary, inputClass } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { toState } from "@/lib/work-blocks";
 import WorkBlocksEditor from "./WorkBlocksEditor";
 
@@ -23,7 +24,6 @@ export type WorkFormData = {
     blocks: unknown[];
 };
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "create" | "edit"; onDiscard: () => void }) {
     const isCreate = mode === "create";
@@ -109,21 +109,24 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                             accept="image/*"
                             required={isCreate}
                             className="sr-only"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) {
+                            onChange={async (e) => {
+                                const input = e.target;
+                                const picked = input.files?.[0];
+                                if (!picked) {
                                     setPhotoPreview(null);
                                     setPhotoError(null);
                                     return;
                                 }
-                                if (!file.type.startsWith("image/") || file.size > MAX_IMAGE_BYTES) {
-                                    setPhotoError(!file.type.startsWith("image/") ? "이미지 파일만 선택할 수 있어요." : `이미지 용량이 너무 커요 (${(file.size / 1024 / 1024).toFixed(1)}MB). 10MB 이하로 줄여 주세요.`);
-                                    e.target.value = "";
+                                const prepared = await prepareImageFile(picked);
+                                if ("error" in prepared) {
+                                    setPhotoError(prepared.error);
+                                    input.value = "";
                                     setPhotoPreview(null);
                                     return;
                                 }
+                                replaceInputFile(input, prepared.file);
                                 setPhotoError(null);
-                                setPhotoPreview(URL.createObjectURL(file));
+                                setPhotoPreview(URL.createObjectURL(prepared.file));
                             }}
                         />
                         {photoError ? (
