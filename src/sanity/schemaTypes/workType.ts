@@ -5,6 +5,14 @@ export const workType = defineType({
     title: 'Work / Project',
     type: 'document',
     fields: [
+        // 관리 화면(/manage/works)의 휴지통용 소프트 삭제 표시. 기존 문서에는 없을 수 있으며, 없으면 "삭제 안 됨"으로 취급한다.
+        defineField({
+            name: 'trashed',
+            title: '(휴지통) 삭제됨',
+            type: 'boolean',
+            initialValue: false,
+            hidden: true,
+        }),
         defineField({ name: 'title', title: 'Album Title', type: 'string', validation: (rule) => rule.required() }),
         defineField({ name: 'artist', title: 'Artist', type: 'string', validation: (rule) => rule.required() }),
         defineField({

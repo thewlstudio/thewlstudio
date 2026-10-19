@@ -1,7 +1,7 @@
 import { groq } from 'next-sanity';
 
 export const worksQuery = groq`
-  *[_type == "work"] | order(releaseDate desc) {
+  *[_type == "work" && !(trashed == true)] | order(releaseDate desc) {
     title,
     artist,
     "slug": slug.current,
@@ -62,7 +62,7 @@ export const crewBySlugQuery = groq`
 `;
 
 export const workBySlugQuery = groq`
-  *[_type == "work" && slug.current == $slug][0] {
+  *[_type == "work" && !(trashed == true) && slug.current == $slug][0] {
     title,
     artist,
     releaseDate,

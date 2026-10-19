@@ -15,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     try {
         [works, crew] = await Promise.all([
             client.fetch<SanitySlugEntry[]>(
-                `*[_type == "work" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+                `*[_type == "work" && !(trashed == true) && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
             ),
             client.fetch<SanitySlugEntry[]>(
                 `*[_type == "crew" && defined(slug.current) && !(trashed == true)]{ "slug": slug.current, _updatedAt }`
