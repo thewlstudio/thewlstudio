@@ -105,7 +105,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
                                             <p className="font-bold text-base truncate">{sp.name ?? "(이름 없음)"}</p>
-                                            {hidden && !isTrashView && <span className="shrink-0 text-[10px] font-bold text-neutral-500 bg-neutral-100 px-1.5 py-0.5 rounded">비공개</span>}
+                                            {hidden && !isTrashView && <span className="shrink-0 text-[10px] font-bold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded">비공개</span>}
                                         </div>
                                         <p className="text-sm text-neutral-500 truncate">
                                             {isLobby ? "로비" : "연습실"} · 사진 {sp.photoCount ?? 0}장
@@ -124,7 +124,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                 })}
             </ul>
 
-            <p className="text-sm text-neutral-400 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
+            <p className="text-sm text-neutral-500 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
                 위 목록은 연습실·로비 카드예요. 서비스 가격·장비·멤버십·이용 안내는 위의 &quot;서비스·장비·멤버십·이용 안내&quot;에서 고쳐요. 로비는 한 곳만 화면에 나와요.
             </p>
         </main>

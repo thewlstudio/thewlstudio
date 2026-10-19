@@ -45,7 +45,7 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                         {shownQuery.trim() ? (
                             <iframe src={mapEmbedUrl(shownQuery.trim())} title="지도 미리보기" loading="lazy" className="w-full h-full border-0" />
                         ) : (
-                            <p className="h-full flex items-center justify-center text-sm text-neutral-400">검색어를 입력해 주세요.</p>
+                            <p className="h-full flex items-center justify-center text-sm text-neutral-600">검색어를 입력해 주세요.</p>
                         )}
                     </div>
                     <p className="text-sm text-neutral-500 mt-2 leading-relaxed">저장 전에도 미리 볼 수 있어요. 위치가 이상하면 주소를 더 자세히 적어 보세요.</p>

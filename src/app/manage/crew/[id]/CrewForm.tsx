@@ -71,7 +71,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={shownPhoto} alt="" className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">사진 없음</div>
+                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600">사진 없음</div>
                         )}
                     </div>
                     <div className="min-w-0">
@@ -137,7 +137,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={shownPhoto} alt="프로필 사진 미리보기" className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">사진 없음</div>
+                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600">사진 없음</div>
                         )}
                     </div>
                     <div className="flex-1 min-w-0">

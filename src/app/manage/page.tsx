@@ -67,9 +67,9 @@ export default async function ManageHubPage() {
                             >
                                 <div className="min-w-0">
                                     <p className="font-bold text-base text-neutral-500 truncate">{section.label}</p>
-                                    <p className="text-sm text-neutral-400 break-keep">{section.description}</p>
+                                    <p className="text-sm text-neutral-500 break-keep">{section.description}</p>
                                 </div>
-                                <span className="shrink-0 text-[10px] font-bold text-neutral-500 bg-neutral-200 px-2 py-1 rounded">
+                                <span className="shrink-0 text-[10px] font-bold text-neutral-600 bg-neutral-200 px-2 py-1 rounded">
                                     준비 중
                                 </span>
                             </div>

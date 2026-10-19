@@ -124,7 +124,7 @@ function ImageBlockEditor({ b, onChange }: { b: Extract<BlockState, { type: "ima
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={shown} alt="이미지 미리보기" className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">이미지 없음</div>
+                        <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600">이미지 없음</div>
                     )}
                 </div>
                 <div className="flex-1 min-w-0">

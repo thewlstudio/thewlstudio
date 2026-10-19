@@ -114,7 +114,7 @@ function PhotoInput({
                             className={`w-full h-full object-cover ${previewClassName ?? ""}`}
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400 text-center px-1">
+                        <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600 text-center px-1">
                             사진 없음
                         </div>
                     )}
@@ -504,7 +504,7 @@ function InstructorFormInner({
                                     className={`w-full h-full object-cover ${photoPosition}`}
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">
+                                <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600">
                                     사진 없음
                                 </div>
                             )}

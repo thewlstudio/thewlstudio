@@ -52,7 +52,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={shownPhoto} alt="" className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">이미지 없음</div>
+                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600">이미지 없음</div>
                         )}
                     </div>
                     <div className="min-w-0">
@@ -95,7 +95,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={shownPhoto} alt="커버 이미지 미리보기" className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">이미지 없음</div>
+                            <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600">이미지 없음</div>
                         )}
                     </div>
                     <div className="flex-1 min-w-0">

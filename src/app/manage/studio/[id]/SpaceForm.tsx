@@ -45,7 +45,7 @@ function ImageItem({ row, index, count, onMove, onRemove, onPicked }: { row: Ima
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={shown} alt={`사진 ${index + 1} 미리보기`} className="w-full h-full object-cover" />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">사진 없음</div>
+                    <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600">사진 없음</div>
                 )}
             </div>
             <div className="flex-1 min-w-0">

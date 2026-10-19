@@ -90,7 +90,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
                                             <p className="font-bold text-base truncate">{m.koName ?? m.name ?? "(이름 없음)"}</p>
-                                            {hidden && !isTrashView && <span className="shrink-0 text-[10px] font-bold text-neutral-500 bg-neutral-100 px-1.5 py-0.5 rounded">비공개</span>}
+                                            {hidden && !isTrashView && <span className="shrink-0 text-[10px] font-bold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded">비공개</span>}
                                         </div>
                                         <p className="text-sm text-neutral-500 truncate">{m.role}</p>
                                     </div>
@@ -107,7 +107,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                 })}
             </ul>
 
-            <p className="text-sm text-neutral-400 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
+            <p className="text-sm text-neutral-500 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
                 저장 실수로 내용이 잘못됐다면, 개발자에게 요청해 <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을 확인할 수 있어요.
             </p>
         </main>
