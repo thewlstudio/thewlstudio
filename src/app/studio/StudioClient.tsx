@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { NAVER_MAP_URL } from "@/lib/constants";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import type { StudioSpaceData } from "@/lib/studio-spaces";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -186,6 +186,7 @@ function RoomBlock({ room }: { room: StudioSpaceData }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[]; lobby: StudioSpaceData | null }) {
+    const { naverReservationUrl, blogUrl } = useSiteSettings();
     return (
         <main id="main-content" className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
             <Header />
@@ -365,7 +366,7 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                             네이버에서 구입 후 즉시 회원가로 예약(사용) 가능하십니다.
                         </p>
                         <a
-                            href={NAVER_MAP_URL}
+                            href={naverReservationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-block px-10 py-4 bg-white text-black font-bold tracking-[0.2em] uppercase text-xs md:text-sm rounded-full hover:bg-neutral-200 transition-colors"
@@ -395,7 +396,7 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                             </p>
                         </div>
                         <a
-                            href={NAVER_MAP_URL}
+                            href={naverReservationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-block px-6 md:px-8 py-3 md:py-4 bg-black text-white font-bold tracking-[0.2em] uppercase text-[10px] md:text-xs rounded-full border border-black hover:bg-transparent hover:text-black transition-colors shrink-0"
@@ -598,7 +599,7 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                         음악 제작 팁부터 스튜디오 비하인드까지, 화이트 라이트 스튜디오의 이야기를 만나보세요.
                     </p>
                     <a
-                        href="https://blog.naver.com/bkh__official"
+                        href={blogUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-white hover:text-neutral-400 font-bold uppercase tracking-widest text-sm inline-flex items-center gap-2 transition-colors border-b border-transparent hover:border-neutral-400 pb-1"

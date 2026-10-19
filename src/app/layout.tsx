@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Preloader from "@/components/Preloader";
 import SmoothScroll from "@/components/SmoothScroll";
+import { SiteSettingsProvider } from "@/components/SiteSettingsProvider";
+import { getSiteSettings } from "@/lib/site-settings-server";
 
 const pretendard = localFont({
   src: "../../public/fonts/PretendardVariable.woff2",
@@ -43,11 +45,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
   return (
     <html lang="ko">
       <body className={`${pretendard.variable} ${pretendard.className} min-h-screen bg-black text-white selection:bg-white selection:text-black`}>
@@ -76,10 +79,12 @@ export default function RootLayout({
             },
           }) }}
         />
-        <Preloader />
-        <SmoothScroll>
-          {children}
-        </SmoothScroll>
+        <SiteSettingsProvider value={settings}>
+          <Preloader />
+          <SmoothScroll>
+            {children}
+          </SmoothScroll>
+        </SiteSettingsProvider>
       </body>
     </html>
   );

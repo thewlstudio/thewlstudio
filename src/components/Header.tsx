@@ -7,6 +7,7 @@ import { Instagram } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 
 const emptySubscribe = () => () => {};
 
@@ -56,6 +57,7 @@ function MenuIcon({ isOpen }: { isOpen: boolean }) {
 }
 
 export default function Header() {
+    const { instagramUrl } = useSiteSettings();
     const [isScrolled, setIsScrolled] = useState(false);
     // isMenuOpen: 오버레이의 열림/닫힘 "목표 상태" — AnimatePresence가 이 값을 보고
     // 진입/퇴장 애니메이션을 재생한다. 닫을 때는 즉시 false가 된다(0.6초 퇴장
@@ -208,7 +210,7 @@ export default function Header() {
 
                     {/* Right Controls */}
                     <div className="flex items-center space-x-6 md:space-x-8">
-                        <a href="https://www.instagram.com/wl_musicstudio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={`hidden md:block hover:opacity-60 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm ${isMenuOpen ? "text-white" : headerTextColor}`}>
+                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={`hidden md:block hover:opacity-60 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm ${isMenuOpen ? "text-white" : headerTextColor}`}>
                             <Instagram strokeWidth={1.5} size={24} />
                         </a>
                         <button
@@ -257,7 +259,7 @@ export default function Header() {
                                     </span>
                                 </Link>
                                 <div className="flex items-center space-x-6 md:space-x-8">
-                                    <a href="https://www.instagram.com/wl_musicstudio/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hidden md:block hover:opacity-60 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm text-white">
+                                    <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hidden md:block hover:opacity-60 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current rounded-sm text-white">
                                         <Instagram strokeWidth={1.5} size={24} />
                                     </a>
                                     <button

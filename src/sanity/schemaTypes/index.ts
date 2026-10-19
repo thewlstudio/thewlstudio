@@ -3,7 +3,8 @@ import { instructorType } from './instructorType';
 import crewType from './crewType';
 import { workType } from './workType';
 import { studioSpaceType } from './studioSpaceType';
+import { siteSettingsType } from './siteSettingsType';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-    types: [instructorType, crewType, workType, studioSpaceType],
+    types: [instructorType, crewType, workType, studioSpaceType, siteSettingsType],
 };

@@ -7,7 +7,7 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { urlFor } from "@/sanity/lib/image";
-import { NAVER_MAP_URL } from "@/lib/constants";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 const emptySubscribe = () => () => {};
@@ -40,6 +40,7 @@ export type Instructor = {
 };
 
 export default function ClassClient({ initialInstructors }: { initialInstructors: Instructor[] }) {
+    const { naverReservationUrl } = useSiteSettings();
     const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
     // isModalOpen: 모달의 열림/닫힘 "목표 상태" — AnimatePresence가 이 값을 보고
     // 진입/퇴장 애니메이션을 재생한다(퇴장 최대 0.4초).
@@ -310,7 +311,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                     transition={{ duration: 1, delay: 0.8 }}
                     className="mt-32 text-center"
                 >
-                    <a href={NAVER_MAP_URL} target="_blank" rel="noopener noreferrer" className="inline-block px-12 py-4 bg-black text-white font-bold tracking-widest text-sm hover:bg-neutral-800 transition-colors uppercase">
+                    <a href={naverReservationUrl} target="_blank" rel="noopener noreferrer" className="inline-block px-12 py-4 bg-black text-white font-bold tracking-widest text-sm hover:bg-neutral-800 transition-colors uppercase">
                         레슨 문의 ↗
                     </a>
                 </motion.div>
@@ -459,7 +460,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     {/* CTA Bottom Button */}
                                     <div className="w-full pt-6 sm:pt-8 border-t border-black/10 mt-auto">
                                         <a
-                                            href={NAVER_MAP_URL}
+                                            href={naverReservationUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="block w-full px-6 sm:px-8 py-4 sm:py-5 bg-black text-white font-bold tracking-[0.2em] text-[10px] sm:text-xs hover:bg-neutral-800 transition-colors uppercase text-center"

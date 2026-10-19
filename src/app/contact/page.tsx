@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { NAVER_MAP_PLACE_URL } from "@/lib/constants";
+import { getSiteSettings } from "@/lib/site-settings-server";
+import { mapEmbedUrl } from "@/lib/site-settings";
 
 export const metadata: Metadata = {
     title: "CONTACT",
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
     alternates: { canonical: "/contact" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+    const settings = await getSiteSettings();
     return (
         <main id="main-content" className="bg-white min-h-screen text-black font-sans">
             <Header />
@@ -34,10 +36,10 @@ export default function ContactPage() {
                                 </svg>
                                 <div>
                                     <p className="text-sm md:text-base font-medium text-[#111] break-keep leading-relaxed tracking-tight">
-                                        서울특별시 광진구 능동로 413-1 지하1층
+                                        {settings.addressKo}
                                     </p>
                                     <p className="text-sm font-normal text-[#666] mt-2 tracking-wide">
-                                        B1, 413-1, Neungdong-ro, Gwangjin-gu, Seoul, Republic of Korea
+                                        {settings.addressEn}
                                     </p>
                                 </div>
                             </div>
@@ -47,8 +49,8 @@ export default function ContactPage() {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-1 text-black/40" aria-hidden="true">
                                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            <a href="tel:0507-1331-7285" className="text-sm md:text-base font-medium text-[#111] hover:underline">
-                                0507-1331-7285
+                            <a href={`tel:${settings.phone}`} className="text-sm md:text-base font-medium text-[#111] hover:underline">
+                                {settings.phone}
                             </a>
                         </div>
                     </div>
@@ -58,10 +60,10 @@ export default function ContactPage() {
                 <div className="mt-16 w-full aspect-square md:aspect-[21/9] bg-neutral-100 rounded-lg overflow-hidden relative border border-black/5 group">
                     {/* 지도 로드 실패 시 폴백 텍스트 */}
                     <div className="absolute inset-0 flex items-center justify-center text-neutral-400 text-sm font-medium">
-                        서울특별시 광진구 능동로 413-1 지하1층
+                        {settings.addressKo}
                     </div>
                     <iframe
-                        src="https://maps.google.com/maps?q=%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EA%B4%91%EC%A7%84%EA%B5%AC%20%EB%8A%A5%EB%8F%99%EB%A1%9C%20413-1&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                        src={mapEmbedUrl(settings.mapQuery)}
                         className="w-full h-full border-0 absolute top-0 left-0 grayscale opacity-90 transition-opacity duration-300 group-hover:opacity-100"
                         title="White Light Studio 위치 지도"
                         allowFullScreen
@@ -71,7 +73,7 @@ export default function ContactPage() {
                     {/* External Link Buttons */}
                     <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-10">
                         <a
-                            href={NAVER_MAP_PLACE_URL}
+                            href={settings.naverMapPlaceUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="bg-white text-black px-5 py-3 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg hover:bg-black hover:text-white transition-colors border border-black/10 flex items-center gap-2"

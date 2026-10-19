@@ -20,7 +20,7 @@ const SECTIONS: Section[] = [
     { key: "crew", label: "Crew", description: "크루 프로필 관리", href: "/manage/crew" },
     { key: "works", label: "Works", description: "작업물 페이지 관리", href: "/manage/works" },
     { key: "studio", label: "Studio", description: "스튜디오 방 정보 관리", href: "/manage/studio" },
-    { key: "contact", label: "Contact", description: "연락처·지도 정보 관리", href: null },
+    { key: "contact", label: "Contact", description: "연락처·지도 정보 관리", href: "/manage/contact" },
 ];
 
 export default async function ManageHubPage() {
