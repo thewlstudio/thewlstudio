@@ -59,7 +59,7 @@ export default async function ContactPage() {
                 {/* Map Area */}
                 <div className="mt-16 w-full aspect-square md:aspect-[21/9] bg-neutral-100 rounded-lg overflow-hidden relative border border-black/5 group">
                     {/* 지도 로드 실패 시 폴백 텍스트 */}
-                    <div className="absolute inset-0 flex items-center justify-center text-neutral-400 text-sm font-medium">
+                    <div className="absolute inset-0 flex items-center justify-center text-neutral-600 text-sm font-medium">
                         {settings.addressKo}
                     </div>
                     <iframe

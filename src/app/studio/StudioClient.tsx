@@ -170,7 +170,7 @@ function RoomBlock({ room }: { room: StudioSpaceData }) {
                             {room.notes.map((note, i) => (
                                 <p
                                     key={i}
-                                    className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
+                                    className="text-xs font-semibold text-[#a8504f] leading-relaxed break-keep"
                                 >
                                     {note}
                                 </p>
@@ -314,13 +314,13 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                                     {item.num}
                                 </span>
                                 <h4 className="text-2xl font-bold tracking-tight mb-2">{item.label}</h4>
-                                <p className="text-neutral-500 font-medium mb-12 uppercase tracking-widest text-xs">
+                                <p className="text-neutral-400 font-medium mb-12 uppercase tracking-widest text-xs">
                                     {item.sub}
                                 </p>
                                 <div className="mt-auto">
                                     <p className="text-3xl font-black tracking-tighter">
                                         {item.price}
-                                        <span className="text-base font-semibold text-neutral-500 ml-1.5 font-sans">원</span>
+                                        <span className="text-base font-semibold text-neutral-400 ml-1.5 font-sans">원</span>
                                     </p>
                                 </div>
                             </motion.div>
@@ -362,7 +362,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                             <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-center md:text-left">
                                 SPACES
                             </h2>
-                            <p className="mt-3 text-xs text-neutral-400 tracking-widest uppercase hidden md:block">
+                            <p className="mt-3 text-xs text-neutral-500 tracking-widest uppercase hidden md:block">
                                 Hover over any photo to explore in detail
                             </p>
                         </div>
@@ -394,7 +394,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                             {/* Top Section: Title */}
                             <div className="border-b-2 border-black/10 pb-5 mb-8">
                                 {lobby.subtitle && (
-                                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-400 uppercase mb-1.5">
+                                    <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
                                         {lobby.subtitle}
                                     </p>
                                 )}
@@ -416,14 +416,14 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                                     <div className="flex flex-col gap-3 mb-6">
                                         {lobby.prices.map((p, i) => (
                                             <div key={i} className="flex items-baseline justify-between border-b border-black/[0.06] pb-3">
-                                                <span className="font-bold tracking-widest uppercase text-xs text-neutral-400">
+                                                <span className="font-bold tracking-widest uppercase text-xs text-neutral-500">
                                                     {p.label}
                                                 </span>
                                                 <div className="flex items-baseline gap-1.5">
                                                     <span className="text-2xl md:text-3xl font-black tracking-tight text-black">
                                                         {p.value}
                                                     </span>
-                                                    <span className="text-xs font-semibold text-neutral-400">{p.unit}</span>
+                                                    <span className="text-xs font-semibold text-neutral-500">{p.unit}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -436,7 +436,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                                     )}
 
                                     <div className="flex-1">
-                                        <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-400 uppercase mb-4">
+                                        <h4 className="text-[10px] font-bold tracking-[0.25em] text-neutral-500 uppercase mb-4">
                                             Space Rules &amp; Features
                                         </h4>
                                         <ul className="space-y-2.5">
@@ -459,7 +459,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                                             {lobby.notes.map((note, i) => (
                                                 <p
                                                     key={i}
-                                                    className="text-xs font-semibold text-[#b86060] leading-relaxed break-keep"
+                                                    className="text-xs font-semibold text-[#a8504f] leading-relaxed break-keep"
                                                 >
                                                     {note}
                                                 </p>
@@ -503,12 +503,12 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                                 Parking
                             </h3>
                             <div className="font-medium space-y-2">
-                                <p className="text-[#b86060] font-bold">{info.parkingWarning}</p>
+                                <p className="text-[#a8504f] font-bold">{info.parkingWarning}</p>
                                 <p className="text-sm text-neutral-600">
                                     <Lines text={info.parkingDetail} always />
                                 </p>
                                 <p className="text-neutral-500 font-mono text-xs pt-1 flex items-center gap-2">
-                                    <span className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-500 font-sans tracking-widest leading-none">
+                                    <span className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-600 font-sans tracking-widest leading-none">
                                         {info.parkingFeeLabel}
                                     </span>
                                     <span>{info.parkingFee}</span>
@@ -533,8 +533,8 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                             </h3>
                             <div className="font-medium space-y-4">
                                 <div>
-                                    <p className="text-[#b86060] text-xs font-bold mb-1 flex items-center">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-[#b86060] mr-1.5 animate-pulse" />
+                                    <p className="text-[#a8504f] text-xs font-bold mb-1 flex items-center">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#a8504f] mr-1.5 animate-pulse" />
                                         {info.cctvTitle}
                                     </p>
                                     <p className="text-neutral-500 text-[11px] md:text-xs break-keep leading-relaxed">
@@ -545,7 +545,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                                     <p className="text-xs break-keep text-neutral-600">
                                         {info.dutyText}
                                     </p>
-                                    <p className="text-xs text-[#b86060] mt-1.5 font-bold">{info.dutyWarning}</p>
+                                    <p className="text-xs text-[#a8504f] mt-1.5 font-bold">{info.dutyWarning}</p>
                                 </div>
                             </div>
                         </div>
@@ -564,7 +564,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                 </a>
 
                 <div className="pt-16 border-t border-white/10 max-w-4xl mx-auto flex flex-col items-center">
-                    <p className="text-neutral-500 text-sm md:text-base mb-6 font-medium break-keep">
+                    <p className="text-neutral-400 text-sm md:text-base mb-6 font-medium break-keep">
                         음악 제작 팁부터 스튜디오 비하인드까지, 화이트 라이트 스튜디오의 이야기를 만나보세요.
                     </p>
                     <a

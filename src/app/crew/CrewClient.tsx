@@ -53,7 +53,7 @@ export default function CrewClient({ members }: { members: CrewMemberSummary[] }
                             {/* JYP Style Hover Overlay */}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-between p-4 md:p-6 pointer-events-none text-center">
                                 <div className="w-full text-right h-6 md:h-8 flex items-start justify-end">
-                                    <span className="text-[8px] md:text-[10px] text-white/50 tracking-widest font-bold uppercase w-full truncate text-right">{member.role}</span>
+                                    <span className="text-[8px] md:text-[10px] text-white/80 tracking-widest font-bold uppercase w-full truncate text-right">{member.role}</span>
                                 </div>
 
                                 <div className="w-full flex flex-col items-center justify-center px-1 md:px-2">

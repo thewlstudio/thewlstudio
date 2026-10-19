@@ -130,7 +130,7 @@ function AudioPlayerBlock({ block }: { block: AudioBlock }) {
                     <span className="text-sm font-bold tracking-widest text-[#222] truncate uppercase">
                         {block.title}
                     </span>
-                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1 truncate">
+                    <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-1 truncate">
                         {block.artist}
                     </span>
                 </div>
@@ -182,7 +182,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                         {artist}
                     </h2>
                     {instagramId && (
-                        <a href={instagramUrl || `https://instagram.com/${instagramId.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="mt-2 text-xs md:text-sm font-bold text-neutral-400 hover:text-neutral-800 transition-colors tracking-widest">
+                        <a href={instagramUrl || `https://instagram.com/${instagramId.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="mt-2 text-xs md:text-sm font-bold text-neutral-500 hover:text-neutral-800 transition-colors tracking-widest">
                             {instagramId}
                         </a>
                     )}
@@ -305,7 +305,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                                         </p>
                                     ))}
                                     {block.signature && (
-                                        <p className="text-neutral-400 text-[10px] md:text-sm tracking-widest mt-12 mb-4 font-bold">
+                                        <p className="text-neutral-500 text-[10px] md:text-sm tracking-widest mt-12 mb-4 font-bold">
                                             {block.signature}
                                         </p>
                                     )}
@@ -327,14 +327,14 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                                                     {section.items?.map((item, j) => (
                                                         <li key={j} className={`flex ${!item.role ? 'flex-col' : ''}`}>
                                                             {item.role && (
-                                                                <span className="w-40 text-neutral-400 font-bold uppercase tracking-wider text-[10px] pt-0.5 shrink-0">
+                                                                <span className="w-40 text-neutral-500 font-bold uppercase tracking-wider text-[10px] pt-0.5 shrink-0">
                                                                     {item.role}
                                                                 </span>
                                                             )}
                                                             <div className="flex flex-col">
                                                                 <span className="text-neutral-800 break-keep">{item.value}</span>
                                                                 {item.linkText && item.linkUrl && (
-                                                                    <a href={item.linkUrl} target="_blank" rel="noopener noreferrer" className={`hover:text-neutral-800 transition-colors ${!item.role ? 'mt-1 text-neutral-400' : 'text-neutral-400 ml-1'}`}>
+                                                                    <a href={item.linkUrl} target="_blank" rel="noopener noreferrer" className={`hover:text-neutral-800 transition-colors ${!item.role ? 'mt-1 text-neutral-500' : 'text-neutral-500 ml-1'}`}>
                                                                         {item.linkText}
                                                                     </a>
                                                                 )}
@@ -355,7 +355,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                                         <Image src={block.imageUrl} alt={block.caption || "Works Image"} width={1200} height={800} style={{ width: '100%', height: 'auto' }} className="rounded-sm shadow-sm" />
                                     )}
                                     {block.caption && (
-                                        <p className="mt-4 text-xs tracking-widest text-neutral-400 text-center">{block.caption}</p>
+                                        <p className="mt-4 text-xs tracking-widest text-neutral-500 text-center">{block.caption}</p>
                                     )}
                                 </div>
                             );

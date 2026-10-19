@@ -21,7 +21,7 @@ export default function About() {
                     className="flex flex-col space-y-8"
                 >
                     <div className="space-y-4">
-                        <h2 className="text-sm tracking-[0.3em] text-neutral-500 font-semibold uppercase">WHITE LIGHT STUDIO</h2>
+                        <h2 className="text-sm tracking-[0.3em] text-neutral-400 font-semibold uppercase">WHITE LIGHT STUDIO</h2>
                         <h3 className="text-4xl md:text-6xl font-black tracking-tighter shrink-0 pt-2 break-keep">
                             <Lines text={homeHeadline} always />
                         </h3>
