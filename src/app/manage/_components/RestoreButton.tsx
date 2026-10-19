@@ -2,9 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { restoreCrew } from "./actions";
+type Result = { ok: true } | { ok: false; error: string };
 
-export default function RestoreButton({ documentId }: { documentId: string }) {
+export default function RestoreButton({
+    documentId,
+    restore,
+}: {
+    documentId: string;
+    restore: (documentId: string) => Promise<Result>;
+}) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
@@ -18,7 +24,7 @@ export default function RestoreButton({ documentId }: { documentId: string }) {
                     e.preventDefault();
                     e.stopPropagation();
                     startTransition(async () => {
-                        const result = await restoreCrew(documentId);
+                        const result = await restore(documentId);
                         if (result.ok) {
                             setError(null);
                             router.refresh();

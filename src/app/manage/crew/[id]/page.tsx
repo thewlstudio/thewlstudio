@@ -3,7 +3,8 @@ import { client } from "@/sanity/lib/client";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../../ManageNav";
-import RestoreButton from "../RestoreButton";
+import RestoreButton from "../../_components/RestoreButton";
+import { restoreCrew } from "../actions";
 import CrewForm, { type CrewFormData } from "./CrewForm";
 import DeleteCrewButton from "./DeleteCrewButton";
 
@@ -70,7 +71,7 @@ export default async function EditCrewPage({ params }: { params: Promise<{ id: s
                 {isTrashed ? (
                     <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
                         <p className="text-sm font-bold text-amber-800 mb-3">이 크루는 휴지통에 있습니다. 사이트와 목록에 보이지 않습니다.</p>
-                        {writeReady && <RestoreButton documentId={data._id} />}
+                        {writeReady && <RestoreButton documentId={data._id} restore={restoreCrew} />}
                     </div>
                 ) : (
                     <DeleteCrewButton documentId={data._id} memberName={data.koName || data.name} />

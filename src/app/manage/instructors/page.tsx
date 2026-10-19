@@ -6,8 +6,9 @@ import { urlFor } from "@/sanity/lib/image";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
-import ReorderButtons from "./ReorderButtons";
-import RestoreButton from "./RestoreButton";
+import ReorderButtons from "../_components/ReorderButtons";
+import RestoreButton from "../_components/RestoreButton";
+import { moveInstructorOrder, restoreInstructor } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
 export const metadata = { title: "강사 관리" };
@@ -122,6 +123,7 @@ export default async function InstructorListPage({
                                             documentId={instructor._id}
                                             disableUp={index === 0}
                                             disableDown={index === instructors.length - 1}
+                                            move={moveInstructorOrder}
                                         />
                                     </div>
                                 )}
@@ -161,7 +163,7 @@ export default async function InstructorListPage({
                                 </Link>
                                 {isTrashView && writeReady && (
                                     <div className="flex items-center pr-3">
-                                        <RestoreButton documentId={instructor._id} />
+                                        <RestoreButton documentId={instructor._id} restore={restoreInstructor} />
                                     </div>
                                 )}
                             </div>

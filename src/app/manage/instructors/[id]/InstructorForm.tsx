@@ -4,7 +4,8 @@ import { useActionState, useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveInstructor, createInstructor, type SaveResult, type FieldError } from "../actions";
-import { setFormDirty } from "@/lib/formDirtyGuard";
+import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../../_components/FormParts";
+import { useGuardedForm } from "../../_components/useGuardedForm";
 
 export type InstructorFormData = {
     _id: string;
@@ -72,66 +73,6 @@ function validateImageFile(file: File): string | null {
 }
 
 // ── 재사용 UI 조각 ────────────────────────────────────────────────────────────
-
-function Section({
-    step,
-    title,
-    hint,
-    children,
-}: {
-    step: number;
-    title: string;
-    hint?: string;
-    children: React.ReactNode;
-}) {
-    return (
-        <section className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6">
-            <div className="mb-5">
-                <div className="flex items-center gap-2.5 mb-1.5">
-                    <span
-                        aria-hidden="true"
-                        className="w-6 h-6 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center shrink-0"
-                    >
-                        {step}
-                    </span>
-                    <h2 className="text-lg font-black tracking-tight">{title}</h2>
-                </div>
-                {hint && <p className="text-sm text-neutral-600 leading-relaxed pl-8.5">{hint}</p>}
-            </div>
-            <div className="space-y-5">{children}</div>
-        </section>
-    );
-}
-
-function Field({
-    label,
-    hint,
-    required,
-    children,
-    htmlFor,
-}: {
-    label: string;
-    hint?: string;
-    required?: boolean;
-    children: React.ReactNode;
-    htmlFor: string;
-}) {
-    return (
-        <div>
-            <label htmlFor={htmlFor} className="block text-sm font-bold mb-1.5">
-                {label}
-                {required && <span className="text-red-600 ml-1">*</span>}
-            </label>
-            {hint && <p className="text-sm text-neutral-600 mb-2 leading-relaxed">{hint}</p>}
-            {children}
-        </div>
-    );
-}
-
-const inputClass =
-    "w-full h-12 px-4 rounded-xl border border-neutral-300 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
-const textareaClass =
-    "w-full px-4 py-3 rounded-xl border border-neutral-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
 
 /** 사진 업로드 + 미리보기. onPreviewUrl로 부모(상단 결과 미리보기)에도 알려준다. */
 function PhotoInput({
@@ -354,49 +295,6 @@ function PopupPreview({
     );
 }
 
-/** 저장 실패 시 상단에 뜨는 오류 요약. 각 항목을 누르면 해당 입력칸으로 이동한다. */
-function ErrorSummary({
-    fields,
-    summaryRef,
-}: {
-    fields: FieldError[];
-    summaryRef: React.RefObject<HTMLDivElement | null>;
-}) {
-    return (
-        <div
-            ref={summaryRef}
-            tabIndex={-1}
-            role="alert"
-            className="rounded-xl border-2 border-red-400 bg-red-50 p-4 focus:outline-none"
-        >
-            <p className="text-sm font-bold text-red-700 mb-2">
-                다음 항목을 확인해 주세요 ({fields.length}개)
-            </p>
-            <ul className="space-y-1.5">
-                {fields.map((f) => (
-                    <li key={f.id}>
-                        <a
-                            href={`#${f.id}`}
-                            className="text-sm font-semibold text-red-700 underline underline-offset-4 hover:text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 rounded-sm"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                const el = document.getElementById(f.id);
-                                el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                                // 사진 입력은 화면에 안 보이게 숨겨둔 요소라 포커스 링이 안 보인다.
-                                // 그런 경우는 스크롤만 하고, 눈에 보이는 입력칸만 포커스한다.
-                                const isHiddenFileInput = el instanceof HTMLInputElement && el.type === "file";
-                                if (!isHiddenFileInput) el?.focus({ preventScroll: true });
-                            }}
-                        >
-                            {f.label}
-                        </a>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
-
 function LivePreview({
     preview,
     thumbUrl,
@@ -502,65 +400,8 @@ function InstructorFormInner({
         [],
     );
 
-    // ── 저장하지 않고 나가면 잃어버릴 내용이 있는지 추적 ──────────────────────────
-    const [isDirty, setIsDirty] = useState(false);
-    const isDirtyRef = useRef(false);
-    useEffect(() => {
-        isDirtyRef.current = isDirty;
-        // ManageNav(← 관리 허브 / 로그아웃)도 같은 dirty 상태를 알아야 실수로
-        // 미저장 변경사항을 잃어버리지 않는다 — 공유 저장소에 동기화한다.
-        setFormDirty(isDirty);
-    }, [isDirty]);
-    // 페이지를 완전히 벗어날 때(언마운트) 공유 dirty 플래그를 반드시 리셋한다.
-    // 클라이언트 사이드 라우팅에서는 모듈이 그대로 남아있으므로, 안 지우면
-    // 다음 화면에서도 "저장 안 한 내용이 있다"고 잘못 경고하게 된다.
-    useEffect(() => () => setFormDirty(false), []);
-    const markDirty = () => setIsDirty(true);
-
-    // 저장이 성공하면(수정 모드는 페이지 이동 없이 이 화면에 남아있으므로)
-    // 방금 저장한 내용을 다시 "안 저장한 상태"로 취급하지 않도록 리셋한다.
-    // useEffect 대신 렌더 중 이전 state와 비교하는 방식 — React가 권장하는
-    // "파생 state를 effect 없이 리셋하는" 패턴이다.
-    const [lastHandledState, setLastHandledState] = useState(state);
-    if (state !== lastHandledState) {
-        setLastHandledState(state);
-        if (state?.ok) setIsDirty(false);
-    }
-
-    // 저장 성공 후 "변경 버리기"가 방금 저장한 값이 아니라 페이지 최초 로딩
-    // 시점의 옛 값으로 되돌아가지 않도록, 서버 데이터를 다시 받아온다
-    // (수정 페이지는 force-dynamic이라 매번 최신 문서를 반환한다).
-    useEffect(() => {
-        if (state?.ok) router.refresh();
-    }, [state, router]);
-
-    // 탭 닫기/새로고침 시 브라우저 기본 경고. ref로 최신값을 읽으므로
-    // 리스너를 매번 다시 등록하지 않아도 된다.
-    useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (!isDirtyRef.current) return;
-            e.preventDefault();
-            e.returnValue = "";
-        };
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-    }, []);
-
-    const handleListLinkClick = (e: React.MouseEvent) => {
-        if (!isDirty) return;
-        const confirmed = window.confirm("저장하지 않은 내용이 있어요. 그래도 나가시겠어요?");
-        if (!confirmed) e.preventDefault();
-    };
-
-    // 저장 실패로 필드별 오류가 새로 생기면 상단 오류 요약으로 포커스를 옮긴다.
-    // (setState가 아닌 DOM 포커스 이동이라 effect 안에서 호출해도 안전하다)
-    const errorSummaryRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (state && !state.ok && state.fields && state.fields.length > 0) {
-            errorSummaryRef.current?.focus();
-            errorSummaryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    }, [state]);
+    // 미저장 변경사항 추적·탭 닫기 경고·저장 성공 처리·오류 요약 포커스는 공통 훅이 담당한다
+    const { isDirty, markDirty, summaryRef: errorSummaryRef, handleListClick: handleListLinkClick } = useGuardedForm(state);
 
     return (
         <form action={formAction} onChange={markDirty} className="space-y-5 pb-32">

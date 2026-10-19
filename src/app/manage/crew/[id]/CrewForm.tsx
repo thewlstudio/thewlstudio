@@ -4,7 +4,8 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveCrew, createCrew, type SaveResult, type FieldError } from "../actions";
-import { setFormDirty } from "@/lib/formDirtyGuard";
+import { Section, Field, ErrorSummary, inputClass } from "../../_components/FormParts";
+import { useGuardedForm } from "../../_components/useGuardedForm";
 import { CREW_ICON_PRESETS } from "@/lib/crew-icons";
 import { toState } from "@/lib/crew-sections";
 import CrewSectionsEditor from "./CrewSectionsEditor";
@@ -26,66 +27,6 @@ export type CrewFormData = {
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_LINKS = 10;
-const inputClass =
-    "w-full h-12 px-4 rounded-xl border border-neutral-300 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
-
-function Section({ step, title, hint, children }: { step: number; title: string; hint?: string; children: React.ReactNode }) {
-    return (
-        <section className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6">
-            <div className="mb-5">
-                <div className="flex items-center gap-2.5 mb-1.5">
-                    <span aria-hidden="true" className="w-6 h-6 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center shrink-0">
-                        {step}
-                    </span>
-                    <h2 className="text-lg font-black tracking-tight">{title}</h2>
-                </div>
-                {hint && <p className="text-sm text-neutral-600 leading-relaxed">{hint}</p>}
-            </div>
-            <div className="space-y-5">{children}</div>
-        </section>
-    );
-}
-
-function Field({ label, hint, required, htmlFor, children }: { label: string; hint?: string; required?: boolean; htmlFor: string; children: React.ReactNode }) {
-    return (
-        <div>
-            <label htmlFor={htmlFor} className="block text-sm font-bold mb-1.5">
-                {label}
-                {required && <span className="text-red-600 ml-1">*</span>}
-            </label>
-            {hint && <p className="text-sm text-neutral-600 mb-2 leading-relaxed">{hint}</p>}
-            {children}
-        </div>
-    );
-}
-
-function ErrorSummary({ fields, summaryRef }: { fields: FieldError[]; summaryRef: React.RefObject<HTMLDivElement | null> }) {
-    return (
-        <div ref={summaryRef} tabIndex={-1} role="alert" className="rounded-xl border-2 border-red-400 bg-red-50 p-4 focus:outline-none">
-            <p className="text-sm font-bold text-red-700 mb-2">다음 항목을 확인해 주세요 ({fields.length}개)</p>
-            <ul className="space-y-1.5">
-                {fields.map((f) => (
-                    <li key={f.id}>
-                        <a
-                            href={`#${f.id}`}
-                            className="text-sm font-semibold text-red-700 underline underline-offset-4 hover:text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 rounded-sm"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                const el = document.getElementById(f.id);
-                                el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                                const hiddenFile = el instanceof HTMLInputElement && el.type === "file";
-                                if (!hiddenFile) el?.focus({ preventScroll: true });
-                            }}
-                        >
-                            {f.label}
-                        </a>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
-
 function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "create" | "edit"; onDiscard: () => void }) {
     const isCreate = mode === "create";
     const router = useRouter();
@@ -99,48 +40,8 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
     const keySeq = useRef(0);
     const shownPhoto = photoPreview ?? data.imageUrl;
 
-    // ── 미저장 변경사항 추적 (강사 화면과 동일한 방식, ManageNav와 공유) ──
-    const [isDirty, setIsDirty] = useState(false);
-    const isDirtyRef = useRef(false);
-    useEffect(() => {
-        isDirtyRef.current = isDirty;
-        setFormDirty(isDirty);
-    }, [isDirty]);
-    useEffect(() => () => setFormDirty(false), []);
-    const markDirty = () => setIsDirty(true);
-
-    const [lastHandled, setLastHandled] = useState(state);
-    if (state !== lastHandled) {
-        setLastHandled(state);
-        if (state?.ok) setIsDirty(false);
-    }
-    // 저장 성공 후 "변경 버리기"가 최초 로딩값이 아니라 방금 저장한 값으로 돌아가도록 서버 데이터를 다시 받는다
-    useEffect(() => {
-        if (state?.ok) router.refresh();
-    }, [state, router]);
-
-    useEffect(() => {
-        const onBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (!isDirtyRef.current) return;
-            e.preventDefault();
-            e.returnValue = "";
-        };
-        window.addEventListener("beforeunload", onBeforeUnload);
-        return () => window.removeEventListener("beforeunload", onBeforeUnload);
-    }, []);
-
-    const summaryRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (state && !state.ok && state.fields && state.fields.length > 0) {
-            summaryRef.current?.focus();
-            summaryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    }, [state]);
-
-    const handleListClick = (e: React.MouseEvent) => {
-        if (!isDirty) return;
-        if (!window.confirm("저장하지 않은 내용이 있어요. 그래도 나가시겠어요?")) e.preventDefault();
-    };
+    // 미저장 변경사항 추적·탭 닫기 경고·저장 성공 처리·오류 요약 포커스는 공통 훅이 담당한다
+    const { isDirty, markDirty, summaryRef, handleListClick: handleListClick } = useGuardedForm(state);
 
     const updateRow = (i: number, patch: Partial<CrewLinkRow>) => {
         setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));

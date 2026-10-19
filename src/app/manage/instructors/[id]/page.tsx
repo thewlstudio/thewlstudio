@@ -5,7 +5,8 @@ import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import InstructorForm, { type InstructorFormData } from "./InstructorForm";
 import DeleteInstructorButton from "./DeleteInstructorButton";
 import DuplicateInstructorButton from "./DuplicateInstructorButton";
-import RestoreButton from "../RestoreButton";
+import RestoreButton from "../../_components/RestoreButton";
+import { restoreInstructor } from "../actions";
 import ManageNav from "../../ManageNav";
 
 export const metadata = { title: "강사 수정" };
@@ -95,7 +96,7 @@ export default async function EditInstructorPage({
                         <p className="text-sm font-bold text-amber-800 mb-3">
                             이 강사는 휴지통에 있습니다. 사이트와 목록에 보이지 않습니다.
                         </p>
-                        {writeReady && <RestoreButton documentId={data._id} />}
+                        {writeReady && <RestoreButton documentId={data._id} restore={restoreInstructor} />}
                     </div>
                 ) : (
                     <div className="flex items-center gap-4">

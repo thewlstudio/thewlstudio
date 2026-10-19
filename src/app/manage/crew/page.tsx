@@ -6,8 +6,9 @@ import { urlFor } from "@/sanity/lib/image";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
-import ReorderButtons from "./ReorderButtons";
-import RestoreButton from "./RestoreButton";
+import ReorderButtons from "../_components/ReorderButtons";
+import RestoreButton from "../_components/RestoreButton";
+import { moveCrewOrder, restoreCrew } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
 export const metadata = { title: "크루 관리" };
@@ -79,7 +80,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                             <div className={`flex items-stretch gap-3 bg-white rounded-2xl border border-neutral-200 hover:border-black hover:shadow-sm transition-all ${hidden ? "opacity-50" : ""}`}>
                                 {!isTrashView && writeReady && (
                                     <div className="flex items-center pl-2">
-                                        <ReorderButtons documentId={m._id} disableUp={index === 0} disableDown={index === members.length - 1} />
+                                        <ReorderButtons documentId={m._id} disableUp={index === 0} disableDown={index === members.length - 1} move={moveCrewOrder} />
                                     </div>
                                 )}
                                 <Link href={`/manage/crew/${encodeURIComponent(m._id)}`} className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
@@ -97,7 +98,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                                 </Link>
                                 {isTrashView && writeReady && (
                                     <div className="flex items-center pr-3">
-                                        <RestoreButton documentId={m._id} />
+                                        <RestoreButton documentId={m._id} restore={restoreCrew} />
                                     </div>
                                 )}
                             </div>
