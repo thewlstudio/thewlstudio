@@ -65,6 +65,16 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                 </div>
             )}
 
+            {!isTrashView && (
+                <Link href="/manage/studio/info" className="flex items-center justify-between gap-4 p-4 mt-3 mb-4 rounded-2xl border border-neutral-200 bg-white hover:border-black hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                    <div className="min-w-0">
+                        <p className="font-bold text-base">서비스·장비·멤버십·이용 안내</p>
+                        <p className="text-sm text-neutral-500">보컬 레코딩 가격, 장비 목록, 회원권 가격, 주차·이용 수칙</p>
+                    </div>
+                    <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">›</span>
+                </Link>
+            )}
+
             {!isTrashView && trashedCount > 0 && (
                 <Link href="/manage/studio?view=trash" className="inline-block mb-4 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4">
                     휴지통 보기 ({trashedCount})
@@ -115,7 +125,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
             </ul>
 
             <p className="text-sm text-neutral-400 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
-                스튜디오 페이지의 서비스 가격·장비·멤버십·이용 안내 문구는 아직 이 화면에서 바꿀 수 없습니다. 연습실·로비 카드만 관리됩니다. 로비는 한 곳만 화면에 나옵니다.
+                위 목록은 연습실·로비 카드예요. 서비스 가격·장비·멤버십·이용 안내는 위의 &quot;서비스·장비·멤버십·이용 안내&quot;에서 고칩니다. 로비는 한 곳만 화면에 나옵니다.
             </p>
         </main>
     );

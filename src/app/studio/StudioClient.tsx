@@ -7,6 +7,22 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import type { StudioSpaceData } from "@/lib/studio-spaces";
+import type { StudioInfo } from "@/lib/studio-info";
+
+/** 문자열의 줄바꿈("\n")을 화면 줄바꿈으로 바꾼다. always가 아니면 데스크톱에서만 줄이 바뀐다. */
+function Lines({ text, always = false }: { text: string; always?: boolean }) {
+    const parts = text.split("\n");
+    return (
+        <>
+            {parts.map((part, i) => (
+                <span key={i}>
+                    {part}
+                    {i < parts.length - 1 && (always ? <br /> : <>{" "}<br className="hidden md:block" /></>)}
+                </span>
+            ))}
+        </>
+    );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RoomCarousel — single-image carousel with ‹ › navigation
@@ -185,7 +201,7 @@ function RoomBlock({ room }: { room: StudioSpaceData }) {
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[]; lobby: StudioSpaceData | null }) {
+export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpaceData[]; lobby: StudioSpaceData | null; info: StudioInfo }) {
     const { naverReservationUrl, blogUrl } = useSiteSettings();
     return (
         <main id="main-content" className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
@@ -221,40 +237,32 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
             {/* ── Services ── */}
             <section className="py-32 bg-black border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-8">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8 }}
-                        className="flex flex-col border-l border-white/20 pl-8"
-                    >
-                        <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">VOCAL RECORDING</h2>
-                        <h3 className="text-2xl font-light text-neutral-400 mb-8 font-mono">
-                            100,000 KRW <span className="text-sm">/ 2 Hours</span>
-                        </h3>
-                        <ul className="text-neutral-400 space-y-4 text-sm md:text-base font-light leading-relaxed">
-                            <li>• 최상의 컨디션을 위한 쾌적한 레코딩 환경</li>
-                            <li>• 최고급 컨덴서 마이크 및 아웃보드 사용</li>
-                            <li>• 디렉팅 및 기초적인 튠 포함</li>
-                        </ul>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="flex flex-col border-l border-white/20 pl-8"
-                    >
-                        <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">AUDIO OUTSOURCING</h2>
-                        <h3 className="text-2xl font-light text-neutral-400 mb-8 font-mono">Contact for Quote</h3>
-                        <ul className="text-neutral-400 space-y-4 text-sm md:text-base font-light leading-relaxed">
-                            <li>• 보컬 에디팅 (튠, 타이밍 박자 보정)</li>
-                            <li>• 믹싱 (Mixing)</li>
-                            <li>• 마스터링 (Mastering)</li>
-                            <li>• 팟캐스트 및 유튜브 음향 보정</li>
-                        </ul>
-                    </motion.div>
+                    {info.services.map((svc, i) => (
+                        <motion.div
+                            key={`${svc.title}-${i}`}
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8, delay: i * 0.2 }}
+                            className="flex flex-col border-l border-white/20 pl-8"
+                        >
+                            <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">{svc.title}</h2>
+                            <h3 className={`text-2xl font-light text-neutral-400 mb-8 font-mono`}>
+                                {svc.price}
+                                {svc.priceUnit && (
+                                    <>
+                                        {" "}
+                                        <span className="text-sm">{svc.priceUnit}</span>
+                                    </>
+                                )}
+                            </h3>
+                            <ul className="text-neutral-400 space-y-4 text-sm md:text-base font-light leading-relaxed">
+                                {svc.points.map((pt, j) => (
+                                    <li key={j}>{`• ${pt}`}</li>
+                                ))}
+                            </ul>
+                        </motion.div>
+                    ))}
                 </div>
             </section>
 
@@ -271,37 +279,21 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                     </motion.div>
 
                     <div className="space-y-12 md:space-y-16 text-sm md:text-base">
-                        <div className="grid grid-cols-1 md:grid-cols-4 border-b border-black/10 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 mb-4 md:mb-0">
-                                Microphones
-                            </h3>
-                            <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
-                                <p>Neumann U87 Ai</p>
-                                <p>AKG C414 XLII</p>
-                                <p>Shure SM7B</p>
+                        {info.equipment.map((group, i) => (
+                            <div
+                                key={`${group.title}-${i}`}
+                                className={`grid grid-cols-1 md:grid-cols-4 pb-8 md:pb-12 items-start ${i < info.equipment.length - 1 ? "border-b border-black/10" : ""}`}
+                            >
+                                <h3 className="font-bold uppercase tracking-widest text-neutral-500 mb-4 md:mb-0">
+                                    <Lines text={group.title} />
+                                </h3>
+                                <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
+                                    {group.items.map((item, j) => (
+                                        <p key={j}>{item}</p>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-4 border-b border-black/10 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 mb-4 md:mb-0">
-                                Outboard &<br className="hidden md:block" /> Interface
-                            </h3>
-                            <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
-                                <p>Universal Audio Apollo x8</p>
-                                <p>Rupert Neve Designs Shelford Channel</p>
-                                <p>Tube-Tech CL 1B</p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-4 pb-8 md:pb-12 items-start">
-                            <h3 className="font-bold uppercase tracking-widest text-neutral-500 mb-4 md:mb-0">
-                                Monitoring
-                            </h3>
-                            <div className="col-span-1 md:col-span-3 space-y-3 font-medium text-base md:text-lg">
-                                <p>Focal Trio6 Be</p>
-                                <p>Yamaha NS-10M Studio</p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -323,11 +315,7 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                     </motion.div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center">
-                        {[
-                            { num: "1", label: "1개월 회원권", sub: "1 Month Pass", price: "40,000" },
-                            { num: "3", label: "3개월 회원권", sub: "3 Months Pass", price: "110,000" },
-                            { num: "5", label: "5개월 회원권", sub: "5 Months Pass", price: "160,000" },
-                        ].map((item, i) => (
+                        {info.memberships.map((item, i) => (
                             <motion.div
                                 key={i}
                                 initial={{ opacity: 0, y: 30 }}
@@ -361,9 +349,7 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                         className="mt-20 text-center"
                     >
                         <p className="text-neutral-400 font-medium text-sm md:text-base leading-relaxed mb-8 max-w-xl mx-auto break-keep">
-                            쿠폰은 구입 후 한 달간 사용 가능하며,
-                            <br className="hidden md:block" />
-                            네이버에서 구입 후 즉시 회원가로 예약(사용) 가능하십니다.
+                            <Lines text={info.membershipNote} />
                         </p>
                         <a
                             href={naverReservationUrl}
@@ -376,7 +362,6 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                     </motion.div>
                 </div>
             </section>
-
             {/* ── Spaces ── */}
             <section id="spaces" className="py-32 bg-neutral-50 text-black border-t border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12">
@@ -516,9 +501,7 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                             GUIDELINES & AMENITIES
                         </h2>
                         <p className="mt-8 text-neutral-600 md:text-lg font-medium leading-relaxed break-keep max-w-4xl">
-                            음악과 예술을 사랑하는 사람으로써 연습실을 사용하시면서 좋은 점과 부족한 점들을 말씀해주시면
-                            보완을 해드릴 수 있는 선에서 최선을 다해 보완해드리겠습니다.{" "}
-                            <br className="hidden md:block" />이 공간에서 좋은 연습이 되시길 바랍니다.
+                            <Lines text={info.guidelinesIntro} />
                         </p>
                     </motion.div>
 
@@ -534,16 +517,15 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                                 Parking
                             </h3>
                             <div className="font-medium space-y-2">
-                                <p className="text-[#b86060] font-bold">주차가 불가합니다.</p>
+                                <p className="text-[#b86060] font-bold">{info.parkingWarning}</p>
                                 <p className="text-sm text-neutral-600">
-                                    중곡역 4번출구 앞 <br />
-                                    한전부지 임시 공영주차장 3분거리
+                                    <Lines text={info.parkingDetail} always />
                                 </p>
                                 <p className="text-neutral-500 font-mono text-xs pt-1 flex items-center gap-2">
                                     <span className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-500 font-sans tracking-widest leading-none">
-                                        요금
+                                        {info.parkingFeeLabel}
                                     </span>
-                                    <span>10분 400원 / 1시간 2,400원</span>
+                                    <span>{info.parkingFee}</span>
                                 </p>
                             </div>
                         </div>
@@ -553,8 +535,9 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                                 Amenities
                             </h3>
                             <div className="font-medium space-y-2 text-neutral-600">
-                                <p>냉·온·얼음 정수기</p>
-                                <p>델리코 반자동 커피머신</p>
+                                {info.amenities.map((a, i) => (
+                                    <p key={i}>{a}</p>
+                                ))}
                             </div>
                         </div>
 
@@ -566,17 +549,17 @@ export default function StudioClient({ rooms, lobby }: { rooms: StudioSpaceData[
                                 <div>
                                     <p className="text-[#b86060] text-xs font-bold mb-1 flex items-center">
                                         <span className="w-1.5 h-1.5 rounded-full bg-[#b86060] mr-1.5 animate-pulse" />
-                                        CCTV 24시간 촬영 중
+                                        {info.cctvTitle}
                                     </p>
                                     <p className="text-neutral-500 text-[11px] md:text-xs break-keep leading-relaxed">
-                                        고객님들의 안전과 보호를 위해 화장실 통로, 로비, 계단 촬영 중
+                                        {info.cctvDetail}
                                     </p>
                                 </div>
                                 <div className="border-t border-dashed border-black/10 pt-4">
                                     <p className="text-xs break-keep text-neutral-600">
-                                        연습실 기자재를 내 물건처럼 사용 부탁드립니다.
+                                        {info.dutyText}
                                     </p>
-                                    <p className="text-xs text-[#b86060] mt-1.5 font-bold">파손시 배상 요청드립니다.</p>
+                                    <p className="text-xs text-[#b86060] mt-1.5 font-bold">{info.dutyWarning}</p>
                                 </div>
                             </div>
                         </div>

@@ -1,5 +1,6 @@
 import { sanityFetch } from "@/sanity/lib/client";
 import { FALLBACK_LOBBY, FALLBACK_ROOMS, type StudioSpaceData } from "@/lib/studio-spaces";
+import { FALLBACK_INFO, mergeInfo, type StudioInfo } from "@/lib/studio-info";
 import StudioClient from "./StudioClient";
 
 // 공개 공간(연습실·로비)만, 관리 화면에서 정한 순서대로. 휴지통·비공개는 제외한다.
@@ -12,6 +13,14 @@ const spacesQuery = `*[_type == "studioSpace" && isActive != false && !(trashed 
     "features": coalesce(features, []),
     "notes": coalesce(notes, []),
     "images": coalesce(images[].asset->url, [])
+}`;
+
+const infoQuery = `*[_type == "studioInfo" && _id == "studioInfo"][0]{
+    services[]{ title, price, priceUnit, points },
+    equipment[]{ title, items },
+    memberships[]{ num, label, sub, price },
+    membershipNote, guidelinesIntro, parkingWarning, parkingDetail, parkingFeeLabel, parkingFee,
+    amenities, cctvTitle, cctvDetail, dutyText, dutyWarning
 }`;
 
 type SpaceRow = StudioSpaceData & { kind?: "room" | "lobby" };
@@ -29,5 +38,14 @@ export default async function StudioPage() {
         rooms = FALLBACK_ROOMS;
         lobby = FALLBACK_LOBBY;
     }
-    return <StudioClient rooms={rooms} lobby={lobby} />;
+
+    // 서비스·장비·멤버십·이용 안내: 문서가 없거나 조회에 실패하면 기존 고정값으로 대체한다
+    let info: StudioInfo;
+    try {
+        info = mergeInfo(await sanityFetch<Record<string, unknown> | null>({ query: infoQuery, tags: ["studioInfo"] }));
+    } catch (err) {
+        console.error("[studio] studioInfo 조회 실패 — 기본값으로 대체", err);
+        info = FALLBACK_INFO;
+    }
+    return <StudioClient rooms={rooms} lobby={lobby} info={info} />;
 }
