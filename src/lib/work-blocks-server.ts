@@ -103,6 +103,16 @@ export async function sanitizeBlocks(
                 out.push({ _key, _type: type, url });
                 break;
             }
+            case "audioBlock": {
+                // 파일 업로드는 /admin 전용 — 기존 문서의 같은 _key 블록이 있어야 하고, 파일은 그대로 유지한다
+                const prev = existing.find((e) => e._key === p._key && e._type === "audioBlock");
+                if (!prev) break;
+                const title = body(p.title, LIMITS.line).trim();
+                const artist = body(p.artist, LIMITS.line).trim();
+                if (!title || !artist) return { error: "오디오 블록은 제목과 아티스트가 모두 필요해요." };
+                out.push({ ...prev, title, artist });
+                break;
+            }
             case "creditGridBlock": {
                 const sections: unknown[] = [];
                 for (const sec of list(p.sections, LIMITS.items).filter(isObj)) {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import {
     BLOCK_META,
-    EDITABLE_TYPES,
+    ADDABLE_TYPES,
     PRESERVED_LABELS,
     emptyBlock,
     emptyCreditSection,
@@ -212,6 +212,19 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
                     <p className="text-sm text-neutral-500 leading-relaxed">유튜브 영상 주소를 붙여넣으세요. 주소가 올바르지 않으면 저장되지 않습니다.</p>
                 </div>
             );
+        case "audioBlock":
+            return (
+                <div className="space-y-2">
+                    {b.audioUrl ? (
+                        <audio controls preload="none" src={b.audioUrl} className="w-full" aria-label="오디오 미리 듣기" />
+                    ) : (
+                        <p className="text-sm text-red-600">오디오 파일을 찾을 수 없어요.</p>
+                    )}
+                    <input aria-label="오디오 제목" placeholder="곡 제목" value={b.title} onChange={(e) => onChange({ ...b, title: e.target.value })} className={input} />
+                    <input aria-label="오디오 아티스트" placeholder="아티스트" value={b.artist} onChange={(e) => onChange({ ...b, artist: e.target.value })} className={input} />
+                    <p className="text-sm text-neutral-500 leading-relaxed">제목·아티스트만 고칠 수 있어요. 오디오 파일을 새로 올리거나 바꾸려면 /admin에서 해 주세요.</p>
+                </div>
+            );
         case "preserved":
             return (
                 <p className="text-sm text-neutral-600 bg-neutral-100 border border-neutral-200 rounded-lg p-3 leading-relaxed">
@@ -291,8 +304,9 @@ export default function WorkBlocksEditor({ initial, onDirty }: { initial: BlockS
 
             <div>
                 <p className="text-sm font-bold mb-2">블록 추가</p>
+                <p className="text-sm text-neutral-500 mb-2">오디오 블록은 파일 업로드가 필요해서 /admin에서 추가해 주세요.</p>
                 <div className="flex flex-wrap gap-2">
-                    {EDITABLE_TYPES.map((t: EditableType) => (
+                    {ADDABLE_TYPES.map((t: EditableType) => (
                         <button key={t} type="button" onClick={() => apply([...blocks, emptyBlock(t)])} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             + {BLOCK_META[t].label}
                         </button>

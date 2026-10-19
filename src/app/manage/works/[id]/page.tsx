@@ -17,7 +17,8 @@ const detailQuery = `*[_type == "work" && _id == $id][0]{
     "imageUrl": coverImage.asset->url,
     contentBlocks[]{
         ...,
-        _type == "imageBlock" => { ..., "imageUrl": image.asset->url }
+        _type == "imageBlock" => { ..., "imageUrl": image.asset->url },
+        _type == "audioBlock" => { ..., "audioUrl": audioFile.asset->url }
     }
 }`;
 
