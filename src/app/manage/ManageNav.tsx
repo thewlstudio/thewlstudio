@@ -29,7 +29,7 @@ export default function ManageNav({
                         onClick={(e) => {
                             if (!confirmLeaveIfDirty()) e.preventDefault();
                         }}
-                        className="inline-block mb-2 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
+                        className="inline-block mb-1 py-2 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
                     >
                         ← 관리 허브
                     </Link>
@@ -47,7 +47,7 @@ export default function ManageNav({
             >
                 <button
                     type="submit"
-                    className="text-sm font-semibold text-neutral-500 hover:text-black transition-colors underline underline-offset-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
+                    className="text-sm font-semibold text-neutral-500 hover:text-black transition-colors underline underline-offset-4 min-h-11 px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
                 >
                     로그아웃
                 </button>

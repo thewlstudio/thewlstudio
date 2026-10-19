@@ -23,7 +23,7 @@ const input =
 const area =
     "w-full px-3 py-2 rounded-lg border border-neutral-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
 const smallBtn =
-    "w-9 h-9 flex items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-black disabled:opacity-20 disabled:hover:bg-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
+    "w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-black disabled:opacity-20 disabled:hover:bg-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const dashedBtn =
     "h-10 px-4 rounded-lg border-2 border-dashed border-neutral-400 text-sm font-bold hover:border-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const dangerBtn =
@@ -79,8 +79,8 @@ function CreditsEditor({ sections, onChange }: { sections: CreditSection[]; onCh
         <div className="space-y-4">
             {sections.map((sec, si) => (
                 <div key={sec.key} className="rounded-lg border border-neutral-300 p-3 space-y-3">
-                    <div className="flex items-center gap-2">
-                        <input aria-label={`크레딧 묶음 ${si + 1} 제목`} placeholder="묶음 제목 (예: Staff Credits)" value={sec.title} onChange={(e) => upd(si, { title: e.target.value })} className={input} />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <input aria-label={`크레딧 묶음 ${si + 1} 제목`} placeholder="묶음 제목 (예: Staff Credits)" value={sec.title} onChange={(e) => upd(si, { title: e.target.value })} className={`${input} basis-full sm:basis-0 sm:flex-1`} />
                         <button type="button" aria-label={`크레딧 묶음 ${si + 1} 위로`} disabled={si === 0} onClick={() => onChange(move(sections, si, si - 1))} className={smallBtn}>▲</button>
                         <button type="button" aria-label={`크레딧 묶음 ${si + 1} 아래로`} disabled={si === sections.length - 1} onClick={() => onChange(move(sections, si, si + 1))} className={smallBtn}>▼</button>
                         <button type="button" onClick={() => { if (window.confirm("이 묶음과 안의 크레딧을 모두 지울까요?")) onChange(sections.filter((_, i) => i !== si)); }} className={dangerBtn}>묶음 지우기</button>

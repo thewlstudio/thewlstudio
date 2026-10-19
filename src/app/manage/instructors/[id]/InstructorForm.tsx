@@ -734,7 +734,7 @@ function InstructorFormInner({
                     <Link
                         href="/manage/instructors"
                         onClick={handleListLinkClick}
-                        className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors"
+                        className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                     >
                         목록
                     </Link>

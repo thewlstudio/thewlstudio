@@ -71,7 +71,7 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">저장하면 홈페이지에 바로 반영됩니다.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors">
+                    <Link href="/manage" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         허브
                     </Link>
                     {isDirty && (

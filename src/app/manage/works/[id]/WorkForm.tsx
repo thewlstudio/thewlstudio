@@ -155,7 +155,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
             {!isCreate && (
                 <Section step={4} title="상세 페이지 내용" hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
                     <div className="flex justify-end -mt-2">
-                        <a href={`/works/${data.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4">
+                        <a href={`/works/${data.slug}`} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             진짜 화면 보기 ↗ (저장한 내용 기준)
                         </a>
                     </div>
@@ -167,7 +167,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영됩니다.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage/works" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors">
+                    <Link href="/manage/works" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
                     </Link>
                     {isDirty && (

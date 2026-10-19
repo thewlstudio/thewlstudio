@@ -29,7 +29,7 @@ const MAX_LINES = 50;
 const MAX_IMAGES = 20;
 
 const smallBtn =
-    "w-9 h-9 flex items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-black disabled:opacity-20 disabled:hover:bg-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
+    "w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-black disabled:opacity-20 disabled:hover:bg-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 const dangerBtn =
     "h-9 px-2 shrink-0 text-sm font-semibold text-red-600 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-red-600 rounded-sm";
 const dashedBtn =
@@ -92,7 +92,7 @@ function ImageItem({ row, index, count, onMove, onRemove, onPicked }: { row: Ima
                 )}
             </div>
             <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-x-2">
                     <p className="text-sm font-bold">사진 {index + 1}</p>
                     <div className="flex items-center">
                         <button type="button" aria-label={`사진 ${index + 1} 앞으로`} disabled={index === 0} onClick={() => onMove(index - 1)} className={smallBtn}>▲</button>
@@ -312,7 +312,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영됩니다.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage/studio" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors">
+                    <Link href="/manage/studio" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
                     </Link>
                     {isDirty && (

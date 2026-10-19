@@ -17,7 +17,7 @@ import {
 const input =
     "w-full h-11 px-3 rounded-lg border border-neutral-300 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
 const smallBtn =
-    "w-9 h-9 flex items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-black disabled:opacity-20 disabled:hover:bg-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
+    "w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-black disabled:opacity-20 disabled:hover:bg-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
 
 function move<T>(list: T[], from: number, to: number): T[] {
     if (to < 0 || to >= list.length || from === to) return list;

@@ -46,7 +46,7 @@ export default function DeleteWorkButton({
                 ref={openButtonRef}
                 type="button"
                 onClick={() => setConfirming(true)}
-                className="text-sm font-semibold text-red-600 hover:text-red-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 rounded-sm"
+                className="py-2 text-sm font-semibold text-red-600 hover:text-red-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 rounded-sm"
             >
                 이 작품 삭제하기
             </button>
