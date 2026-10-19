@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ExpandControls, Summary, ToggleButton, snippet, useOpenKeys } from "../../_components/Collapse";
 import {
     KNOWN_TYPES,
     SECTION_META,
@@ -155,9 +156,37 @@ function SectionBody({ st, onChange, onMigrate }: { st: SectionState; onChange: 
     }
 }
 
-export default function CrewSectionsEditor({ initial, onDirty }: { initial: SectionState[]; onDirty: () => void }) {
+/** 접힌 카드에 보이는 한 줄 요약 */
+function summaryOf(st: SectionState): string {
+    switch (st.type) {
+        case "aboutSection":
+            return st.text.trim() ? snippet(st.text, 44) : "비어 있음";
+        case "careerSection":
+            return `경력 ${st.items.length}건${st.items[0]?.title ? ` (${snippet(st.items[0].title, 24)} …)` : ""}`;
+        case "educationSection":
+            return `학력 ${st.items.length}건${st.items[0]?.title ? ` (${snippet(st.items[0].title, 24)} …)` : ""}`;
+        case "certificationsSection":
+            return `자격증 ${st.items.length}건${st.items[0]?.title ? ` (${snippet(st.items[0].title, 24)} …)` : ""}`;
+        case "awardsAndActivitiesSection":
+            return `수상 ${st.awards.length}건 · 대외활동 ${st.activities.length}건`;
+        case "discographySection":
+            return `연도 ${st.years.length}개 · 트랙 ${st.years.reduce((n, y) => n + y.tracks.length, 0)}곡`;
+        case "legacy":
+            return "예전 형식 (홈페이지에 나오지 않음)";
+    }
+}
+
+export default function CrewSectionsEditor({ initial, onDirty, failedState }: { initial: SectionState[]; onDirty: () => void; failedState?: unknown }) {
     const [sections, setSections] = useState<SectionState[]>(initial);
     const [dragFrom, setDragFrom] = useState<number | null>(null);
+    // 예전 형식 섹션에는 "홈페이지에 나오지 않음" 안내와 옮기기 버튼이 있어 처음부터 펼쳐 둔다
+    const col = useOpenKeys(initial.filter((x) => x.type === "legacy").map((x) => x.key));
+
+    // 저장 실패 시 어느 카드에 문제가 있는지 보이도록 모두 펼친다
+    useEffect(() => {
+        if (failedState) col.openAll(sections.map((x) => x.key));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [failedState]);
 
     const apply = (next: SectionState[]) => {
         setSections(next);
@@ -173,6 +202,7 @@ export default function CrewSectionsEditor({ initial, onDirty }: { initial: Sect
             <input type="hidden" name="sectionsJson" value={JSON.stringify(toPayload(sections))} />
 
             {sections.length === 0 && <p className="text-sm text-neutral-500">아직 섹션이 없어요. 아래에서 추가해 주세요.</p>}
+            {sections.length > 1 && <ExpandControls onOpenAll={() => col.openAll(sections.map((x) => x.key))} onCloseAll={col.closeAll} />}
 
             {sections.map((st, i) => (
                 <div
@@ -185,8 +215,8 @@ export default function CrewSectionsEditor({ initial, onDirty }: { initial: Sect
                     }}
                     className={`rounded-xl border bg-white p-4 ${dragFrom === i ? "opacity-40 border-black" : "border-neutral-300"}`}
                 >
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2 min-w-0">
+                    <div className={`flex flex-wrap items-center justify-between gap-2 ${col.isOpen(st.key) ? "mb-3" : ""}`}>
+                        <div className="flex items-center gap-2 min-w-0 flex-1 basis-48">
                             <span
                                 draggable
                                 aria-hidden="true"
@@ -203,9 +233,13 @@ export default function CrewSectionsEditor({ initial, onDirty }: { initial: Sect
                             >
                                 ⠿
                             </span>
-                            <h3 className="font-black text-base truncate">{titleOf(st)}</h3>
+                            <div className="min-w-0">
+                                <h3 className="font-black text-base truncate">{titleOf(st)}</h3>
+                                {!col.isOpen(st.key) && <Summary>{summaryOf(st)}</Summary>}
+                            </div>
                         </div>
                         <div className="flex items-center shrink-0">
+                            <ToggleButton open={col.isOpen(st.key)} onClick={() => col.toggle(st.key)} name={titleOf(st)} />
                             <button type="button" aria-label={`${titleOf(st)} 위로 이동`} disabled={i === 0} onClick={() => apply(move(sections, i, i - 1))} className={smallBtn}>▲</button>
                             <button type="button" aria-label={`${titleOf(st)} 아래로 이동`} disabled={i === sections.length - 1} onClick={() => apply(move(sections, i, i + 1))} className={smallBtn}>▼</button>
                             <button
@@ -219,11 +253,13 @@ export default function CrewSectionsEditor({ initial, onDirty }: { initial: Sect
                             </button>
                         </div>
                     </div>
-                    <SectionBody
-                        st={st}
-                        onChange={(next) => apply(sections.map((s, idx) => (idx === i ? next : s)))}
-                        onMigrate={() => apply(migrateLegacy(sections, st.key))}
-                    />
+                    <div className={col.isOpen(st.key) ? "" : "hidden"}>
+                        <SectionBody
+                            st={st}
+                            onChange={(next) => apply(sections.map((s, idx) => (idx === i ? next : s)))}
+                            onMigrate={() => apply(migrateLegacy(sections, st.key))}
+                        />
+                    </div>
                 </div>
             ))}
 
@@ -232,7 +268,11 @@ export default function CrewSectionsEditor({ initial, onDirty }: { initial: Sect
                     <p className="text-sm font-bold mb-2">섹션 추가</p>
                     <div className="flex flex-wrap gap-2">
                         {addable.map((t) => (
-                            <button key={t} type="button" onClick={() => apply([...sections, emptySection(t)])} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                            <button key={t} type="button" onClick={() => {
+                                const created = emptySection(t);
+                                apply([...sections, created]);
+                                col.open(created.key);
+                            }} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                                 + {SECTION_META[t].label}
                             </button>
                         ))}

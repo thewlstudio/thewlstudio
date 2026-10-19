@@ -264,7 +264,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                             진짜 화면 보기 ↗ (저장한 내용 기준)
                         </a>
                     </div>
-                    <CrewSectionsEditor initial={toState(data.sections)} onDirty={markDirty} />
+                    <CrewSectionsEditor initial={toState(data.sections)} onDirty={markDirty} failedState={state && !state.ok ? state : null} />
                 </Section>
             )}
 

@@ -159,7 +159,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                             진짜 화면 보기 ↗ (저장한 내용 기준)
                         </a>
                     </div>
-                    <WorkBlocksEditor initial={toState(data.blocks)} onDirty={markDirty} />
+                    <WorkBlocksEditor initial={toState(data.blocks)} onDirty={markDirty} failedState={state && !state.ok ? state : null} />
                 </Section>
             )}
 

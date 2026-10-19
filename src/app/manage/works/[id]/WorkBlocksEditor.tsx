@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
+import { ExpandControls, Summary, ToggleButton, snippet, useOpenKeys } from "../../_components/Collapse";
 import {
     BLOCK_META,
     ADDABLE_TYPES,
@@ -234,11 +235,40 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
     }
 }
 
+/** 접힌 카드에 보이는 한 줄 요약 */
+function summaryOf(b: BlockState): string {
+    switch (b.type) {
+        case "descriptionBlock":
+            return b.paragraphs.length > 0 ? `${snippet(b.paragraphs[0].text)} (문단 ${b.paragraphs.length}개)` : "비어 있음";
+        case "signatureMessageBlock":
+            return b.paragraphs.length > 0 ? `${snippet(b.paragraphs[0].text)}${b.signature ? ` — ${snippet(b.signature, 20)}` : ""}` : b.signature || "비어 있음";
+        case "creditGridBlock":
+            return `묶음 ${b.sections.length}개 · 크레딧 ${b.sections.reduce((n, sec) => n + sec.items.length, 0)}개${b.sections[0]?.title ? ` (${snippet(b.sections[0].title, 20)} …)` : ""}`;
+        case "tracklistBlock":
+            return b.tracks.length > 0 ? `트랙 ${b.tracks.length}곡 (${snippet(b.tracks[0].title, 20)} …)` : "비어 있음";
+        case "imageBlock":
+            return b.caption || (b.imageUrl ? "이미지 1장" : "이미지를 선택해 주세요");
+        case "videoEmbedBlock":
+            return b.url ? snippet(b.url, 44) : "주소를 입력해 주세요";
+        case "audioBlock":
+            return [b.title, b.artist].filter(Boolean).join(" — ") || "비어 있음";
+        case "preserved":
+            return "수정은 /admin에서";
+    }
+}
+
 const titleOf = (b: BlockState) => (b.type === "preserved" ? `${PRESERVED_LABELS[b.rawType] ?? b.rawType} (편집 불가)` : BLOCK_META[b.type].label);
 
-export default function WorkBlocksEditor({ initial, onDirty }: { initial: BlockState[]; onDirty: () => void }) {
+export default function WorkBlocksEditor({ initial, onDirty, failedState }: { initial: BlockState[]; onDirty: () => void; failedState?: unknown }) {
     const [blocks, setBlocks] = useState<BlockState[]>(initial);
     const [dragFrom, setDragFrom] = useState<number | null>(null);
+    const col = useOpenKeys();
+
+    // 저장 실패(예: 링크 주소 오류) 시 어느 카드에 문제가 있는지 보이도록 모두 펼친다
+    useEffect(() => {
+        if (failedState) col.openAll(blocks.map((x) => x.key));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [failedState]);
 
     const apply = (next: BlockState[]) => {
         setBlocks(next);
@@ -250,6 +280,7 @@ export default function WorkBlocksEditor({ initial, onDirty }: { initial: BlockS
             <input type="hidden" name="blocksJson" value={JSON.stringify(toPayload(blocks))} />
 
             {blocks.length === 0 && <p className="text-sm text-neutral-500">아직 블록이 없어요. 아래에서 추가해 주세요.</p>}
+            {blocks.length > 1 && <ExpandControls onOpenAll={() => col.openAll(blocks.map((x) => x.key))} onCloseAll={col.closeAll} />}
 
             {blocks.map((b, i) => (
                 <div
@@ -262,8 +293,8 @@ export default function WorkBlocksEditor({ initial, onDirty }: { initial: BlockS
                     }}
                     className={`rounded-xl border bg-white p-4 ${dragFrom === i ? "opacity-40 border-black" : "border-neutral-300"}`}
                 >
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2 min-w-0">
+                    <div className={`flex flex-wrap items-center justify-between gap-2 ${col.isOpen(b.key) ? "mb-3" : ""}`}>
+                        <div className="flex items-center gap-2 min-w-0 flex-1 basis-48">
                             <span
                                 draggable
                                 aria-hidden="true"
@@ -280,9 +311,13 @@ export default function WorkBlocksEditor({ initial, onDirty }: { initial: BlockS
                             >
                                 ⠿
                             </span>
-                            <h3 className="font-black text-base truncate">{titleOf(b)}</h3>
+                            <div className="min-w-0">
+                                <h3 className="font-black text-base truncate">{titleOf(b)}</h3>
+                                {!col.isOpen(b.key) && <Summary>{summaryOf(b)}</Summary>}
+                            </div>
                         </div>
                         <div className="flex items-center shrink-0">
+                            <ToggleButton open={col.isOpen(b.key)} onClick={() => col.toggle(b.key)} name={titleOf(b)} />
                             <button type="button" aria-label={`${titleOf(b)} 위로 이동`} disabled={i === 0} onClick={() => apply(move(blocks, i, i - 1))} className={smallBtn}>▲</button>
                             <button type="button" aria-label={`${titleOf(b)} 아래로 이동`} disabled={i === blocks.length - 1} onClick={() => apply(move(blocks, i, i + 1))} className={smallBtn}>▼</button>
                             {b.type !== "preserved" && (
@@ -298,7 +333,9 @@ export default function WorkBlocksEditor({ initial, onDirty }: { initial: BlockS
                             )}
                         </div>
                     </div>
-                    <BlockBody b={b} onChange={(next) => apply(blocks.map((x, idx) => (idx === i ? next : x)))} />
+                    <div className={col.isOpen(b.key) ? "" : "hidden"}>
+                        <BlockBody b={b} onChange={(next) => apply(blocks.map((x, idx) => (idx === i ? next : x)))} />
+                    </div>
                 </div>
             ))}
 
@@ -307,7 +344,11 @@ export default function WorkBlocksEditor({ initial, onDirty }: { initial: BlockS
                 <p className="text-sm text-neutral-500 mb-2">오디오 블록은 파일 업로드가 필요해서 /admin에서 추가해 주세요.</p>
                 <div className="flex flex-wrap gap-2">
                     {ADDABLE_TYPES.map((t: EditableType) => (
-                        <button key={t} type="button" onClick={() => apply([...blocks, emptyBlock(t)])} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                        <button key={t} type="button" onClick={() => {
+                            const created = emptyBlock(t);
+                            apply([...blocks, created]);
+                            col.open(created.key);
+                        }} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             + {BLOCK_META[t].label}
                         </button>
                     ))}

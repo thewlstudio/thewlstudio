@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { saveStudioInfo, type SaveResult } from "./actions";
 import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
 import { LinesEditor, dangerBtn, dashedBtn, move, smallBtn } from "../../_components/listUi";
+import { ExpandControls, Summary, ToggleButton, snippet, useOpenKeys } from "../../_components/Collapse";
 import type { StudioInfo } from "@/lib/studio-info";
 
 let seq = 0;
@@ -15,9 +16,10 @@ type Keyed<T> = T & { key: string };
 const withKeys = <T,>(rows: T[], prefix: string): Keyed<T>[] => rows.map((r, i) => ({ ...r, key: `${prefix}-${i}` }));
 
 /** 한 행의 ▲▼·지우기 */
-function RowTools({ name, i, count, onMove, onRemove }: { name: string; i: number; count: number; onMove: (to: number) => void; onRemove: () => void }) {
+function RowTools({ name, i, count, onMove, onRemove, toggle }: { name: string; i: number; count: number; onMove: (to: number) => void; onRemove: () => void; toggle?: React.ReactNode }) {
     return (
-        <div className="flex items-center">
+        <div className="flex flex-wrap items-center justify-end">
+            {toggle}
             <button type="button" aria-label={`${name} ${i + 1} 위로`} disabled={i === 0} onClick={() => onMove(i - 1)} className={smallBtn}>▲</button>
             <button type="button" aria-label={`${name} ${i + 1} 아래로`} disabled={i === count - 1} onClick={() => onMove(i + 1)} className={smallBtn}>▼</button>
             <button
@@ -54,6 +56,13 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
         dutyWarning: data.dutyWarning,
     });
     const [amenities, setAmenities] = useState(data.amenities);
+    const col = useOpenKeys();
+
+    // 저장 실패(예: 제목이 빈 항목) 시 어느 카드에 문제가 있는지 보이도록 모두 펼친다
+    useEffect(() => {
+        if (state && !state.ok) col.openAll([...services, ...equipment, ...memberships].map((x) => x.key));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state]);
 
     const set = <T,>(setter: (v: T) => void) => (v: T) => {
         setter(v);
@@ -77,16 +86,25 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
             <input type="hidden" name="dataJson" value={dataJson} />
             {state && !state.ok && state.fields && state.fields.length > 0 && <ErrorSummary fields={state.fields} summaryRef={summaryRef} />}
 
+            <ExpandControls
+                onOpenAll={() => col.openAll([...services, ...equipment, ...memberships].map((x) => x.key))}
+                onCloseAll={col.closeAll}
+            />
+
             <Section step={1} title="서비스" hint="페이지 위쪽의 검은 배경 카드(예: 보컬 레코딩)예요. 서비스가 2개일 때 가장 보기 좋아요.">
                 <div id="services" tabIndex={-1} className="space-y-4 focus:outline-none">
                     {services.map((s, i) => {
                         const upd = (patch: Partial<typeof s>) => set(setServices)(services.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
                         return (
-                            <div key={s.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className="text-sm font-bold">서비스 {i + 1}</p>
-                                    <RowTools name="서비스" i={i} count={services.length} onMove={(to) => set(setServices)(move(services, i, to))} onRemove={() => set(setServices)(services.filter((_, idx) => idx !== i))} />
+                            <div key={s.key} className="rounded-xl border border-neutral-200 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="min-w-0 flex-1 basis-40">
+                                        <p className="text-sm font-bold">서비스 {i + 1}</p>
+                                        {!col.isOpen(s.key) && <Summary>{[s.title, s.price].filter(Boolean).join(" · ") || "비어 있음"}</Summary>}
+                                    </div>
+                                    <RowTools toggle={<ToggleButton open={col.isOpen(s.key)} onClick={() => col.toggle(s.key)} name={`서비스 ${i + 1}`} />} name="서비스" i={i} count={services.length} onMove={(to) => set(setServices)(move(services, i, to))} onRemove={() => set(setServices)(services.filter((_, idx) => idx !== i))} />
                                 </div>
+                                <div className={col.isOpen(s.key) ? "space-y-3 mt-3" : "hidden"}>
                                 <Field label="제목" htmlFor={`svc-title-${s.key}`} required>
                                     <input id={`svc-title-${s.key}`} value={s.title} onChange={(e) => upd({ title: e.target.value })} className={inputClass} />
                                 </Field>
@@ -100,10 +118,15 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                                     <p className="text-sm font-bold mb-2">설명 줄</p>
                                     <LinesEditor lines={s.points} onChange={(points) => upd({ points })} label="설명" placeholder="예: 디렉팅 및 기초적인 튠 포함" />
                                 </div>
+                                </div>
                             </div>
                         );
                     })}
-                    <button type="button" onClick={() => set(setServices)([...services, { key: newKey(), title: "", price: "", priceUnit: "", points: [] }])} className={dashedBtn}>+ 서비스 추가</button>
+                    <button type="button" onClick={() => {
+                        const key = newKey();
+                        set(setServices)([...services, { key, title: "", price: "", priceUnit: "", points: [] }]);
+                        col.open(key);
+                    }} className={dashedBtn}>+ 서비스 추가</button>
                 </div>
             </Section>
 
@@ -112,11 +135,15 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                     {equipment.map((g, i) => {
                         const upd = (patch: Partial<typeof g>) => set(setEquipment)(equipment.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
                         return (
-                            <div key={g.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className="text-sm font-bold">장비 묶음 {i + 1}</p>
-                                    <RowTools name="장비 묶음" i={i} count={equipment.length} onMove={(to) => set(setEquipment)(move(equipment, i, to))} onRemove={() => set(setEquipment)(equipment.filter((_, idx) => idx !== i))} />
+                            <div key={g.key} className="rounded-xl border border-neutral-200 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="min-w-0 flex-1 basis-40">
+                                        <p className="text-sm font-bold">장비 묶음 {i + 1}</p>
+                                        {!col.isOpen(g.key) && <Summary>{g.title ? `${snippet(g.title.replace(/\n/g, " "), 24)} · ${g.items.length}개` : "비어 있음"}</Summary>}
+                                    </div>
+                                    <RowTools toggle={<ToggleButton open={col.isOpen(g.key)} onClick={() => col.toggle(g.key)} name={`장비 묶음 ${i + 1}`} />} name="장비 묶음" i={i} count={equipment.length} onMove={(to) => set(setEquipment)(move(equipment, i, to))} onRemove={() => set(setEquipment)(equipment.filter((_, idx) => idx !== i))} />
                                 </div>
+                                <div className={col.isOpen(g.key) ? "space-y-3 mt-3" : "hidden"}>
                                 <Field label="묶음 제목" htmlFor={`eq-title-${g.key}`} required hint="예: Microphones. 데스크톱에서 줄을 바꾸고 싶으면 Enter로 줄을 나눠 적으세요.">
                                     <textarea id={`eq-title-${g.key}`} rows={2} value={g.title} onChange={(e) => upd({ title: e.target.value })} className={textareaClass} />
                                 </Field>
@@ -124,10 +151,15 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                                     <p className="text-sm font-bold mb-2">장비 이름</p>
                                     <LinesEditor lines={g.items} onChange={(items) => upd({ items })} label="장비" placeholder="예: Neumann U87 Ai" />
                                 </div>
+                                </div>
                             </div>
                         );
                     })}
-                    <button type="button" onClick={() => set(setEquipment)([...equipment, { key: newKey(), title: "", items: [] }])} className={dashedBtn}>+ 장비 묶음 추가</button>
+                    <button type="button" onClick={() => {
+                        const key = newKey();
+                        set(setEquipment)([...equipment, { key, title: "", items: [] }]);
+                        col.open(key);
+                    }} className={dashedBtn}>+ 장비 묶음 추가</button>
                 </div>
             </Section>
 
@@ -136,11 +168,15 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                     {memberships.map((m, i) => {
                         const upd = (patch: Partial<typeof m>) => set(setMemberships)(memberships.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
                         return (
-                            <div key={m.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className="text-sm font-bold">회원권 {i + 1}</p>
-                                    <RowTools name="회원권" i={i} count={memberships.length} onMove={(to) => set(setMemberships)(move(memberships, i, to))} onRemove={() => set(setMemberships)(memberships.filter((_, idx) => idx !== i))} />
+                            <div key={m.key} className="rounded-xl border border-neutral-200 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="min-w-0 flex-1 basis-40">
+                                        <p className="text-sm font-bold">회원권 {i + 1}</p>
+                                        {!col.isOpen(m.key) && <Summary>{[m.label, m.price && `${m.price}원`].filter(Boolean).join(" · ") || "비어 있음"}</Summary>}
+                                    </div>
+                                    <RowTools toggle={<ToggleButton open={col.isOpen(m.key)} onClick={() => col.toggle(m.key)} name={`회원권 ${i + 1}`} />} name="회원권" i={i} count={memberships.length} onMove={(to) => set(setMemberships)(move(memberships, i, to))} onRemove={() => set(setMemberships)(memberships.filter((_, idx) => idx !== i))} />
                                 </div>
+                                <div className={col.isOpen(m.key) ? "space-y-3 mt-3" : "hidden"}>
                                 <Field label="원 안의 숫자" htmlFor={`mem-num-${m.key}`} hint="예: 1">
                                     <input id={`mem-num-${m.key}`} value={m.num} onChange={(e) => upd({ num: e.target.value })} className={inputClass} />
                                 </Field>
@@ -153,10 +189,15 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                                 <Field label="금액" htmlFor={`mem-price-${m.key}`} required hint="예: 40,000 (뒤에 '원'이 자동으로 붙어요)">
                                     <input id={`mem-price-${m.key}`} value={m.price} onChange={(e) => upd({ price: e.target.value })} className={inputClass} />
                                 </Field>
+                                </div>
                             </div>
                         );
                     })}
-                    <button type="button" onClick={() => set(setMemberships)([...memberships, { key: newKey(), num: "", label: "", sub: "", price: "" }])} className={dashedBtn}>+ 회원권 추가</button>
+                    <button type="button" onClick={() => {
+                        const key = newKey();
+                        set(setMemberships)([...memberships, { key, num: "", label: "", sub: "", price: "" }]);
+                        col.open(key);
+                    }} className={dashedBtn}>+ 회원권 추가</button>
                 </div>
                 <Field label="멤버십 안내 문구" htmlFor="membershipNote" hint="카드 아래에 나와요. Enter로 줄을 나누면 데스크톱에서 줄이 바뀝니다.">
                     <textarea id="membershipNote" rows={3} value={text.membershipNote} onChange={setT("membershipNote")} className={textareaClass} />

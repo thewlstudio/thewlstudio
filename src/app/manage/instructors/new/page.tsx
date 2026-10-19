@@ -34,9 +34,6 @@ export default async function NewInstructorPage() {
             <ManageNav title="새 강사 추가" />
 
             <div className="mb-6">
-                <p className="text-[10px] font-bold tracking-[0.35em] text-neutral-500 uppercase mb-1.5">
-                    새 강사 추가
-                </p>
                 <h2 className="text-2xl md:text-3xl font-black tracking-tight">
                     강사 정보를 입력해 주세요
                 </h2>
