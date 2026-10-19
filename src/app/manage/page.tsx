@@ -19,7 +19,7 @@ const SECTIONS: Section[] = [
     { key: "instructors", label: "강사", description: "레슨 강사 정보 관리", href: "/manage/instructors" },
     { key: "crew", label: "Crew", description: "크루 프로필 관리", href: "/manage/crew" },
     { key: "works", label: "Works", description: "작업물 페이지 관리", href: "/manage/works" },
-    { key: "studio", label: "Studio", description: "스튜디오 방 정보 관리", href: null },
+    { key: "studio", label: "Studio", description: "스튜디오 방 정보 관리", href: "/manage/studio" },
     { key: "contact", label: "Contact", description: "연락처·지도 정보 관리", href: null },
 ];
 
