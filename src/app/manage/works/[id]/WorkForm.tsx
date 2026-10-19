@@ -8,6 +8,7 @@ import { useGuardedForm } from "../../_components/useGuardedForm";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
 import { toState } from "@/lib/work-blocks";
 import WorkBlocksEditor from "./WorkBlocksEditor";
+import { Eye } from "lucide-react";
 
 export type WorkFormData = {
     _id: string;
@@ -45,7 +46,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
 
             {/* 미리보기 */}
             <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
-                <p className="text-sm font-bold text-neutral-600 mb-3">👀 목록에서 이렇게 보여요 (입력하면 바로 바뀌어요)</p>
+                <p className="text-sm font-bold text-neutral-600 mb-3"><Eye size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />목록에서 이렇게 보여요 (입력하면 바로 바뀌어요)</p>
                 <div className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center gap-4">
                     <div className="relative w-24 aspect-square rounded-lg overflow-hidden bg-neutral-100 shrink-0">
                         {shownPhoto ? (

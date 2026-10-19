@@ -7,6 +7,7 @@ import { saveInstructor, createInstructor, type SaveResult, type FieldError } fr
 import { Section, Field, ErrorSummary, inputClass, textareaClass } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
 import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
+import { Eye, MapPin, Image as ImageIcon } from "lucide-react";
 
 export type InstructorFormData = {
     _id: string;
@@ -98,8 +99,8 @@ function PhotoInput({
                 {label}
                 {required && <span className="text-red-600 ml-1">*</span>}
             </p>
-            <p className="text-sm text-neutral-600 mb-0.5 leading-relaxed">📍 {whereText}</p>
-            <p className="text-sm text-neutral-600 mb-3 leading-relaxed">🖼️ {howText}</p>
+            <p className="text-sm text-neutral-600 mb-0.5 leading-relaxed"><MapPin size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />{whereText}</p>
+            <p className="text-sm text-neutral-600 mb-3 leading-relaxed"><ImageIcon size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />{howText}</p>
 
             <div className="flex items-start gap-4">
                 <div
@@ -299,7 +300,7 @@ function LivePreview({
         <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
             <div className="flex items-center justify-between gap-3 mb-3">
                 <p className="text-sm font-bold text-neutral-600">
-                    👀 실제로 이렇게 보여요 (입력하면 바로 바뀌어요)
+                    <Eye size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />실제로 이렇게 보여요 (입력하면 바로 바뀌어요)
                 </p>
                 <Link
                     href="/class"
@@ -489,10 +490,10 @@ function InstructorFormInner({
                         {isCreate && <span className="text-red-600 ml-1">*</span>}
                     </p>
                     <p className="text-sm text-neutral-600 mb-0.5 leading-relaxed">
-                        📍 위 미리보기 ① 클래스 목록 화면의 왼쪽 네모 칸
+                        <MapPin size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />위 미리보기 ① 클래스 목록 화면의 왼쪽 네모 칸
                     </p>
                     <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
-                        🖼️ 세로로 긴 네모 모양으로 잘려서 나와요. 얼굴이 잘리면 아래 &quot;사진에서 보여줄 부분&quot;에서 조정하세요.
+                        <ImageIcon size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />세로로 긴 네모 모양으로 잘려서 나와요. 얼굴이 잘리면 아래 &quot;사진에서 보여줄 부분&quot;에서 조정하세요.
                     </p>
                     <div className="flex items-start gap-4">
                         <div className="relative w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
