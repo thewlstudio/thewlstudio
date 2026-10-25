@@ -36,6 +36,9 @@ npm run dev
 npm run dev      # 개발 서버
 npm run build    # 프로덕션 빌드
 npm run lint     # ESLint 검사
+npm test         # 자동 테스트
+npm run typecheck # 타입 검사
+npm run smoke    # 떠 있는 서버 핵심 경로 점검
 npm run analyze  # 번들 크기 분석
 ```
 

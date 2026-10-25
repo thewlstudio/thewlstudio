@@ -1,0 +1,42 @@
+name: CI
+
+# 푸시·PR마다 코드 검사, 타입 검사, 자동 테스트, 빌드, 스모크 점검을 돌린다.
+# (배포는 Vercel이 따로 한다. 여기서 실패하면 고친 뒤 배포하세요.)
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # 관리 화면이 "설정됨" 상태로 뜨게 하는 가짜 값 (실제 비밀이 아님)
+      MANAGE_PASSWORD: ci-test-password
+      MANAGE_SECRET: ci-test-secret-0123456789abcdef0123456789abcdef
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: 코드 검사 (lint)
+        run: npm run lint
+      - name: 타입 검사
+        run: npm run typecheck
+      - name: 자동 테스트
+        run: npm test
+      - name: 빌드
+        run: npm run build
+      - name: 스모크 점검 (빌드된 서버)
+        run: |
+          npm run start -- -p 3000 &
+          for i in $(seq 1 40); do curl -sf http://localhost:3000/manage/login >/dev/null && break; sleep 2; done
+          node scripts/smoke.mjs http://localhost:3000
