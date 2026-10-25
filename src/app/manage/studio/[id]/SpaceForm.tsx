@@ -150,7 +150,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 </div>
             )}
 
-            <Section step={1} title="기본 정보">
+            <Section step={1} title="기본 정보" help="연습실은 이름을 **W.L Studio [A Room]** 형태로 적으면 큰 제목이 A ROOM으로 나와요. 로비는 홈페이지에 **한 곳만** 보여요.">
                 {isCreate && (
                     <div>
                         <p className="text-sm font-bold mb-1.5">종류</p>
@@ -216,7 +216,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section step={2} title="사진" hint="홈페이지 사진 넘기기에 이 순서대로 나와요. 첫 번째 사진이 처음에 보여요.">
+            <Section step={2} title="사진" help="넘겨 보는 사진이에요. **첫 번째 사진**이 처음에 보이고, 순서는 ▲▼로 바꿔요." hint="홈페이지 사진 넘기기에 이 순서대로 나와요. 첫 번째 사진이 처음에 보여요.">
                 {images.length === 0 && <p className="text-sm text-neutral-500">아직 사진이 없어요. 아래에서 추가해 주세요.</p>}
                 {images.map((im, i) => (
                     <ImageItem
@@ -236,7 +236,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section step={3} title="가격" hint="예: 라벨 '기본' / 금액 '6,000' / 단위 '원 / 1H'. 라벨과 금액이 모두 비면 저장할 때 빠져요.">
+            <Section step={3} title="가격" help="라벨(기본·회원), 금액, 단위를 따로 적어요. 라벨과 금액이 모두 비어 있으면 저장할 때 빠져요." hint="예: 라벨 '기본' / 금액 '6,000' / 단위 '원 / 1H'. 라벨과 금액이 모두 비면 저장할 때 빠져요.">
                 {prices.map((p, i) => (
                     <div key={p.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
                         <div className="flex items-center justify-between gap-3">
@@ -267,7 +267,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 <LinesEditor lines={features} onChange={apply(setFeatures)} label="특징" placeholder="예: 삼익 업라이트 피아노" />
             </Section>
 
-            <Section step={5} title="안내 문구" hint="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요. (예: * 방음문 사용 안내)">
+            <Section step={5} title="안내 문구" help="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요." hint="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요. (예: * 방음문 사용 안내)">
                 <LinesEditor lines={notes} onChange={apply(setNotes)} label="안내 문구" placeholder="예: * 방음문: 열때는 아래로…" />
             </Section>
 

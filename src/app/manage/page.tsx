@@ -28,6 +28,31 @@ const SECTIONS: Section[] = [
 
 type Recent = { _id: string; _type: string; _updatedAt: string; title?: string };
 
+const COUNT_QUERY = `{
+    "instructors": count(*[_type == "instructor" && !(trashed == true)]),
+    "instructorsHidden": count(*[_type == "instructor" && !(trashed == true) && isActive == false]),
+    "crew": count(*[_type == "crew" && !(trashed == true)]),
+    "crewHidden": count(*[_type == "crew" && !(trashed == true) && isActive == false]),
+    "works": count(*[_type == "work" && !(trashed == true)]),
+    "rooms": count(*[_type == "studioSpace" && !(trashed == true) && kind != "lobby"]),
+    "lobbies": count(*[_type == "studioSpace" && !(trashed == true) && kind == "lobby"])
+}`;
+
+type Counts = Record<"instructors" | "instructorsHidden" | "crew" | "crewHidden" | "works" | "rooms" | "lobbies", number>;
+
+/** 허브 카드에 붙는 현황 문구 (게임의 "보유 1/30"처럼 지금 상태를 한눈에) */
+function statusText(key: string, c: Counts | null): string | null {
+    if (!c) return null;
+    const hid = (n: number) => (n > 0 ? ` · 비공개 ${n}` : "");
+    switch (key) {
+        case "instructors": return `${c.instructors}명${hid(c.instructorsHidden)}`;
+        case "crew": return `${c.crew}명${hid(c.crewHidden)}`;
+        case "works": return `${c.works}개`;
+        case "studio": return `연습실 ${c.rooms} · 로비 ${c.lobbies}`;
+        default: return null;
+    }
+}
+
 const RECENT_QUERY = `*[_type in ["instructor","crew","work","studioSpace","studioInfo","siteSettings"]] | order(_updatedAt desc)[0...6]{
     _id, _type, _updatedAt,
     "title": coalesce(instructorName, koName, title, name)
@@ -49,6 +74,7 @@ export default async function ManageHubPage() {
 
     // 최근 수정은 보조 정보라, 읽기에 실패해도 허브 자체는 그대로 보여 준다
     const recent = await client.fetch<Recent[]>(RECENT_QUERY).catch(() => [] as Recent[]);
+    const counts = await client.fetch<Counts>(COUNT_QUERY).catch(() => null);
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
@@ -80,8 +106,13 @@ export default async function ManageHubPage() {
                                     <p className="font-bold text-base truncate">{section.label}</p>
                                     <p className="text-sm text-neutral-500 break-keep">{section.description}</p>
                                 </div>
-                                <span aria-hidden="true" className="text-neutral-400 text-xl shrink-0">
-                                    ›
+                                <span className="flex items-center gap-3 shrink-0">
+                                    {statusText(section.key, counts) && (
+                                        <span className="text-xs font-bold text-neutral-700 bg-neutral-100 px-2 py-1 rounded-md">{statusText(section.key, counts)}</span>
+                                    )}
+                                    <span aria-hidden="true" className="text-neutral-400 text-xl">
+                                        ›
+                                    </span>
                                 </span>
                             </Link>
                         ) : (

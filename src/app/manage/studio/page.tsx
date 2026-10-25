@@ -12,6 +12,7 @@ import RestoreButton from "../_components/RestoreButton";
 import { moveSpaceOrder, restoreSpace, reorderSpaces } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
+import EmptyState from "../_components/EmptyState";
 
 export const metadata = { title: "스튜디오 공간 관리" };
 export const dynamic = "force-dynamic";
@@ -83,6 +84,15 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                 </Link>
             )}
             {isTrashView && spaces.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
+
+            {!isTrashView && spaces.length === 0 && (
+                <EmptyState
+                    title="아직 등록된 공간이 없어요"
+                    body="연습실이나 로비를 추가하면 Studio 페이지에 카드로 나와요."
+                    actionHref={writeReady ? "/manage/studio/new" : undefined}
+                    actionLabel={writeReady ? "+ 첫 공간 만들기" : undefined}
+                />
+            )}
 
             <ManagedList
                 reorder={!isTrashView && writeReady ? reorderSpaces : undefined}

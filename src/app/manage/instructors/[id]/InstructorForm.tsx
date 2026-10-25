@@ -422,7 +422,7 @@ function InstructorFormInner({
             />
 
             {/* 1. 기본 정보 */}
-            <Section step={1} title="기본 정보">
+            <Section step={1} title="기본 정보" help="**공개/비공개**로 홈페이지 노출을 바꿔요. 수업을 잠시 쉬는 강사는 삭제 대신 **비공개**를 쓰세요. 목록 순서는 강사 목록에서 바꿔요.">
                 <fieldset>
                     <legend className="text-sm font-bold mb-1.5">공개 상태</legend>
                     <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
@@ -623,7 +623,7 @@ function InstructorFormInner({
             </Section>
 
             {/* 3. 소개 글 */}
-            <Section step={3} title="소개 글">
+            <Section step={3} title="소개 글" help="줄을 바꾸면 문단이 나뉘어요. **Enter**로 여러 문단을 쓸 수 있어요.">
                 <Field
                     label="한 줄 소개"
                     htmlFor="subtitle"

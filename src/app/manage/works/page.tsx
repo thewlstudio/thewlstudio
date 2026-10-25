@@ -11,6 +11,7 @@ import ManagedList from "../_components/ManagedList";
 import { restoreWork } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
+import EmptyState from "../_components/EmptyState";
 
 export const metadata = { title: "작업물 관리" };
 export const dynamic = "force-dynamic";
@@ -71,6 +72,15 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
                 </Link>
             )}
             {isTrashView && works.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
+
+            {!isTrashView && works.length === 0 && (
+                <EmptyState
+                    title="아직 등록된 작업물이 없어요"
+                    body="작업물을 추가하면 홈페이지 Works 목록에 나와요. 제목, 아티스트, 발매일, 커버 이미지로 시작해요."
+                    actionHref={writeReady ? "/manage/works/new" : undefined}
+                    actionLabel={writeReady ? "+ 첫 작업물 만들기" : undefined}
+                />
+            )}
 
             <ManagedList
                 searchPlaceholder="제목·아티스트로 찾기"

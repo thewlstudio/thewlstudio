@@ -1,6 +1,8 @@
 "use client";
 
 import { cloneElement, createContext, isValidElement, useContext } from "react";
+import Rich from "./Rich";
+import HelpTip from "./HelpTip";
 
 type FieldError = { id: string; label: string };
 
@@ -25,11 +27,14 @@ export function Section({
     step,
     title,
     hint,
+    help,
     children,
 }: {
     step: number;
     title: string;
     hint?: string;
+    /** 제목 옆 "?"를 눌렀을 때 펼쳐지는 설명 (**강조** 가능) */
+    help?: string;
     children: React.ReactNode;
 }) {
     return (
@@ -43,8 +48,13 @@ export function Section({
                         {step}
                     </span>
                     <h2 className="text-lg font-black tracking-tight">{title}</h2>
+                    {help && <HelpTip title={title} body={help} />}
                 </div>
-                {hint && <p className="text-sm text-neutral-600 leading-relaxed pl-8.5">{hint}</p>}
+                {hint && (
+                    <p className="text-sm text-neutral-600 leading-relaxed pl-8.5">
+                        <Rich text={hint} />
+                    </p>
+                )}
             </div>
             <div className="space-y-5">{children}</div>
         </section>
@@ -76,7 +86,11 @@ export function Field({
                 {label}
                 {required && <span className="text-red-600 ml-1">*</span>}
             </label>
-            {hint && <p className="text-sm text-neutral-600 mb-2 leading-relaxed">{hint}</p>}
+            {hint && (
+                <p className="text-sm text-neutral-600 mb-2 leading-relaxed">
+                    <Rich text={hint} />
+                </p>
+            )}
             {control}
             {error && (
                 <p id={`${htmlFor}-error`} role="alert" className="text-sm font-semibold text-red-600 mt-1.5">

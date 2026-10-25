@@ -12,6 +12,7 @@ import RestoreButton from "../_components/RestoreButton";
 import { moveInstructorOrder, restoreInstructor, reorderInstructors } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
+import EmptyState from "../_components/EmptyState";
 
 export const metadata = { title: "강사 관리" };
 // 관리 화면은 항상 최신 데이터를 보여야 한다
@@ -110,6 +111,15 @@ export default async function InstructorListPage({
 
             {isTrashView && instructors.length === 0 && (
                 <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>
+            )}
+
+            {!isTrashView && instructors.length === 0 && (
+                <EmptyState
+                    title="아직 등록된 강사가 없어요"
+                    body="강사를 추가하면 홈페이지 Class 페이지에 나와요. 이름, 분야, 사진 3장으로 시작해요."
+                    actionHref={writeReady ? "/manage/instructors/new" : undefined}
+                    actionLabel={writeReady ? "+ 첫 강사 만들기" : undefined}
+                />
             )}
 
             <ManagedList

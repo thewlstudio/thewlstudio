@@ -19,7 +19,7 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
-            <Section step={1} title="위치·연락처" hint="Contact 페이지에 나오는 정보예요. 모든 칸을 채워 주세요.">
+            <Section step={1} title="위치·연락처" help="Contact 페이지에 나와요. 전화번호를 누르면 방문자 휴대폰에서 **바로 전화**가 걸려요." hint="Contact 페이지에 나오는 정보예요. 모든 칸을 채워 주세요.">
                 <Field label="전화번호" htmlFor="phone" required hint="예: 0507-1331-7285 (누르면 전화가 걸려요)">
                     <input id="phone" name="phone" type="tel" defaultValue={data.phone} className={inputClass} />
                 </Field>
@@ -31,7 +31,7 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                 </Field>
             </Section>
 
-            <Section step={2} title="지도" hint="구글 지도에 표시할 위치를 주소로 적어 주세요. 지도 공유 코드는 넣지 마세요. 주소만 적으면 홈페이지가 지도를 알아서 만들어요.">
+            <Section step={2} title="지도" help="주소만 적으면 지도가 만들어져요. 위치가 이상하면 **주소를 더 자세히** 적고 지도 미리보기 갱신을 눌러 보세요." hint="구글 지도에 표시할 위치를 주소로 적어 주세요. 지도 공유 코드는 넣지 마세요. 주소만 적으면 홈페이지가 지도를 알아서 만들어요.">
                 <Field label="지도 검색어" htmlFor="mapQuery" required hint="예: 서울특별시 광진구 능동로 413-1">
                     <input id="mapQuery" name="mapQuery" value={mapQuery} onChange={(e) => setMapQuery(e.target.value)} className={inputClass} />
                 </Field>
@@ -54,7 +54,7 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                 </div>
             </Section>
 
-            <Section step={3} title="링크" hint="브라우저 주소창의 주소를 복사해 붙여넣어 주세요. 칸마다 안내된 사이트의 주소만 쓸 수 있어요.">
+            <Section step={3} title="링크" help="헤더의 인스타그램, 예약·멤버십 버튼, 블로그 링크로 쓰여요." hint="브라우저 주소창의 주소를 복사해 붙여넣어 주세요. 칸마다 안내된 사이트의 주소만 쓸 수 있어요.">
                 <Field label="네이버 지도 장소 주소" htmlFor="naverMapPlaceUrl" required hint="Contact 페이지의 'Open in Naver Map' 버튼 (naver.com 주소)">
                     <input id="naverMapPlaceUrl" name="naverMapPlaceUrl" type="url" inputMode="url" defaultValue={data.naverMapPlaceUrl} className={inputClass} />
                 </Field>
@@ -69,7 +69,7 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                 </Field>
             </Section>
 
-            <Section step={4} title="홈페이지 소개 문구" hint="홈페이지 첫 화면 아래 'WHITE LIGHT STUDIO' 소개 영역의 제목과 설명이에요. Enter로 줄을 나누면 데스크톱에서 줄이 바뀌고, 모바일에서는 이어서 나와요.">
+            <Section step={4} title="홈페이지 소개 문구" help="홈페이지 첫 화면 아래 소개 영역이에요. **Enter 한 번**은 줄바꿈, **두 번**은 문단 나누기예요." hint="홈페이지 첫 화면 아래 'WHITE LIGHT STUDIO' 소개 영역의 제목과 설명이에요. Enter로 줄을 나누면 데스크톱에서 줄이 바뀌고, 모바일에서는 이어서 나와요.">
                 <Field label="소개 제목" htmlFor="homeHeadline" required hint="Enter로 줄을 나누면 항상 줄이 바뀌어요. (예: 두 줄)">
                     <textarea id="homeHeadline" name="homeHeadline" rows={2} defaultValue={data.homeHeadline} className={textareaClass} />
                 </Field>

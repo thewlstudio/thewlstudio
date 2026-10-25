@@ -67,7 +67,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 </div>
             </div>
 
-            <Section step={1} title="기본 정보">
+            <Section step={1} title="기본 정보" help="**발매일**을 달력에서 고르면 목록이 최신순으로 자동 정렬돼요. 홈페이지 주소(영문)는 만든 뒤에 **바꿀 수 없어요**.">
                 <Field label="앨범(작품) 제목" htmlFor="title" required>
                     <input id="title" name="title" defaultValue={data.title} onChange={(e) => setPreview((p) => ({ ...p, title: e.target.value }))} className={inputClass} />
                 </Field>
@@ -92,7 +92,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 )}
             </Section>
 
-            <Section step={2} title="커버 이미지">
+            <Section step={2} title="커버 이미지" help="목록과 상세 맨 위에 나오는 정사각형 이미지예요. **사진 자르기**에서 1:1을 고르면 딱 맞아요.">
                 <div className="flex items-start gap-4">
                     <div className="relative w-28 aspect-square shrink-0 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
                         {shownPhoto ? (
@@ -148,7 +148,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
             <InlineError id="imageFile" />
             </Section>
 
-            <Section step={3} title="링크" hint="모두 선택 사항이에요. 비워 두면 사이트에서 해당 버튼이 나오지 않을 수 있어요.">
+            <Section step={3} title="링크" help="모두 선택 사항이에요. 유튜브 주소를 넣으면 **커버를 눌렀을 때** 영상이 열려요." hint="모두 선택 사항이에요. 비워 두면 사이트에서 해당 버튼이 나오지 않을 수 있어요.">
                 <Field label="유튜브 주소 (커버를 눌렀을 때 열림)" htmlFor="youtubeUrl" hint="브라우저 주소창의 주소를 복사해 붙여넣어 주세요.">
                     <input id="youtubeUrl" name="youtubeUrl" type="url" inputMode="url" placeholder="https://..." defaultValue={data.youtubeUrl} className={inputClass} />
                 </Field>
@@ -161,7 +161,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
             </Section>
 
             {!isCreate && (
-                <Section step={4} title="상세 페이지 내용" hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
+                <Section step={4} title="상세 페이지 내용" help="설명·크레딧·트랙리스트·인사말·이미지·유튜브를 **블록**으로 쌓아요. 블록 추가 → 채우기 → 저장 순서예요. 오디오 파일을 새로 올리는 것은 /admin에서만 할 수 있어요." hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
                     <div className="flex justify-end -mt-2">
                         <a href={`/works/${data.slug}`} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             진짜 화면 보기 ↗ (저장한 내용 기준)

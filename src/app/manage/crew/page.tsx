@@ -12,6 +12,7 @@ import RestoreButton from "../_components/RestoreButton";
 import { moveCrewOrder, restoreCrew, reorderCrew } from "./actions";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
+import EmptyState from "../_components/EmptyState";
 
 export const metadata = { title: "크루 관리" };
 export const dynamic = "force-dynamic";
@@ -73,6 +74,15 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                 </Link>
             )}
             {isTrashView && members.length === 0 && <p className="text-sm text-neutral-500 py-8 text-center">휴지통이 비어 있어요.</p>}
+
+            {!isTrashView && members.length === 0 && (
+                <EmptyState
+                    title="아직 등록된 크루가 없어요"
+                    body="크루를 추가하면 홈페이지 Crew 페이지에 소개돼요. 사진, 이름, 직책만 있으면 시작할 수 있어요."
+                    actionHref={writeReady ? "/manage/crew/new" : undefined}
+                    actionLabel={writeReady ? "+ 첫 크루 만들기" : undefined}
+                />
+            )}
 
             <ManagedList
                 reorder={!isTrashView && writeReady ? reorderCrew : undefined}

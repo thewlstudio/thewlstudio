@@ -94,7 +94,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 onCloseAll={col.closeAll}
             />
 
-            <Section step={1} title="서비스" hint="페이지 위쪽의 검은 배경 카드(예: 보컬 레코딩)예요. 서비스가 2개일 때 가장 보기 좋아요.">
+            <Section step={1} title="서비스" help="페이지 위쪽의 검은 카드예요. **2개**일 때 가장 보기 좋아요." hint="페이지 위쪽의 검은 배경 카드(예: 보컬 레코딩)예요. 서비스가 2개일 때 가장 보기 좋아요.">
                 <div id="services" tabIndex={-1} className="space-y-4 focus:outline-none">
                     {services.map((s, i) => {
                         const upd = (patch: Partial<typeof s>) => set(setServices)(services.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -133,7 +133,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </div>
             </Section>
 
-            <Section step={2} title="장비" hint="EQUIPMENT 영역의 묶음(마이크, 아웃보드 등)과 그 안의 장비 이름이에요.">
+            <Section step={2} title="장비" help="묶음 제목과 장비 이름을 적어요. 제목에서 **Enter**로 줄을 나누면 데스크톱에서 줄이 바뀌어요." hint="EQUIPMENT 영역의 묶음(마이크, 아웃보드 등)과 그 안의 장비 이름이에요.">
                 <div id="equipment" tabIndex={-1} className="space-y-4 focus:outline-none">
                     {equipment.map((g, i) => {
                         const upd = (patch: Partial<typeof g>) => set(setEquipment)(equipment.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -166,7 +166,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </div>
             </Section>
 
-            <Section step={3} title="멤버십" hint="MEMBERSHIP 영역의 회원권 카드예요. 3개일 때 가장 보기 좋아요.">
+            <Section step={3} title="멤버십" help="회원권 카드예요. **3개**일 때 가장 보기 좋고, 금액 뒤에는 '원'이 자동으로 붙어요." hint="MEMBERSHIP 영역의 회원권 카드예요. 3개일 때 가장 보기 좋아요.">
                 <div id="memberships" tabIndex={-1} className="space-y-4 focus:outline-none">
                     {memberships.map((m, i) => {
                         const upd = (patch: Partial<typeof m>) => set(setMemberships)(memberships.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -207,7 +207,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </Field>
             </Section>
 
-            <Section step={4} title="이용 안내" hint="GUIDELINES & AMENITIES 영역이에요.">
+            <Section step={4} title="이용 안내" help="주차·편의시설·CCTV·수칙 영역이에요. 붉은 강조 문구는 **짧게** 적는 게 좋아요." hint="GUIDELINES & AMENITIES 영역이에요.">
                 <Field label="소개 문구" htmlFor="guidelinesIntro" hint="Enter로 줄을 나누면 데스크톱에서 줄이 바뀌어요.">
                     <textarea id="guidelinesIntro" rows={5} value={text.guidelinesIntro} onChange={setT("guidelinesIntro")} className={textareaClass} />
                 </Field>

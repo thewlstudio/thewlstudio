@@ -86,7 +86,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 </div>
             </div>
 
-            <Section step={1} title="기본 정보">
+            <Section step={1} title="기본 정보" help="**공개/비공개**로 홈페이지 표시를 바꿔요. 비공개로 두면 내용은 남고 홈페이지에서만 숨겨져요. **홈페이지 주소(영문)**는 만든 뒤에 바꿀 수 없어요.">
                 <div>
                     <p className="text-sm font-bold mb-1.5">공개 상태</p>
                     <p className="text-sm text-neutral-600 mb-2 leading-relaxed">
@@ -134,7 +134,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 )}
             </Section>
 
-            <Section step={2} title="프로필 사진">
+            <Section step={2} title="프로필 사진" help="목록과 상세 페이지에 나오는 대표 사진이에요. **사진 자르기**로 비율을 맞출 수 있어요. 3MB가 넘으면 자동으로 줄여서 올라가요.">
                 <div className="flex items-start gap-4">
                     <div className="relative w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
                         {shownPhoto ? (
@@ -190,7 +190,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
             <InlineError id="imageFile" />
             </Section>
 
-            <Section step={3} title="소셜 링크" hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워 둬도 돼요.">
+            <Section step={3} title="소셜 링크" help="프로필에 아이콘으로 나와요. 주소창의 주소를 **통째로 복사해서 붙여넣으면** 돼요. 필요 없는 줄은 이 링크 지우기를 누르세요." hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워 둬도 돼요.">
                 {rows.map((row, i) => {
                     const known = CREW_ICON_PRESETS.some((p) => p.ref === row.iconRef);
                     return (
