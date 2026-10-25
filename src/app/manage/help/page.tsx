@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/manage-auth";
 import ManageNav from "../ManageNav";
+import OnboardingReset from "./OnboardingReset";
 
 export const metadata = { title: "사용 안내" };
 
@@ -110,8 +111,13 @@ export default async function HelpPage() {
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-8 md:py-12">
             <ManageNav title="사용 안내" />
-            <p className="text-sm text-neutral-600 mb-6 leading-relaxed">
+            <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
                 처음 사용하셔도 괜찮아요. 궁금한 항목을 눌러 펼쳐 보세요.
+            </p>
+            <p className="text-sm mb-6">
+                <Link href="/manage/map" className="font-bold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm">
+                    홈페이지의 어느 부분을 어디서 고치는지 한눈에 보기 → 홈페이지 지도
+                </Link>
             </p>
 
             <div className="space-y-8">
@@ -136,6 +142,8 @@ export default async function HelpPage() {
                     </section>
                 ))}
             </div>
+
+            <OnboardingReset />
 
             <p className="text-sm text-neutral-500 mt-10 border-t border-neutral-200 pt-4 leading-relaxed">
                 이 안내에 없는 문제가 생기면 개발자에게 어느 화면에서 무엇을 하다가 어떤 메시지가 나왔는지 알려 주세요.

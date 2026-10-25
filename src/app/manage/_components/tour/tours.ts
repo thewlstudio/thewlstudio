@@ -51,6 +51,7 @@ const HUB: TourDef = {
     steps: [
         { target: sel("hub-checklist"), title: "처음 설정", body: "여기 **다섯 가지**를 해 보면 사용법을 금방 익혀요. 하나씩 하면 **자동으로 체크**돼요." },
         { target: sel("hub-cards"), title: "고칠 항목 고르기", body: "강사·Crew·Works·Studio·Contact 중 **고칠 항목**을 눌러요. 오른쪽 숫자는 지금 **등록된 개수**예요." },
+        { target: sel("hub-map"), title: "홈페이지 지도", body: "홈페이지의 **어느 부분을 어디서 고치는지** 그림으로 보여 드려요. 번호를 누르면 그 수정 화면으로 가요." },
         { target: sel("hub-view-site"), title: "홈페이지에서 확인하기", body: "고친 결과는 여기서 바로 확인해요. **저장하기 전에는** 홈페이지가 바뀌지 않아요." },
         { target: sel("hub-recent"), title: "최근 수정", body: "방금 고친 항목으로 **바로 돌아가요**." },
         { target: sel("nav-help"), title: "막히면 여기서", body: "**사용 안내**에 질문별 답이 있어요. 각 화면 위의 **이 화면 안내**를 누르면 지금 보는 안내를 다시 볼 수 있어요." },

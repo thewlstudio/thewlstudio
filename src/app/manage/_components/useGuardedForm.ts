@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { setFormDirty } from "@/lib/formDirtyGuard";
 import { eulReul } from "@/lib/josa";
+import { checklist } from "./checklist/storage";
 
 type FieldError = { id: string; label: string };
 type FormState = { ok: true } | { ok: false; fields?: FieldError[] } | null;
@@ -34,7 +35,10 @@ export function useGuardedForm(state: FormState) {
     }
     // "변경 버리기"가 방금 저장한 값으로 돌아가도록 서버 데이터를 다시 받는다
     useEffect(() => {
-        if (state?.ok) router.refresh();
+        if (state?.ok) {
+            checklist.markSave(window.location.pathname);
+            router.refresh();
+        }
     }, [state, router]);
 
     useEffect(() => {

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/manage-auth";
 import ManageNav from "./ManageNav";
 import FirstTimeGuide from "./FirstTimeGuide";
+import SetupChecklist from "./_components/checklist/SetupChecklist";
 import { client } from "@/sanity/lib/client";
 import { formatAbsolute, formatUpdated } from "@/lib/format-updated";
 
@@ -81,18 +82,28 @@ export default async function ManageHubPage() {
             <ManageNav title="관리 허브" showHubLink={false} />
 
             <FirstTimeGuide />
+            <SetupChecklist />
 
             <div className="flex items-center justify-between gap-4 mb-4">
                 <p className="text-sm text-neutral-600">관리할 항목을 선택해 주세요.</p>
-                <a
-                    data-tour="hub-view-site"
-                    href="/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
-                >
-                    홈페이지 보기 ↗
-                </a>
+                <div className="flex items-center gap-4 shrink-0">
+                <Link
+                        data-tour="hub-map"
+                        href="/manage/map"
+                        className="shrink-0 py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
+                    >
+                        홈페이지 지도
+                    </Link>
+                    <a
+                        data-tour="hub-view-site"
+                        href="/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
+                    >
+                        홈페이지 보기 ↗
+                    </a>
+                </div>
             </div>
 
             <ul data-tour="hub-cards" className="space-y-3">

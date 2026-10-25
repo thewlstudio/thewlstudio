@@ -3,6 +3,7 @@ import { getSessionExpiry } from "@/lib/manage-auth";
 import { ToastProvider } from "./_components/Toast";
 import SessionWatcher from "./_components/SessionWatcher";
 import { TourProvider } from "./_components/tour/TourProvider";
+import ChecklistTracker from "./_components/checklist/ChecklistTracker";
 
 export const metadata: Metadata = {
     title: { default: "홈페이지 관리", template: "%s | 홈페이지 관리" },
@@ -18,6 +19,7 @@ export default async function ManageLayout({ children }: { children: React.React
             <ToastProvider>
                 <TourProvider>
                     {children}
+                    <ChecklistTracker />
                     {expiresAt && <SessionWatcher expiresAt={expiresAt} />}
                 </TourProvider>
             </ToastProvider>
