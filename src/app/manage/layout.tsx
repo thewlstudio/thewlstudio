@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getSessionExpiry } from "@/lib/manage-auth";
 import { ToastProvider } from "./_components/Toast";
 import SessionWatcher from "./_components/SessionWatcher";
+import { TourProvider } from "./_components/tour/TourProvider";
 
 export const metadata: Metadata = {
     title: { default: "홈페이지 관리", template: "%s | 홈페이지 관리" },
@@ -15,8 +16,10 @@ export default async function ManageLayout({ children }: { children: React.React
     return (
         <div className="bg-neutral-50 text-black min-h-screen">
             <ToastProvider>
-                {children}
-                {expiresAt && <SessionWatcher expiresAt={expiresAt} />}
+                <TourProvider>
+                    {children}
+                    {expiresAt && <SessionWatcher expiresAt={expiresAt} />}
+                </TourProvider>
             </ToastProvider>
         </div>
     );

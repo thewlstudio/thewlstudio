@@ -36,7 +36,7 @@ export default function ReorderButtons({
     const btn =
         "w-9 h-8 flex items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-black disabled:opacity-20 disabled:hover:bg-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black";
     return (
-        <div className="flex flex-col shrink-0">
+        <div data-tour="list-reorder" className="flex flex-col shrink-0">
             <button type="button" disabled={disableUp || isPending} onClick={() => run("up")} aria-label="위로 이동" className={`${btn} rounded-t-lg`}>
                 ▲
             </button>

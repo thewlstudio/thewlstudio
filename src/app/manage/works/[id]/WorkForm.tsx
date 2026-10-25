@@ -48,7 +48,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
             {/* 미리보기 */}
-            <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
+            <div data-tour="form-preview" className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
                 <p className="text-sm font-bold text-neutral-600 mb-3"><Eye size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />목록에서 이렇게 보여요 (입력하면 바로 바뀌어요)</p>
                 <div className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center gap-4">
                     <div className="relative w-24 aspect-square rounded-lg overflow-hidden bg-neutral-100 shrink-0">
@@ -92,7 +92,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 )}
             </Section>
 
-            <Section step={2} title="커버 이미지" help="목록과 상세 맨 위에 나오는 정사각형 이미지예요. **사진 자르기**에서 1:1을 고르면 딱 맞아요.">
+            <Section tour="form-photo" step={2} title="커버 이미지" help="목록과 상세 맨 위에 나오는 정사각형 이미지예요. **사진 자르기**에서 1:1을 고르면 딱 맞아요.">
                 <div className="flex items-start gap-4">
                     <div className="relative w-28 aspect-square shrink-0 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
                         {shownPhoto ? (
@@ -161,7 +161,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
             </Section>
 
             {!isCreate && (
-                <Section step={4} title="상세 페이지 내용" help="설명·크레딧·트랙리스트·인사말·이미지·유튜브를 **블록**으로 쌓아요. 블록 추가 → 채우기 → 저장 순서예요. 오디오 파일을 새로 올리는 것은 /admin에서만 할 수 있어요." hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
+                <Section tour="works-blocks" step={4} title="상세 페이지 내용" help="설명·크레딧·트랙리스트·인사말·이미지·유튜브를 **블록**으로 쌓아요. 블록 추가 → 채우기 → 저장 순서예요. 오디오 파일을 새로 올리는 것은 /admin에서만 할 수 있어요." hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
                     <div className="flex justify-end -mt-2">
                         <a href={`/works/${data.slug}`} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             진짜 화면 보기 ↗ (저장한 내용 기준)
@@ -171,7 +171,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 </Section>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
+            <div data-tour="form-save-bar" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">

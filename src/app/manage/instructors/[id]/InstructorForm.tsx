@@ -303,7 +303,7 @@ function LivePreview({
     photoPosition: string;
 }) {
     return (
-        <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
+        <div data-tour="form-preview" className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
             <div className="flex items-center justify-between gap-3 mb-3">
                 <p className="text-sm font-bold text-neutral-600">
                     <Eye size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />실제로 이렇게 보여요 (입력하면 바로 바뀌어요)
@@ -485,6 +485,7 @@ function InstructorFormInner({
 
             {/* 2. 사진 */}
             <Section
+                tour="form-photo"
                 step={2}
                 title="사진"
                 hint="사진은 총 3장이 필요해요. 바꾸고 싶은 것만 고르면 돼요. 위 미리보기에서 바로 확인하세요."
@@ -731,7 +732,7 @@ function InstructorFormInner({
             </Section>
 
             {/* 저장 바 — 화면 아래 고정 */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
+            <div data-tour="form-save-bar" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && (
                     <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">
                         저장하지 않은 변경사항이 있어요

@@ -61,7 +61,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                 <div className="flex items-center justify-between gap-4 mb-2">
                     <p className="text-sm text-neutral-600">수정할 크루를 눌러 주세요. 총 {members.length}명이 등록되어 있어요.</p>
                     {writeReady && (
-                        <Link href="/manage/crew/new" className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                        <Link data-tour="list-new" href="/manage/crew/new" className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             + 새 크루
                         </Link>
                     )}
@@ -69,7 +69,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
             )}
 
             {!isTrashView && trashedCount > 0 && (
-                <Link href="/manage/crew?view=trash" className="inline-block mb-4 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4">
+                <Link data-tour="list-trash" href="/manage/crew?view=trash" className="inline-block mb-4 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4">
                     휴지통 보기 ({trashedCount})
                 </Link>
             )}

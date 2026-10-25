@@ -8,7 +8,7 @@ export default function UpdatedAt({ iso, historyHref }: { iso?: string | null; h
     // 최근(오늘·어제 등)일 때만 "3시간 전" 같은 상대 표현을 덧붙인다
     const relative = /전 수정$|방금 수정$|어제 수정$/.test(text) ? ` (${text.replace(" 수정", "")})` : "";
     return (
-        <p className="text-sm text-neutral-500 mt-1">
+        <p data-tour="form-updated" className="text-sm text-neutral-500 mt-1">
             마지막 수정:{" "}
             <time dateTime={iso} title={formatAbsolute(iso)}>
                 {formatAbsolute(iso)}

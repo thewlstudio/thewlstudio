@@ -91,6 +91,7 @@ export default async function InstructorListPage({
                     </p>
                     {writeReady && (
                         <Link
+                            data-tour="list-new"
                             href="/manage/instructors/new"
                             className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                         >
@@ -102,6 +103,7 @@ export default async function InstructorListPage({
 
             {!isTrashView && trashedCount > 0 && (
                 <Link
+                    data-tour="list-trash"
                     href="/manage/instructors?view=trash"
                     className="inline-block mb-4 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4"
                 >

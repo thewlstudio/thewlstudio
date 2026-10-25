@@ -123,7 +123,7 @@ export default function ManagedList({
     return (
         <DragCtx.Provider value={{ canDrag, begin: setDragId, end: () => { setDragId(null); setOverId(null); } }}>
             {showTools && (
-                <div className="mb-4 space-y-2">
+                <div data-tour="list-tools" className="mb-4 space-y-2">
                     <div className="flex items-center gap-2">
                         <label htmlFor={searchId} className="sr-only">목록에서 찾기</label>
                         <input
@@ -172,9 +172,10 @@ export default function ManagedList({
             {visible.length === 0 && filtering && <p className="text-sm text-neutral-500 py-8 text-center">조건에 맞는 항목이 없어요.</p>}
 
             <ul className="space-y-3">
-                {visible.map((item) => (
+                {visible.map((item, rowIndex) => (
                     <li
                         key={item.id}
+                        data-tour={rowIndex === 0 ? "list-row" : undefined}
                         onDragOver={(e) => {
                             if (dragId && canDrag) {
                                 e.preventDefault();

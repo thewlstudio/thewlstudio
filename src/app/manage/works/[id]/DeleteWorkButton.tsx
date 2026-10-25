@@ -45,6 +45,7 @@ export default function DeleteWorkButton({
     if (!confirming) {
         return (
             <button
+                data-tour="form-danger"
                 ref={openButtonRef}
                 type="button"
                 onClick={() => setConfirming(true)}

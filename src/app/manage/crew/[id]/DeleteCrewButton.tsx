@@ -45,6 +45,7 @@ export default function DeleteCrewButton({
     if (!confirming) {
         return (
             <button
+                data-tour="form-danger"
                 ref={openButtonRef}
                 type="button"
                 onClick={() => setConfirming(true)}

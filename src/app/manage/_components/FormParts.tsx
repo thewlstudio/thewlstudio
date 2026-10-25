@@ -28,6 +28,7 @@ export function Section({
     title,
     hint,
     help,
+    tour,
     children,
 }: {
     step: number;
@@ -35,10 +36,12 @@ export function Section({
     hint?: string;
     /** 제목 옆 "?"를 눌렀을 때 펼쳐지는 설명 (**강조** 가능) */
     help?: string;
+    /** 화면 안내(투어)가 가리킬 이름 → data-tour */
+    tour?: string;
     children: React.ReactNode;
 }) {
     return (
-        <section className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6">
+        <section data-tour={tour ?? (step === 1 ? "form-first" : undefined)} className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6">
             <div className="mb-5">
                 <div className="flex items-center gap-2.5 mb-1.5">
                     <span

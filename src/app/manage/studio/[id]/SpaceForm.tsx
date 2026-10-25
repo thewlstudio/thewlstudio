@@ -216,7 +216,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section step={2} title="사진" help="넘겨 보는 사진이에요. **첫 번째 사진**이 처음에 보이고, 순서는 ▲▼로 바꿔요." hint="홈페이지 사진 넘기기에 이 순서대로 나와요. 첫 번째 사진이 처음에 보여요.">
+            <Section tour="form-photo" step={2} title="사진" help="넘겨 보는 사진이에요. **첫 번째 사진**이 처음에 보이고, 순서는 ▲▼로 바꿔요." hint="홈페이지 사진 넘기기에 이 순서대로 나와요. 첫 번째 사진이 처음에 보여요.">
                 {images.length === 0 && <p className="text-sm text-neutral-500">아직 사진이 없어요. 아래에서 추가해 주세요.</p>}
                 {images.map((im, i) => (
                     <ImageItem
@@ -271,7 +271,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 <LinesEditor lines={notes} onChange={apply(setNotes)} label="안내 문구" placeholder="예: * 방음문: 열때는 아래로…" />
             </Section>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
+            <div data-tour="form-save-bar" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">

@@ -59,7 +59,7 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
                 <div className="flex items-center justify-between gap-4 mb-2">
                     <p className="text-sm text-neutral-600">수정할 작업물을 눌러 주세요. 발매일 최신순이며, 총 {works.length}개예요.</p>
                     {writeReady && (
-                        <Link href="/manage/works/new" className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                        <Link data-tour="list-new" href="/manage/works/new" className="shrink-0 h-10 px-4 rounded-xl bg-black text-white text-sm font-bold flex items-center hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             + 새 작업물
                         </Link>
                     )}
@@ -67,7 +67,7 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
             )}
 
             {!isTrashView && trashedCount > 0 && (
-                <Link href="/manage/works?view=trash" className="inline-block mb-4 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4">
+                <Link data-tour="list-trash" href="/manage/works?view=trash" className="inline-block mb-4 text-sm font-semibold text-neutral-500 hover:text-black underline underline-offset-4">
                     휴지통 보기 ({trashedCount})
                 </Link>
             )}

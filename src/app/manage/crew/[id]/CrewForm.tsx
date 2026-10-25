@@ -67,7 +67,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
             )}
 
             {/* 미리보기 */}
-            <div className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
+            <div data-tour="form-preview" className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
                 <p className="text-sm font-bold text-neutral-600 mb-3"><Eye size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />목록에서 이렇게 보여요 (입력하면 바로 바뀌어요)</p>
                 <div className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center gap-4">
                     <div className="relative w-20 aspect-[3/4] rounded-lg overflow-hidden bg-neutral-100 shrink-0">
@@ -134,7 +134,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 )}
             </Section>
 
-            <Section step={2} title="프로필 사진" help="목록과 상세 페이지에 나오는 대표 사진이에요. **사진 자르기**로 비율을 맞출 수 있어요. 3MB가 넘으면 자동으로 줄여서 올라가요.">
+            <Section tour="form-photo" step={2} title="프로필 사진" help="목록과 상세 페이지에 나오는 대표 사진이에요. **사진 자르기**로 비율을 맞출 수 있어요. 3MB가 넘으면 자동으로 줄여서 올라가요.">
                 <div className="flex items-start gap-4">
                     <div className="relative w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
                         {shownPhoto ? (
@@ -276,7 +276,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 </Section>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
+            <div data-tour="form-save-bar" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">

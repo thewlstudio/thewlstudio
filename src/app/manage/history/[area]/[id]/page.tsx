@@ -142,7 +142,7 @@ export default async function HistoryPage({
                 </section>
             )}
 
-            <ol className="space-y-2">
+            <ol data-tour="history-list" className="space-y-2">
                 {rows.map((r, i) => {
                     const rel = formatUpdated(r.timestamp);
                     const active = r.timestamp === at;

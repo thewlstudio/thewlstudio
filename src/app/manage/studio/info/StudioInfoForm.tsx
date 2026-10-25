@@ -94,7 +94,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 onCloseAll={col.closeAll}
             />
 
-            <Section step={1} title="서비스" help="페이지 위쪽의 검은 카드예요. **2개**일 때 가장 보기 좋아요." hint="페이지 위쪽의 검은 배경 카드(예: 보컬 레코딩)예요. 서비스가 2개일 때 가장 보기 좋아요.">
+            <Section tour="info-services" step={1} title="서비스" help="페이지 위쪽의 검은 카드예요. **2개**일 때 가장 보기 좋아요." hint="페이지 위쪽의 검은 배경 카드(예: 보컬 레코딩)예요. 서비스가 2개일 때 가장 보기 좋아요.">
                 <div id="services" tabIndex={-1} className="space-y-4 focus:outline-none">
                     {services.map((s, i) => {
                         const upd = (patch: Partial<typeof s>) => set(setServices)(services.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -133,7 +133,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </div>
             </Section>
 
-            <Section step={2} title="장비" help="묶음 제목과 장비 이름을 적어요. 제목에서 **Enter**로 줄을 나누면 데스크톱에서 줄이 바뀌어요." hint="EQUIPMENT 영역의 묶음(마이크, 아웃보드 등)과 그 안의 장비 이름이에요.">
+            <Section tour="info-equipment" step={2} title="장비" help="묶음 제목과 장비 이름을 적어요. 제목에서 **Enter**로 줄을 나누면 데스크톱에서 줄이 바뀌어요." hint="EQUIPMENT 영역의 묶음(마이크, 아웃보드 등)과 그 안의 장비 이름이에요.">
                 <div id="equipment" tabIndex={-1} className="space-y-4 focus:outline-none">
                     {equipment.map((g, i) => {
                         const upd = (patch: Partial<typeof g>) => set(setEquipment)(equipment.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -166,7 +166,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </div>
             </Section>
 
-            <Section step={3} title="멤버십" help="회원권 카드예요. **3개**일 때 가장 보기 좋고, 금액 뒤에는 '원'이 자동으로 붙어요." hint="MEMBERSHIP 영역의 회원권 카드예요. 3개일 때 가장 보기 좋아요.">
+            <Section tour="info-membership" step={3} title="멤버십" help="회원권 카드예요. **3개**일 때 가장 보기 좋고, 금액 뒤에는 '원'이 자동으로 붙어요." hint="MEMBERSHIP 영역의 회원권 카드예요. 3개일 때 가장 보기 좋아요.">
                 <div id="memberships" tabIndex={-1} className="space-y-4 focus:outline-none">
                     {memberships.map((m, i) => {
                         const upd = (patch: Partial<typeof m>) => set(setMemberships)(memberships.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -250,7 +250,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </div>
             </Section>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
+            <div data-tour="form-save-bar" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">저장하면 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">

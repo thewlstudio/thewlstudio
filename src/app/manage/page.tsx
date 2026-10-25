@@ -85,6 +85,7 @@ export default async function ManageHubPage() {
             <div className="flex items-center justify-between gap-4 mb-4">
                 <p className="text-sm text-neutral-600">관리할 항목을 선택해 주세요.</p>
                 <a
+                    data-tour="hub-view-site"
                     href="/"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -94,7 +95,7 @@ export default async function ManageHubPage() {
                 </a>
             </div>
 
-            <ul className="space-y-3">
+            <ul data-tour="hub-cards" className="space-y-3">
                 {SECTIONS.map((section) => (
                     <li key={section.key}>
                         {section.href ? (
@@ -134,7 +135,7 @@ export default async function ManageHubPage() {
             </ul>
 
             {recent.length > 0 && (
-                <section aria-labelledby="recent" className="mt-10">
+                <section data-tour="hub-recent" aria-labelledby="recent" className="mt-10">
                     <h2 id="recent" className="text-sm font-black tracking-tight mb-3">최근 수정</h2>
                     <ul className="rounded-2xl border border-neutral-200 bg-white divide-y divide-neutral-100">
                         {recent.map((r) => {
