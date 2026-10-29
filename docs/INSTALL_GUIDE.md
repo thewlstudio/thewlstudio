@@ -84,5 +84,5 @@ npm run smoke https://<고객 사이트 주소>   # 공개 페이지·관리 화
 ## 9. 알려진 한계·다음 확인
 - 빈 프로젝트 전체 시연 미실시(위 상단 참고). 첫 설치 때 소요 시간과 막힌 곳을 이 문서에 기록한다.
 - 모든 저장이 한 쓰기 토큰·공유 비밀번호로 이뤄진다(계정·권한은 설계서 S4·S5).
-- 오류 모니터링(Sentry)과 자동 백업은 아직 없다(설계서 S3). 인계 전 [백업 절차](../MANAGE_GUIDE.md)를 한 번 시험하고 위치를 고객에게 알린다.
+- 자동 백업은 `.github/workflows/backup.yml`로 준비돼 있다. **고객 저장소에 시크릿 `SANITY_AUTH_TOKEN`을 넣고 한 번 수동 실행해 통과를 확인**해야 켜진 것이다([설정](BACKUP_RESTORE.md)). 오류 모니터링(Sentry)은 아직 없다(설계서 S3).
 - Studio(`/admin`)의 Presentation 미리보기는 읽기 토큰을 발급해 `defineEnableDraftMode`로 연결하기 전까지 쓸 수 없다. `/manage`의 미리보기는 별개로 동작한다.

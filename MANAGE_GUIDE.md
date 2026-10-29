@@ -159,6 +159,7 @@
 `migrate-studio-spaces.ts`, `migrate-site-settings.ts`, `migrate-studio-info.ts`, `migrate-home-intro.ts`
 
 ### 백업과 복구
+- **자동 백업(매주)과 복구 절차·리허설: [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md).** 아래는 수동 명령 요약입니다.
 - `/manage` 이력은 최신 25건과 비교용 이전 기록 1건을 조회합니다. 조회 결과의 마지막 항목을 최초 생성으로 단정하지 않고, 읽지 못한 기록을 빈 문서처럼 비교하지 않습니다. 실제 현재 문서의 버전과 일치하는 항목에만 `현재`를 표시합니다.
 - 이력에서 되돌리기는 같은 공개 문서 ID·종류를 확인하고, 확인 화면을 연 시점의 `_rev`가 유지될 때만 조건부 패치를 적용합니다. 휴지통·순서·시스템 필드는 유지하며, 확인 뒤 변경되거나 영구 삭제된 문서를 덮어쓰거나 재생성하지 않습니다. 초안·릴리스 문서는 `/admin`에서 관리합니다.
 - API 동작 참고: [Sanity History API](https://www.sanity.io/docs/http-reference/history), [Sanity 클라이언트의 조건부 패치](https://github.com/sanity-io/client#patch-a-document-only-if-revision-matches).

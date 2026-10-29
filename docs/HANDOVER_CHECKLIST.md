@@ -29,7 +29,8 @@
 - [ ] 로컬 `.env.local`에 쓰기 토큰이 없다
 - [ ] Sanity 데이터셋이 공개이므로 데이터셋에 비밀번호·개인정보가 없다
 - [ ] Sanity 프로젝트·Vercel 프로젝트·GitHub 저장소의 **소유자(Owner)가 고객**이고, 설치자는 필요한 만큼만 멤버로 남았다
-- [ ] 백업 1회 실행해 보관 위치를 정했다 (`npx sanity dataset export production backups/…`, MANAGE_GUIDE "백업과 복구")
+- [ ] 자동 백업 설정(시크릿 `SANITY_AUTH_TOKEN`)을 하고 Actions에서 **Backup을 수동 실행해 통과**를 확인했다
+- [ ] 복구 리허설(새 시험용 데이터셋에 가져오기)을 한 번 해 보고 결과를 기록했다 — [docs/BACKUP_RESTORE.md](BACKUP_RESTORE.md) §3-1
 
 ## E. 고객에게 전달
 - [ ] 관리 주소(`https://<고객 사이트>/manage`)와 사용 안내(`/manage/help`), 이 사이트의 `MANAGE_GUIDE.md`의 "운영자" 절

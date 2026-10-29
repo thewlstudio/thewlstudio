@@ -1,0 +1,52 @@
+name: Backup
+
+# 매주 일요일 03:00(한국 시간) Sanity 데이터셋을 내보내 점검하고, GitHub Actions 보관함(artifact)에 올린다.
+# 수동 실행: Actions 탭 → Backup → Run workflow.
+# 준비(한 번): 저장소 Settings → Secrets and variables → Actions → Secrets에 SANITY_AUTH_TOKEN(읽기 이상 권한의 Sanity 토큰) 추가.
+#   프로젝트·데이터셋은 .env 값(NEXT_PUBLIC_SANITY_*)이 아니라 이 저장소의 sanity.cli.ts 기본값을 쓴다 —
+#   바꾸려면 Variables에 SANITY_PROJECT_ID / SANITY_DATASET을 추가한다.
+# 복구 절차: docs/BACKUP_RESTORE.md
+on:
+  schedule:
+    - cron: "0 18 * * 0" # 일요일 18:00 UTC = 월요일 03:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+      NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ vars.SANITY_PROJECT_ID }}
+      NEXT_PUBLIC_SANITY_DATASET: ${{ vars.SANITY_DATASET }}
+      DO_NOT_TRACK: "1"
+    steps:
+      - name: 토큰 확인
+        run: |
+          if [ -z "$SANITY_AUTH_TOKEN" ]; then
+            echo "::error::SANITY_AUTH_TOKEN 시크릿이 없어요. Settings → Secrets and variables → Actions에서 추가해 주세요. (docs/BACKUP_RESTORE.md)"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: 데이터셋 내보내기 (사진·파일 포함)
+        run: |
+          DATASET="${NEXT_PUBLIC_SANITY_DATASET:-production}"
+          mkdir -p backups
+          npx sanity dataset export "$DATASET" "backups/backup-$(date -u +%Y%m%d).tar.gz" --overwrite
+      - name: 백업 점검 (문서 수·깨진 줄·필수 문서)
+        run: npx tsx scripts/verify-backup.ts backups/backup-*.tar.gz --require siteSettings
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sanity-backup
+          path: backups/*.tar.gz
+          # 보관함 용량(무료 500MB)을 넘지 않도록 짧게 둔다. 백업 1개가 50MB 안팎이면 약 5주치.
+          retention-days: 35
+          if-no-files-found: error
