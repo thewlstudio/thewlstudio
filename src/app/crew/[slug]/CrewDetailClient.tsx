@@ -76,7 +76,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                         {section.years?.map((group, idx) => (
                                             <div key={group._key ?? idx} className="flex flex-col md:flex-row gap-4 md:gap-8 group/yearblock items-start">
                                                 <div className="w-full md:w-28 shrink-0">
-                                                    <p className="text-2xl md:text-4xl font-extrabold italic tracking-tight text-neutral-200 group-hover/yearblock:text-black transition-colors duration-500 leading-none -mt-1 md:-mt-1.5">
+                                                    <p className="text-2xl md:text-4xl font-extrabold italic tracking-tight text-neutral-500 group-hover/yearblock:text-black transition-colors duration-500 leading-none -mt-1 md:-mt-1.5">
                                                         {group.year}
                                                     </p>
                                                 </div>
@@ -84,7 +84,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                                     {group.tracks?.map((track, i) => (
                                                         <div key={track._key ?? i} className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200/60 pb-4 group/track cursor-default overflow-hidden transition-colors duration-300 hover:border-black">
                                                             <h3 className="text-sm md:text-xl font-bold text-neutral-500 tracking-tight group-hover/track:text-black motion-safe:group-hover/track:translate-x-3 transition-all duration-300 ease-out">{track.title}</h3>
-                                                            {track.desc && <span className="text-[10px] md:text-xs font-bold text-neutral-300 uppercase tracking-widest mt-1 md:mt-0 font-mono group-hover/track:text-black transition-colors duration-300 shrink-0">{track.desc}</span>}
+                                                            {track.desc && <span className="text-[10px] md:text-xs font-bold text-neutral-500 uppercase tracking-widest mt-1 md:mt-0 font-mono group-hover/track:text-black transition-colors duration-300 shrink-0">{track.desc}</span>}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -138,7 +138,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                             <ul className="space-y-5 pt-1">
                                                 {section.awards.map((item, idx) => (
                                                     <li key={item._key ?? `award-${idx}`} className="flex gap-4 group/list">
-                                                        <span className="text-xs font-bold text-neutral-300 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
+                                                        <span className="text-xs font-bold text-neutral-500 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
                                                         <span className="text-xs md:text-base font-semibold text-neutral-500 break-words group-hover/list:text-black motion-safe:group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>
                                                 ))}
@@ -155,7 +155,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                             <ul className="space-y-5 pt-1">
                                                 {section.activities.map((item, idx) => (
                                                     <li key={item._key ?? `activity-${idx}`} className="flex gap-4 group/list">
-                                                        <span className="text-xs font-bold text-neutral-300 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
+                                                        <span className="text-xs font-bold text-neutral-500 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
                                                         <span className="text-xs md:text-base font-semibold text-neutral-500 break-words group-hover/list:text-black motion-safe:group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>
                                                 ))}
