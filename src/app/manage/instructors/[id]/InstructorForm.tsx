@@ -298,7 +298,7 @@ function LivePreview({
             </div>
             <div className="space-y-3">
                 <div>
-                    <p className="text-sm font-bold text-neutral-500 mb-1.5">① 클래스 목록 화면</p>
+                    <p className="text-sm font-bold text-neutral-600 mb-1.5">① 클래스 목록 화면</p>
                     <ListRowPreview
                         thumbUrl={thumbUrl}
                         photoPosition={photoPosition}
@@ -307,7 +307,7 @@ function LivePreview({
                     />
                 </div>
                 <div>
-                    <p className="text-sm font-bold text-neutral-500 mb-1.5">② 이름을 누르면 뜨는 창</p>
+                    <p className="text-sm font-bold text-neutral-600 mb-1.5">② 이름을 누르면 뜨는 창</p>
                     <PopupPreview
                         modalUrl={modalUrl}
                         category={preview.category}

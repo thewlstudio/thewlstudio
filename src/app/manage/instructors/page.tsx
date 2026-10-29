@@ -205,13 +205,13 @@ export default async function InstructorListPage({
             {isTrashView && instructors.length > 0 && (
                 <p className="text-sm text-neutral-500 mt-6 leading-relaxed">
                     완전 삭제는 아직 지원하지 않아요. 꼭 필요하면 개발자에게{" "}
-                    <code className="bg-neutral-100 px-1 rounded">/admin</code>에서 직접 삭제해 달라고 요청하세요.
+                    <code className="bg-neutral-100 text-neutral-700 px-1 rounded">/admin</code>에서 직접 삭제해 달라고 요청하세요.
                 </p>
             )}
 
             <p className="text-sm text-neutral-500 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
                 저장 실수로 내용이 잘못됐다면, 개발자에게 요청해{" "}
-                <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을
+                <code className="bg-neutral-100 text-neutral-700 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을
                 확인할 수 있어요.
             </p>
         </main>

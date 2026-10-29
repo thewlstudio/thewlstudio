@@ -135,7 +135,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
             />
 
             <p className="text-sm text-neutral-500 mt-8 leading-relaxed border-t border-neutral-200 pt-4">
-                저장 실수로 내용이 잘못됐다면, 개발자에게 요청해 <code className="bg-neutral-100 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을 확인할 수 있어요.
+                저장 실수로 내용이 잘못됐다면, 개발자에게 요청해 <code className="bg-neutral-100 text-neutral-700 px-1 rounded">/admin</code>의 문서 이력에서 이전 내용을 확인할 수 있어요.
             </p>
         </main>
     );

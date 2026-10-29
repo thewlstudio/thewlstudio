@@ -134,7 +134,7 @@ export default function ManagedList({
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder={searchPlaceholder}
                             autoComplete="off"
-                            className="flex-1 h-11 px-4 rounded-xl border border-neutral-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                            className="flex-1 min-w-0 h-11 px-4 rounded-xl border border-neutral-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
                         />
                         {statusFilter && (
                             <div role="group" aria-label="공개 상태로 걸러 보기" className="flex rounded-xl border border-neutral-300 bg-white overflow-hidden shrink-0">
