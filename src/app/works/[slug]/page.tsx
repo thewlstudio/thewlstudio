@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { SITE_NAME_TEXT, getSiteUrl } from "@/config/site";
 import { client, sanityFetch } from "@/sanity/lib/client";
 import { workBySlugQuery, worksQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/lib/queries";
 import WorkDetailClient from "./WorkDetailClient";
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     return publicPageMetadata({
         title: `${work.artist} - ${work.title}`,
-        description: `White Light Studio Portfolio: ${work.artist} - ${work.title}`,
+        description: `${SITE_NAME_TEXT} Portfolio: ${work.artist} - ${work.title}`,
         path, shareImage,
     });
 }
@@ -46,7 +47,7 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
         return notFound();
     }
 
-    const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app").replace(/\/+$/, "");
+    const baseUrl = getSiteUrl();
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "MusicRecording",

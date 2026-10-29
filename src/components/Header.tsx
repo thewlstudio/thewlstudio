@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { usePublicDialog } from "@/hooks/usePublicDialog";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { focusPageElement, pageFocusTarget } from "@/lib/page-focus";
+import { SITE_NAME } from "@/config/site";
 
 const emptySubscribe = () => () => {};
 
@@ -165,7 +166,7 @@ export default function Header() {
                     <div className="z-50 relative">
                         <Link href="/" className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current rounded-sm">
                             <span className={`text-xl min-[360px]:text-2xl font-black uppercase tracking-tighter whitespace-nowrap hover:opacity-80 transition-opacity block ${headerTextColor}`}>
-                                WHITE LIGHT STUDIO
+                                {SITE_NAME}
                             </span>
                         </Link>
                     </div>
@@ -220,7 +221,7 @@ export default function Header() {
                             <div className="sticky top-0 z-20 -mx-6 lg:-mx-24 px-6 lg:px-24 py-6 bg-black flex justify-between items-center">
                                 <Link href="/" onNavigate={() => navigateFromMenu("/")} className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current rounded-sm">
                                     <span className="text-xl min-[360px]:text-2xl font-black uppercase tracking-tighter whitespace-nowrap hover:opacity-80 transition-opacity block text-white">
-                                        WHITE LIGHT STUDIO
+                                        {SITE_NAME}
                                     </span>
                                 </Link>
                                 <div className="flex items-center gap-6 md:gap-8">
@@ -252,7 +253,7 @@ export default function Header() {
                                 >
                                     <div className="mb-10 w-max pr-8 md:pr-10 lg:pr-14 bg-black">
                                         <Link href="/" onNavigate={() => navigateFromMenu("/")}>
-                                            <h3 className="text-white text-xl md:text-2xl font-bold uppercase tracking-widest whitespace-nowrap hover:text-neutral-400 transition-colors">WHITE LIGHT STUDIO</h3>
+                                            <h3 className="text-white text-xl md:text-2xl font-bold uppercase tracking-widest whitespace-nowrap hover:text-neutral-400 transition-colors">{SITE_NAME}</h3>
                                         </Link>
                                     </div>
                                     <div className="flex flex-col space-y-5">

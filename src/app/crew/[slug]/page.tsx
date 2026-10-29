@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { SITE_NAME, SITE_NAME_TEXT, getSiteUrl } from "@/config/site";
 import { notFound } from "next/navigation";
 import { client, sanityFetch } from "@/sanity/lib/client";
 import { crewBySlugQuery, crewsQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/lib/queries";
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     return publicPageMetadata({
         title: `${member.name} (${member.role})`,
-        description: `White Light Studio Crew: ${member.name} - ${member.koName}`,
+        description: `${SITE_NAME_TEXT} Crew: ${member.name} - ${member.koName}`,
         path, shareImage,
     });
 }
@@ -51,7 +52,7 @@ export default async function CrewDetailPage({ params }: Props) {
         notFound();
     }
 
-    const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app").replace(/\/+$/, "");
+    const baseUrl = getSiteUrl();
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "Person",
@@ -62,7 +63,7 @@ export default async function CrewDetailPage({ params }: Props) {
         url: `${baseUrl}${path}`,
         worksFor: {
             "@type": "Organization",
-            name: "WHITE LIGHT STUDIO",
+            name: SITE_NAME,
             url: baseUrl,
         },
     };

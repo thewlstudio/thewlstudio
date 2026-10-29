@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import Lines from "@/components/Lines";
+import { SITE_NAME, SITE_NAME_KO } from "@/config/site";
 
 export default function About() {
     const { transitionFor } = usePublicMotion();
@@ -24,7 +25,7 @@ export default function About() {
                     className="flex flex-col space-y-8"
                 >
                     <div className="space-y-4">
-                        <p className="text-sm tracking-[0.3em] text-neutral-400 font-semibold uppercase">WHITE LIGHT STUDIO</p>
+                        <p className="text-sm tracking-[0.3em] text-neutral-400 font-semibold uppercase">{SITE_NAME}</p>
                         <h2 className="text-4xl md:text-6xl font-black tracking-tighter shrink-0 pt-2 break-keep">
                             <Lines text={homeHeadline} always />
                         </h2>
@@ -51,31 +52,31 @@ export default function About() {
 
                         {/* 1. Large Main Box (2x2) */}
                         <div className="relative col-span-2 row-span-2 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700">
-                            <Image src="/images/lobby_2.jpg" alt="화이트라이트 스튜디오 로비" fill className="object-cover motion-safe:hover:scale-105 transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 66vw, 40vw" />
+                            <Image src="/images/lobby_2.jpg" alt={`${SITE_NAME_KO} 로비`} fill className="object-cover motion-safe:hover:scale-105 transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 66vw, 40vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 2. Top Right Box (1x1) */}
                         <div className="relative col-span-1 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-75">
-                            <Image src="/images/room_a_3.jpg" alt="화이트라이트 스튜디오 A룸" fill className="object-cover scale-125 motion-safe:hover:scale-[1.35] transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 33vw, 20vw" />
+                            <Image src="/images/room_a_3.jpg" alt={`${SITE_NAME_KO} A룸`} fill className="object-cover scale-125 motion-safe:hover:scale-[1.35] transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 33vw, 20vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 3. Mid Right Box (1x1) */}
                         <div className="relative col-span-1 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-150">
-                            <Image src="/images/room_c_3.jpg" alt="화이트라이트 스튜디오 C룸" fill className="object-cover object-bottom scale-110 motion-safe:hover:scale-[1.20] transition-transform duration-1000 origin-bottom" sizes="(max-width: 768px) 33vw, 20vw" />
+                            <Image src="/images/room_c_3.jpg" alt={`${SITE_NAME_KO} C룸`} fill className="object-cover object-bottom scale-110 motion-safe:hover:scale-[1.20] transition-transform duration-1000 origin-bottom" sizes="(max-width: 768px) 33vw, 20vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 4. Bottom Left Box (1x1) */}
                         <div className="relative col-span-1 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-200">
-                            <Image src="/images/room_d_1.jpg" alt="화이트라이트 스튜디오 D룸" fill className="object-cover scale-125 motion-safe:hover:scale-[1.35] transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 33vw, 20vw" />
+                            <Image src="/images/room_d_1.jpg" alt={`${SITE_NAME_KO} D룸`} fill className="object-cover scale-125 motion-safe:hover:scale-[1.35] transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 33vw, 20vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 
                         {/* 5. Bottom Right Wide Box (2x1) */}
                         <div className="relative col-span-2 row-span-1 overflow-hidden shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700 delay-300">
-                            <Image src="/images/room_b_3.jpg" alt="화이트라이트 스튜디오 B룸" fill className="object-cover motion-safe:hover:scale-105 transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 66vw, 40vw" />
+                            <Image src="/images/room_b_3.jpg" alt={`${SITE_NAME_KO} B룸`} fill className="object-cover motion-safe:hover:scale-105 transition-transform duration-1000 origin-center" sizes="(max-width: 768px) 66vw, 40vw" />
                             <div className="absolute inset-0 bg-black/10 pointer-events-none" />
                         </div>
 

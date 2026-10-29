@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/config/site";
 
 export const metadata: Metadata = {
     title: "404 - Page Not Found",
@@ -10,7 +11,7 @@ export default function NotFound() {
         <main id="main-content" className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 font-sans">
             <div className="text-center">
                 <p className="text-xs font-bold tracking-[0.4em] text-neutral-500 uppercase mb-6">
-                    WHITE LIGHT STUDIO
+                    {SITE_NAME}
                 </p>
                 <h1 className="text-[120px] md:text-[200px] font-black leading-none tracking-tighter text-white/10 select-none">
                     404

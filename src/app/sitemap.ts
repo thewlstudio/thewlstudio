@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 import { client } from "@/sanity/lib/client";
 import { crewSitemapQuery, workSitemapQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/lib/queries";
 import { publicDetailPath } from "@/lib/public-routes";
+import { getSiteUrl } from "@/config/site";
 
 export const revalidate = 86400; // Revalidate sitemap daily (24h)
 
-const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app").replace(/\/+$/, "");
+const BASE_URL = getSiteUrl();
 
 type SanitySlugEntry = { slug: string; _updatedAt: string };
 

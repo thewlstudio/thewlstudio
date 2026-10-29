@@ -5,6 +5,7 @@ import { usePublicMotion } from "@/hooks/usePublicMotion";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePrefersReducedMotion } from "./SmoothScroll";
+import { SITE_NAME, SITE_NAME_KO } from "@/config/site";
 
 export default function Hero() {
     const { transitionFor } = usePublicMotion();
@@ -20,12 +21,12 @@ export default function Hero() {
     return (
         <div className="w-full">
             {/* Section 1: Logo only */}
-            <section id="page-title" tabIndex={-1} data-page-path="/" aria-label="WHITE LIGHT STUDIO" style={{ outlineOffset: '-4px' }} className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black">
+            <section id="page-title" tabIndex={-1} data-page-path="/" aria-label={SITE_NAME} style={{ outlineOffset: '-4px' }} className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black">
                 {/* Background Image / Logo */}
                 <div className="absolute inset-0 z-0 scale-150 md:scale-125">
                     <Image
                         src="/images/studio_logo_2.png"
-                        alt="화이트라이트 스튜디오 로고"
+                        alt={`${SITE_NAME_KO} 로고`}
                         fill
                         className="object-contain"
                         sizes="100vw"

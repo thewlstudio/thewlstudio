@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { getSiteSettings } from "@/lib/site-settings-server";
 import { mapEmbedUrl } from "@/lib/site-settings";
 import { publicPageMetadata, PUBLIC_SECTIONS } from "@/lib/public-metadata";
+import { SITE_NAME_LINES, SITE_NAME_TEXT } from "@/config/site";
 
 export const metadata = publicPageMetadata(PUBLIC_SECTIONS.contact);
 
@@ -21,7 +22,7 @@ export default async function ContactPage() {
                     {/* Location Info */}
                     <div className="flex flex-col md:flex-row md:gap-16 w-full">
                         <div className="md:w-1/3 mb-6 md:mb-0">
-                            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">WHITE LIGHT<br />STUDIO</h2>
+                            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight">{SITE_NAME_LINES[0]}<br />{SITE_NAME_LINES[1]}</h2>
                         </div>
 
                         <div className="md:w-1/3 flex flex-col gap-2 mb-8 md:mb-0">
@@ -61,7 +62,7 @@ export default async function ContactPage() {
                     <iframe
                         src={mapEmbedUrl(settings.mapQuery)}
                         className="w-full h-full border-0 absolute top-0 left-0 grayscale opacity-90 transition-opacity duration-300 group-hover:opacity-100"
-                        title="White Light Studio 위치 지도"
+                        title={`${SITE_NAME_TEXT} 위치 지도`}
                         allowFullScreen
                         loading="lazy"
                     ></iframe>
