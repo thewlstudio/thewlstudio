@@ -106,7 +106,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                                 {!isTrashView && writeReady && (
                                     <div className="flex items-center pl-2">
                                         <DragHandle id={m._id} />
-                                        <ReorderButtons documentId={m._id} disableUp={index === 0} disableDown={index === members.length - 1} move={moveCrewOrder} />
+                                        <ReorderButtons documentId={m._id} label={m.koName ?? m.name} disableUp={index === 0} disableDown={index === members.length - 1} move={moveCrewOrder} />
                                     </div>
                                 )}
                                 <Link href={`/manage/crew/${encodeURIComponent(m._id)}`} className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">

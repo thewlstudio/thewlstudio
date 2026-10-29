@@ -150,6 +150,7 @@ export default async function InstructorListPage({
                                         <DragHandle id={instructor._id} />
                                         <ReorderButtons
                                             documentId={instructor._id}
+                                            label={instructor.instructorName}
                                             disableUp={index === 0}
                                             disableDown={index === instructors.length - 1}
                                             move={moveInstructorOrder}

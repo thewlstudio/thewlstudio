@@ -122,7 +122,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                                 {!isTrashView && writeReady && (
                                     <div className="flex items-center pl-2">
                                         <DragHandle id={sp._id} />
-                                        <ReorderButtons documentId={sp._id} disableUp={!prevSame} disableDown={!nextSame} move={moveSpaceOrder} />
+                                        <ReorderButtons documentId={sp._id} label={sp.name} disableUp={!prevSame} disableDown={!nextSame} move={moveSpaceOrder} />
                                     </div>
                                 )}
                                 <Link href={`/manage/studio/${encodeURIComponent(sp._id)}`} className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
