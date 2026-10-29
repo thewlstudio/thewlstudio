@@ -21,6 +21,7 @@ beforeEach(() => {
         const url = new URL(input);
         if (url.pathname === '/sitemap.xml') return new Response(sitemap);
         if (/^\/(works|crew)\//.test(url.pathname)) return new Response(detailBody, { status: detailStatus });
+        if (url.pathname === '/api/draft') return new Response('Forbidden', { status: 403 });
         if (url.pathname === '/manage/login') return new Response('<meta name="robots" content="noindex">');
         if (url.pathname.startsWith('/manage')) return new Response('', { status: 307, headers: { location: '/manage/login' } });
         return new Response('<h1>홈페이지</h1>', { headers: { 'X-Frame-Options': 'SAMEORIGIN', 'Content-Security-Policy': "default-src 'self'" } });

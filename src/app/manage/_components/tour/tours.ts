@@ -34,6 +34,7 @@ function listTour(area: string): TourDef {
 function formTour(area: string): TourDef {
     const steps: TourStep[] = [
         { target: sel("form-preview"), title: "미리보기", body: "입력하면 **홈페이지에 나올 모습**이 바로 바뀌어요. 저장하기 전에 확인해 보세요." },
+        { target: sel("form-visibility"), title: "공개 상태와 미리보기", body: "**비공개**로 저장하면 홈페이지에는 안 나와요. 저장한 뒤 **홈페이지에서 미리보기**로 먼저 확인하고, 마음에 들면 **공개**로 바꿔 저장하세요. 삭제는 **휴지통**으로 가서 되돌릴 수 있어요." },
         { target: sel("form-first"), title: "먼저 기본 정보", body: "**빨간 별(*)** 칸은 꼭 채워야 해요. 칸 아래 설명과 제목 옆 **?** 를 눌러 보세요." },
         { target: sel("form-photo"), title: "사진", body: "**사진 고르기** 다음 **사진 자르기**로 비율을 맞춰요. 큰 사진은 자동으로 줄여서 올라가요." },
     ];
@@ -41,7 +42,6 @@ function formTour(area: string): TourDef {
     steps.push(
         { target: sel("form-save-bar"), title: "저장하기", body: "**저장하기**를 눌러야 홈페이지에 반영돼요. **Ctrl+S**(맥은 ⌘+S)도 돼요. 마음이 바뀌면 **변경 버리기**를 누르세요." },
         { target: sel("form-updated"), title: "변경 이력", body: "실수했나요? **변경 이력**에서 이전 상태로 되돌릴 수 있어요." },
-        { target: sel("form-danger"), title: "삭제와 비공개", body: "삭제는 **휴지통**으로 가서 되돌릴 수 있어요. 잠깐 숨기려면 공개 상태를 **비공개**로 바꾸세요." },
     );
     return { id: `form-${area}`, steps };
 }

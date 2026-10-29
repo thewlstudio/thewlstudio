@@ -54,6 +54,12 @@ check(
     `status ${inst.status}`,
 );
 
+// 2-1. 미리보기: 로그인 없이는 켜지지 않고, 예전 무인증 켜기 경로는 막혀 있다
+const preview = await fetch(base + "/manage/preview?to=/", { redirect: "manual" });
+check("미리보기 /manage/preview → 로그인 없이는 로그인으로 이동", (preview.status === 307 || preview.status === 308) && (preview.headers.get("location") ?? "").includes("/manage/login") && !/__prerender_bypass/.test(preview.headers.get("set-cookie") ?? ""), `status ${preview.status}`);
+const legacyDraft = await fetch(base + "/api/draft?slug=/", { redirect: "manual" });
+check("예전 /api/draft → 403 (미리보기 모드를 켜지 않음)", legacyDraft.status === 403 && !/__prerender_bypass/.test(legacyDraft.headers.get("set-cookie") ?? ""), `status ${legacyDraft.status}`);
+
 // 3. 로그인 화면과 검색엔진 노출 차단
 const login = await get("/manage/login");
 check("관리 로그인 → 200", login.status === 200, `status ${login.status}`);
