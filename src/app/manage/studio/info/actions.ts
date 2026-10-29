@@ -7,6 +7,7 @@ import { managedWriteError, saveManagedSingleton } from "@/lib/manage-target";
 import { studioInfoLimitError } from "@/lib/studio-content-limits";
 import { arrayKeyError, managedArrayKey } from "@/lib/manage-array-keys";
 import { studioInfoShapeError } from "@/lib/studio-content-shape";
+import { reportError } from "@/lib/error-reporting";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -94,7 +95,7 @@ export async function saveStudioInfo(_prev: SaveResult | null, formData: FormDat
         revalidatePath("/studio");
         return { ok: true };
     } catch (err) {
-        console.error("[saveStudioInfo]", err);
+        reportError("saveStudioInfo", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }

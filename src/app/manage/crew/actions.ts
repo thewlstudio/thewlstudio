@@ -14,6 +14,7 @@ import { isManagedDocumentId } from "@/lib/manage-document-id";
 import { externalHttpUrl } from "@/lib/content-urls";
 import { publicDetailPath } from "@/lib/public-routes";
 import { arrayKeyError, managedArrayKey } from "@/lib/manage-array-keys";
+import { reportError } from "@/lib/error-reporting";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -140,7 +141,7 @@ export async function saveCrew(_prev: SaveResult | null, formData: FormData): Pr
         refresh(managedSlug(current));
         return { ok: true };
     } catch (err) {
-        console.error("[saveCrew]", err);
+        reportError("saveCrew", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }
@@ -194,7 +195,7 @@ export async function createCrew(_prev: SaveResult | null, formData: FormData): 
         documentId = created._id;
         refresh(slug);
     } catch (err) {
-        console.error("[createCrew]", err);
+        reportError("createCrew", err);
         return { ok: false, error: managedWriteError(err) };
     }
     redirect(`/manage/crew/${documentId}?created=1`);
@@ -213,7 +214,7 @@ export async function moveCrewOrder(documentId: string, direction: "up" | "down"
         refresh();
         return { ok: true };
     } catch (err) {
-        console.error("[moveCrewOrder]", err);
+        reportError("moveCrewOrder", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }
@@ -228,7 +229,7 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         refresh(managedSlug(current));
         return { ok: true };
     } catch (err) {
-        console.error("[setTrashed]", err);
+        reportError("setTrashed", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }
@@ -250,7 +251,7 @@ export async function reorderCrew(ids: string[]): Promise<SaveResult> {
         if (result.ok) refresh();
         return result;
     } catch (err) {
-        console.error("[reorderCrew]", err);
+        reportError("reorderCrew", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }

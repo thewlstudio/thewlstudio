@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { requireAuth } from "@/lib/manage-auth";
 import { buildRestorePatch, docAt, HISTORY_AREAS, isHistoryArea, isHistoryDocument, isHistoryDocumentId } from "@/lib/manage-history";
 import { getWriteClient } from "@/sanity/lib/writeClient";
+import { reportError } from "@/lib/error-reporting";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -40,7 +41,7 @@ export async function restoreRevision(area: string, documentId: string, time: st
         paths.forEach((path) => path === "/" ? revalidatePath(path, "layout") : revalidatePath(path));
         return { ok: true };
     } catch (err) {
-        console.error("[restoreRevision]", err);
+        reportError("restoreRevision", err);
         if (err && typeof err === "object" && "statusCode" in err && err.statusCode === 409) {
             return { ok: false, error: "확인하는 사이에 내용이 바뀌었어요. 이력 화면을 새로고침한 뒤 다시 확인해 주세요." };
         }

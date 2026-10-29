@@ -12,6 +12,7 @@ import { managedWriteError, requireManagedDocument } from "@/lib/manage-target";
 import { isManagedDocumentId } from "@/lib/manage-document-id";
 import { externalHttpUrl } from "@/lib/content-urls";
 import { uploadImageIfPresent, validateManageUploadForm } from "@/lib/manage-upload";
+import { reportError } from "@/lib/error-reporting";
 
 /** 오류가 난 필드의 DOM id와 사람이 읽을 이름 — 상단 오류 요약에서 해당 칸으로 이동할 때 쓴다 */
 export type FieldError = { id: string; label: string };
@@ -141,7 +142,7 @@ export async function saveInstructor(
         return { ok: true };
     } catch (err) {
         const message = managedWriteError(err);
-        console.error("[saveInstructor]", err);
+        reportError("saveInstructor", err);
         return { ok: false, error: message };
     }
 }
@@ -203,7 +204,7 @@ export async function createInstructor(
         documentId = created._id;
     } catch (err) {
         const message = managedWriteError(err);
-        console.error("[createInstructor]", err);
+        reportError("createInstructor", err);
         return { ok: false, error: message };
     }
 
@@ -243,7 +244,7 @@ export async function moveInstructorOrder(
         return { ok: true };
     } catch (err) {
         const message = managedWriteError(err);
-        console.error("[moveInstructorOrder]", err);
+        reportError("moveInstructorOrder", err);
         return { ok: false, error: message };
     }
 }
@@ -297,7 +298,7 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
         return { ok: true, newId: created._id };
     } catch (err) {
         const message = managedWriteError(err);
-        console.error("[duplicateInstructor]", err);
+        reportError("duplicateInstructor", err);
         return { ok: false, error: message };
     }
 }
@@ -326,7 +327,7 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
         return { ok: true };
     } catch (err) {
         const message = managedWriteError(err);
-        console.error("[deleteInstructor]", err);
+        reportError("deleteInstructor", err);
         return { ok: false, error: message };
     }
 }
@@ -349,7 +350,7 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
         return { ok: true };
     } catch (err) {
         const message = managedWriteError(err);
-        console.error("[restoreInstructor]", err);
+        reportError("restoreInstructor", err);
         return { ok: false, error: message };
     }
 }
@@ -366,7 +367,7 @@ export async function reorderInstructors(ids: string[]): Promise<SaveResult> {
         }
         return result;
     } catch (err) {
-        console.error("[reorderInstructors]", err);
+        reportError("reorderInstructors", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }

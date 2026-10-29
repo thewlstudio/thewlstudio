@@ -10,6 +10,7 @@ import { labelsEulReul } from "@/lib/josa";
 import { managedSlug, managedWriteError, requireManagedDocument } from "@/lib/manage-target";
 import { externalHttpUrl } from "@/lib/content-urls";
 import { publicDetailPath } from "@/lib/public-routes";
+import { reportError } from "@/lib/error-reporting";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -119,7 +120,7 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
         refresh(managedSlug(current));
         return { ok: true };
     } catch (err) {
-        console.error("[saveWork]", err);
+        reportError("saveWork", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }
@@ -167,7 +168,7 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
         documentId = created._id;
         refresh(slug);
     } catch (err) {
-        console.error("[createWork]", err);
+        reportError("createWork", err);
         return { ok: false, error: managedWriteError(err) };
     }
     redirect(`/manage/works/${documentId}?created=1`);
@@ -183,7 +184,7 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         refresh(managedSlug(current));
         return { ok: true };
     } catch (err) {
-        console.error("[setTrashed:work]", err);
+        reportError("setTrashed:work", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }

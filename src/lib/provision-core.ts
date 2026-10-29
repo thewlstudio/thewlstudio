@@ -72,6 +72,10 @@ export function validateEnv(env: EnvMap, mode: "production" | "local" = "product
     if (!token || PLACEHOLDER.test(token)) add(mode === "local" ? "warn" : "error", "SANITY_API_WRITE_TOKEN", mode === "local" ? "없으면 관리 화면은 읽기 전용이에요(로컬 기본값)." : "비어 있으면 관리 화면에서 저장할 수 없어요. Sanity에서 Editor 권한 토큰을 발급해 넣어 주세요.");
     if (mode === "local" && token) add("warn", "SANITY_API_WRITE_TOKEN", "로컬에 쓰기 토큰이 있으면 개발 서버의 저장이 실제 데이터셋에 써져요. 시험할 때 주의하세요.");
 
+    const dsn = val("SENTRY_DSN");
+    if (!dsn) add("warn", "SENTRY_DSN", "비어 있으면 서버 오류 감시가 꺼져 있어요(선택 항목). 고객 사이트라면 Sentry를 연결하는 것을 권장해요.");
+    else if (!/^https:\/\/[^@\s]+@[^/\s]+\/\d+$/.test(dsn)) add("error", "SENTRY_DSN", "Sentry DSN 형식이 아니에요. (https://<키>@<호스트>/<프로젝트 번호>)");
+
     return issues;
 }
 
@@ -97,6 +101,9 @@ SANITY_API_WRITE_TOKEN=
 
 # 선택: Studio 미리보기용 읽기 토큰
 SANITY_API_READ_TOKEN=
+
+# 선택: 서버 오류 감시(Sentry DSN)
+SENTRY_DSN=
 `;
 }
 
@@ -110,6 +117,7 @@ export function vercelEnvList(v: InitValues): [string, string][] {
         ["MANAGE_PASSWORD", v.password],
         ["MANAGE_SECRET", v.secret],
         ["SANITY_API_WRITE_TOKEN", "(Sanity에서 발급한 Editor 토큰)"],
+        ["SENTRY_DSN", "(선택: Sentry 프로젝트의 DSN)"],
     ];
 }
 

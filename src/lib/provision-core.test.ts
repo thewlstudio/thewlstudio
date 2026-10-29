@@ -4,7 +4,7 @@ import { DEFAULT_SANITY_PROJECT_ID, DEFAULT_SITE_URL } from "@/config/site";
 
 const good = (): EnvMap => ({
     NEXT_PUBLIC_SANITY_PROJECT_ID: "abcd1234", NEXT_PUBLIC_SANITY_DATASET: "production", NEXT_PUBLIC_SITE_URL: "https://studio.example",
-    MANAGE_PASSWORD: generatePassword(), MANAGE_SECRET: generateSecret(), SANITY_API_WRITE_TOKEN: "sk-test",
+    MANAGE_PASSWORD: generatePassword(), MANAGE_SECRET: generateSecret(), SANITY_API_WRITE_TOKEN: "sk-test", SENTRY_DSN: "https://abc123@o1.ingest.sentry.io/42",
 });
 const keys = (env: EnvMap, mode?: "production" | "local") => validateEnv(env, mode).map((i) => `${i.level}:${i.key}`);
 
@@ -67,6 +67,11 @@ describe("환경변수 점검", () => {
         expect(keys({ ...good(), SANITY_API_WRITE_TOKEN: "" }, "local")).toContain("warn:SANITY_API_WRITE_TOKEN");
         expect(keys(good(), "local")).toContain("warn:SANITY_API_WRITE_TOKEN");
     });
+    it("Sentry DSN: 비어 있으면 주의(선택 항목), 형식이 틀리면 오류", () => {
+        expect(keys({ ...good(), SENTRY_DSN: "" })).toEqual(["warn:SENTRY_DSN"]);
+        expect(keys({ ...good(), SENTRY_DSN: "not-a-dsn" })).toContain("error:SENTRY_DSN");
+        expect(keys({ ...good(), SENTRY_DSN: "http://abc@o1.ingest.sentry.io/42" })).toContain("error:SENTRY_DSN");
+    });
     it("점검 결과에는 비밀 값이 들어가지 않는다", () => {
         const env = { ...good(), MANAGE_PASSWORD: "SECRET-PW-VALUE-123", SANITY_API_WRITE_TOKEN: "TOKEN-VALUE-ABC" };
         expect(JSON.stringify(validateEnv({ ...env, MANAGE_SECRET: "short-SECRET-VALUE" }))).not.toMatch(/SECRET-PW-VALUE|TOKEN-VALUE|short-SECRET-VALUE/);
@@ -81,8 +86,8 @@ describe("env 파일 생성·읽기", () => {
     });
     it("Vercel 목록에는 로컬 전용 항목이 없고 쓰기 토큰 자리 안내가 있다", () => {
         const list = vercelEnvList(values);
-        expect(list.map(([k]) => k)).toEqual(["NEXT_PUBLIC_SANITY_PROJECT_ID", "NEXT_PUBLIC_SANITY_DATASET", "NEXT_PUBLIC_SANITY_API_VERSION", "NEXT_PUBLIC_SITE_URL", "MANAGE_PASSWORD", "MANAGE_SECRET", "SANITY_API_WRITE_TOKEN"]);
-        expect(list.at(-1)![1]).toContain("Editor");
+        expect(list.map(([k]) => k)).toEqual(["NEXT_PUBLIC_SANITY_PROJECT_ID", "NEXT_PUBLIC_SANITY_DATASET", "NEXT_PUBLIC_SANITY_API_VERSION", "NEXT_PUBLIC_SITE_URL", "MANAGE_PASSWORD", "MANAGE_SECRET", "SANITY_API_WRITE_TOKEN", "SENTRY_DSN"]);
+        expect(list.find(([k]) => k === "SANITY_API_WRITE_TOKEN")![1]).toContain("Editor");
     });
     it("주석·빈 줄·따옴표를 처리한다", () => {
         expect(parseEnvText('# c\n\nA=1\nB="two"\nC=\'three\'\n  D = 4  \nlower=x')).toEqual({ A: "1", B: "two", C: "three", D: "4" });

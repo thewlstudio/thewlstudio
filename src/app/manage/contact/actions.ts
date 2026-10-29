@@ -7,6 +7,7 @@ import { labelsEulReul } from "@/lib/josa";
 import { managedWriteError, saveManagedSingleton } from "@/lib/manage-target";
 import { externalHttpUrl } from "@/lib/content-urls";
 import { SITE_SETTINGS_LINK_HOSTS, siteSettingsLinkUrl, siteSettingsPhone, type SiteSettingsLinkKey } from "@/lib/site-settings";
+import { reportError } from "@/lib/error-reporting";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -67,7 +68,7 @@ export async function saveSettings(_prev: SaveResult | null, formData: FormData)
         revalidatePath("/", "layout");
         return { ok: true };
     } catch (err) {
-        console.error("[saveSettings]", err);
+        reportError("saveSettings", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }

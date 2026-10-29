@@ -12,6 +12,7 @@ import { isManagedDocumentId } from "@/lib/manage-document-id";
 import { arrayKeyError, managedArrayKey as key } from "@/lib/manage-array-keys";
 import { studioSpaceLimitError } from "@/lib/studio-content-limits";
 import { studioSpaceShapeError } from "@/lib/studio-content-shape";
+import { reportError } from "@/lib/error-reporting";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -121,7 +122,7 @@ export async function saveSpace(_prev: SaveResult | null, formData: FormData): P
         refresh();
         return { ok: true };
     } catch (err) {
-        console.error("[saveSpace]", err);
+        reportError("saveSpace", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }
@@ -163,7 +164,7 @@ export async function createSpace(_prev: SaveResult | null, formData: FormData):
         documentId = created._id;
         refresh();
     } catch (err) {
-        console.error("[createSpace]", err);
+        reportError("createSpace", err);
         return { ok: false, error: managedWriteError(err) };
     }
     redirect(`/manage/studio/${documentId}?created=1`);
@@ -186,7 +187,7 @@ export async function moveSpaceOrder(documentId: string, direction: "up" | "down
         refresh();
         return { ok: true };
     } catch (err) {
-        console.error("[moveSpaceOrder]", err);
+        reportError("moveSpaceOrder", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }
@@ -201,7 +202,7 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         refresh();
         return { ok: true };
     } catch (err) {
-        console.error("[setTrashed:space]", err);
+        reportError("setTrashed:space", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }
@@ -223,7 +224,7 @@ export async function reorderSpaces(ids: string[]): Promise<SaveResult> {
         if (result.ok) refresh();
         return result;
     } catch (err) {
-        console.error("[reorderSpaces]", err);
+        reportError("reorderSpaces", err);
         return { ok: false, error: managedWriteError(err) };
     }
 }

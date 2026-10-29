@@ -6,6 +6,7 @@ import { buildHistoryRows, buildRestoredDoc, changedKeys, docAt, HISTORY_AREAS, 
 import { formatAbsolute, formatUpdated } from "@/lib/format-updated";
 import ManageNav from "../../../ManageNav";
 import RestoreRevisionButton from "../../RestoreRevisionButton";
+import { reportError } from "@/lib/error-reporting";
 
 export const metadata = { title: "변경 이력" };
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function HistoryPage({
         // 한 건을 더 읽어 25번째 항목도 바로 이전 기록과 비교한다.
         [revisions, current] = await Promise.all([listRevisions(sanity, id, 26), sanity.getDocument<Doc>(id)]);
     } catch (err) {
-        console.error("[history]", err);
+        reportError("history", err);
         return (
             <Shell back={back} title={cfg.title}>
                 <div role="alert" className="rounded-2xl border border-red-300 bg-red-50 p-5 text-sm leading-relaxed">

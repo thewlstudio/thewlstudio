@@ -3,6 +3,7 @@ import { client } from "@/sanity/lib/client";
 import { crewSitemapQuery, workSitemapQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/lib/queries";
 import { publicDetailPath } from "@/lib/public-routes";
 import { getSiteUrl } from "@/config/site";
+import { reportError } from "@/lib/error-reporting";
 
 export const revalidate = 86400; // Revalidate sitemap daily (24h)
 
@@ -20,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     results.forEach((result, index) => {
         const area = index === 0 ? "works" : "crew";
         if (result.status === "rejected") {
-            console.error(`[sitemap] ${area} fetch failed:`, result.reason);
+            reportError(`sitemap ${area} fetch failed`, result.reason);
             return;
         }
         const seen = new Set<string>();
