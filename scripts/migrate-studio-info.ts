@@ -6,15 +6,14 @@
 import { readFileSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
-import { createClient } from "@sanity/client";
+import { scriptClient } from "./lib/sanity-client";
 import { FALLBACK_INFO } from "../src/lib/studio-info";
 
 const apply = process.argv.includes("--apply");
 const k = (p: string, i: number) => `${p}${String(i + 1).padStart(2, "0")}`;
 
 async function main() {
-    const cfg = JSON.parse(readFileSync(join(homedir(), ".config/sanity/config.json"), "utf8"));
-    const client = createClient({ projectId: "antidcuz", dataset: "production", apiVersion: "2024-01-01", token: cfg.authToken, useCdn: false });
+    const client = scriptClient();
     if (await client.fetch<number>(`count(*[_id == "studioInfo"])`)) {
         console.log("SKIP  studioInfo (이미 있음)");
         return;

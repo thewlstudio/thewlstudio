@@ -1,3 +1,4 @@
+import { DEFAULT_INFO } from "@/config/default-content";
 /**
  * /studio 페이지의 "공간 카드 외" 안내 내용: 서비스 가격, 장비, 멤버십, 이용 안내.
  * 값은 Sanity(studioInfo 싱글톤)에서 오고, 문서가 없거나 조회에 실패하면 FALLBACK_INFO를 쓴다.
@@ -31,45 +32,8 @@ export type StudioInfoForManage = Omit<StudioInfo, "services" | "equipment" | "m
     memberships: (StudioMembership & { _key?: string })[];
 };
 
-/** 5~8단계 이전 시점의 하드코딩 값과 같다 */
-export const FALLBACK_INFO: StudioInfo = {
-    services: [
-        {
-            title: "VOCAL RECORDING",
-            price: "100,000 KRW",
-            priceUnit: "/ 2 Hours",
-            points: ["최상의 컨디션을 위한 쾌적한 레코딩 환경", "최고급 컨덴서 마이크 및 아웃보드 사용", "디렉팅 및 기초적인 튠 포함"],
-        },
-        {
-            title: "AUDIO OUTSOURCING",
-            price: "Contact for Quote",
-            priceUnit: "",
-            points: ["보컬 에디팅 (튠, 타이밍 박자 보정)", "믹싱 (Mixing)", "마스터링 (Mastering)", "팟캐스트 및 유튜브 음향 보정"],
-        },
-    ],
-    equipment: [
-        { title: "Microphones", items: ["Neumann U87 Ai", "AKG C414 XLII", "Shure SM7B"] },
-        { title: "Outboard &\nInterface", items: ["Universal Audio Apollo x8", "Rupert Neve Designs Shelford Channel", "Tube-Tech CL 1B"] },
-        { title: "Monitoring", items: ["Focal Trio6 Be", "Yamaha NS-10M Studio"] },
-    ],
-    memberships: [
-        { num: "1", label: "1개월 회원권", sub: "1 Month Pass", price: "40,000" },
-        { num: "3", label: "3개월 회원권", sub: "3 Months Pass", price: "110,000" },
-        { num: "5", label: "5개월 회원권", sub: "5 Months Pass", price: "160,000" },
-    ],
-    membershipNote: "쿠폰은 구입 후 한 달간 사용 가능하며,\n네이버에서 구입 후 즉시 회원가로 예약(사용) 가능하십니다.",
-    guidelinesIntro:
-        "음악과 예술을 사랑하는 사람으로써 연습실을 사용하시면서 좋은 점과 부족한 점들을 말씀해주시면 보완을 해드릴 수 있는 선에서 최선을 다해 보완해드리겠습니다.\n이 공간에서 좋은 연습이 되시길 바랍니다.",
-    parkingWarning: "주차가 불가합니다.",
-    parkingDetail: "중곡역 4번출구 앞\n한전부지 임시 공영주차장 3분거리",
-    parkingFeeLabel: "요금",
-    parkingFee: "10분 400원 / 1시간 2,400원",
-    amenities: ["냉·온·얼음 정수기", "델리코 반자동 커피머신"],
-    cctvTitle: "CCTV 24시간 촬영 중",
-    cctvDetail: "고객님들의 안전과 보호를 위해 화장실 통로, 로비, 계단 촬영 중",
-    dutyText: "연습실 기자재를 내 물건처럼 사용 부탁드립니다.",
-    dutyWarning: "파손시 배상 요청드립니다.",
-};
+/** 조회 실패·문서 없음일 때 쓰는 기본값. 값은 고객 고유 내용이라 src/config/default-content.ts에 있다. */
+export const FALLBACK_INFO: StudioInfo = DEFAULT_INFO;
 
 type Raw = Record<string, unknown> | null | undefined;
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);

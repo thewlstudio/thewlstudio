@@ -43,3 +43,18 @@ describe("고객 고유 문구는 config/site.ts에만 둔다", () => {
         expect(hits).toEqual([]);
     });
 });
+
+/** 고객 고유 기본 콘텐츠(전화·주소·가격·연습실)는 src/config/default-content.ts에만 둔다. */
+describe("기본 콘텐츠와 스크립트도 고객 값을 직접 갖지 않는다", () => {
+    it.each(["src/lib/site-settings.ts", "src/lib/studio-spaces.ts", "src/lib/studio-info.ts", "src/lib/constants.ts"])("%s에는 전화·주소·링크가 없다", (file) => {
+        const text = readFileSync(file, "utf8");
+        for (const word of ["0507-", "능동로", "W.L Studio", "wl_musicstudio", "bkh__official", "map.naver.com/p/entry"]) expect(text, word).not.toContain(word);
+    });
+    it("설치용 스크립트는 프로젝트 ID를 코드에 박지 않고 공통 클라이언트를 쓴다", () => {
+        for (const file of readdirSync("scripts").filter((f) => /^migrate-.*\.ts$/.test(f))) {
+            const text = readFileSync(join("scripts", file), "utf8");
+            expect(text, file).not.toMatch(/projectId\s*:\s*"/);
+            expect(text, file).toContain("scriptClient()");
+        }
+    });
+});

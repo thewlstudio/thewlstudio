@@ -6,14 +6,13 @@
 import { readFileSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
-import { createClient } from "@sanity/client";
+import { scriptClient } from "./lib/sanity-client";
 import { FALLBACK_SETTINGS } from "../src/lib/site-settings";
 
 const apply = process.argv.includes("--apply");
 
 async function main() {
-    const cfg = JSON.parse(readFileSync(join(homedir(), ".config/sanity/config.json"), "utf8"));
-    const client = createClient({ projectId: "antidcuz", dataset: "production", apiVersion: "2024-01-01", token: cfg.authToken, useCdn: false });
+    const client = scriptClient();
     const exists = await client.fetch<number>(`count(*[_id == "siteSettings"])`);
     if (exists) {
         console.log("SKIP  siteSettings (이미 있음)");
