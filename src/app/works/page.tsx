@@ -1,10 +1,19 @@
-import { sanityFetch } from "@/sanity/lib/client";
-import { worksQuery } from "@/sanity/lib/queries";
 import WorksClient from "./WorksClient";
-import type { WorkSummary } from "@/types/sanity";
+import type { Metadata } from "next";
+import { getPublicWorks } from "./data";
+import { worksPage, worksPageHref, worksQueryString, type WorksSearchParams } from "@/lib/works-pagination";
+import { publicPageMetadata, PUBLIC_SECTIONS } from "@/lib/public-metadata";
 
-export default async function WorksIndexPage() {
-    const works = await sanityFetch<WorkSummary[]>({ query: worksQuery, tags: ['work'] });
+type Props = { searchParams: Promise<WorksSearchParams> };
 
-    return <WorksClient initialWorks={works} />;
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+    const [query, works] = await Promise.all([searchParams, getPublicWorks()]);
+    const { page } = worksPage(query.page, works.length);
+    return publicPageMetadata({ ...PUBLIC_SECTIONS.works, path: worksPageHref("", page) });
+}
+
+export default async function WorksIndexPage({ searchParams }: Props) {
+    const [query, works] = await Promise.all([searchParams, getPublicWorks()]);
+    const { page } = worksPage(query.page, works.length);
+    return <WorksClient initialWorks={works} currentPage={page} query={worksQueryString(query)} />;
 }

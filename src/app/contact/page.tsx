@@ -1,14 +1,10 @@
-import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getSiteSettings } from "@/lib/site-settings-server";
 import { mapEmbedUrl } from "@/lib/site-settings";
+import { publicPageMetadata, PUBLIC_SECTIONS } from "@/lib/public-metadata";
 
-export const metadata: Metadata = {
-    title: "CONTACT",
-    description: "화이트라이트 스튜디오 위치 안내 - 서울특별시 광진구 능동로 413-1 지하1층, 7호선 중곡역 3번 출구",
-    alternates: { canonical: "/contact" },
-};
+export const metadata = publicPageMetadata(PUBLIC_SECTIONS.contact);
 
 export default async function ContactPage() {
     const settings = await getSiteSettings();
@@ -17,7 +13,7 @@ export default async function ContactPage() {
             <Header />
 
             <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-40 pb-24 md:pt-48 md:pb-32">
-                <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-16 md:mb-24 text-center">CONTACT</h1>
+                <h1 id="page-title" tabIndex={-1} data-page-path="/contact" className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-16 md:mb-24 text-center">CONTACT</h1>
 
                 {/* Contact Info List */}
                 <div className="flex flex-col space-y-16 md:space-y-0 md:flex-row md:justify-between border-b border-black/10 pb-16 md:pb-24">

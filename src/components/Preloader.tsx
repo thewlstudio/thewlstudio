@@ -17,28 +17,32 @@ export default function Preloader() {
     const skip = isAdminScreen || prefersReducedMotion;
 
     const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
-    const alreadySeen = useSyncExternalStore(
-        emptySubscribe,
-        () => sessionStorage.getItem("wls_preloader_seen") === "true",
-        () => false,
-    );
+    if (skip || !isClient) return null;
+    return <PreloaderRun />;
+}
+
+/** 실행 중에는 저장소를 다시 읽지 않아 seen 기록 때문에 자기 타이머가 취소되지 않는다. */
+function PreloaderRun() {
+    const [alreadySeen] = useState(() => {
+        try { return sessionStorage.getItem("wls_preloader_seen") === "true"; }
+        catch { return false; }
+    });
     const [step, setStep] = useState(0);
+    const [active, setActive] = useState(!alreadySeen);
 
     // 배경 스크롤 잠금은 메뉴·클래스 모달과 공유하는 useBodyScrollLock이 담당한다
     // (각자 body.style.overflow를 직접 건드리면, Preloader가 실행되는 2초 사이
     // 메뉴를 열었을 때처럼 한쪽이 끝나면서 다른 쪽의 잠금까지 풀어버릴 수 있다 —
     // Preloader는 pointer-events-none이라 실제로 뒤 배경 클릭이 통과된다).
-    // Preloader가 화면에 실제로 떠 있는 동안(step 0~1)에만 잠근다.
-    const isPreloaderVisible = !skip && isClient && !alreadySeen && step < 2;
-    useBodyScrollLock(isPreloaderVisible);
+    // 퇴장 애니메이션이 끝날 때까지 잠금을 유지한다.
+    useBodyScrollLock(active);
 
     useEffect(() => {
         // 관리 화면이거나 동작 줄이기 설정이면 안정성·접근성이 우선이라
         // 타이머 등 어떤 부수효과도 실행하지 않고 완전히 건너뛴다
-        if (skip) return;
-        if (!isClient || alreadySeen) return;
-
-        sessionStorage.setItem("wls_preloader_seen", "true");
+        if (alreadySeen) return;
+        try { sessionStorage.setItem("wls_preloader_seen", "true"); }
+        catch { /* 저장소 차단은 브랜드 연출이나 페이지를 중단시키지 않는다. */ }
 
         // Step 0: PNG transparent logo fades in gracefully
         const timer1 = setTimeout(() => {
@@ -47,20 +51,19 @@ export default function Preloader() {
 
         const timer2 = setTimeout(() => {
             setStep(2); // Hide preloader and reveal the site
-            window.scrollTo(0, 0);
         }, 2000);
 
         return () => {
             clearTimeout(timer1);
             clearTimeout(timer2);
         };
-    }, [skip, isClient, alreadySeen]);
+    }, [alreadySeen]);
 
     // 관리 화면/동작 줄이기 제외 + 하이드레이션 불일치 방지 / 이미 봤으면 스킵
-    if (skip || !isClient || alreadySeen) return null;
+    if (alreadySeen) return null;
 
     return (
-        <AnimatePresence>
+        <AnimatePresence onExitComplete={() => setActive(false)}>
             {step < 2 && (
                 <motion.div
                     key="preloader"
@@ -83,7 +86,7 @@ export default function Preloader() {
                                     src="/images/studio_logo_2.png"
                                     alt=""
                                     fill
-                                    sizes="(max-width: 768px) 256px, (max-width: 1024px) 384px, 768px"
+                                    sizes="(min-width: 1024px) 768px, (min-width: 768px) 576px, (min-width: 640px) 384px, 256px"
                                     className="object-contain"
                                     priority
                                 />
@@ -102,7 +105,7 @@ export default function Preloader() {
                                     src="/images/studio_logo.jpg"
                                     alt=""
                                     fill
-                                    sizes="(max-width: 768px) 256px, 80vw"
+                                    sizes="(min-width: 768px) 80vw, (min-width: 640px) 384px, 256px"
                                     className="object-cover md:object-contain grayscale contrast-150 rounded"
                                     priority
                                 />

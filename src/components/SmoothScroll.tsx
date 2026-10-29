@@ -1,24 +1,36 @@
 "use client";
 
-import { ReactLenis } from 'lenis/react';
+import { ReactLenis, useLenis } from 'lenis/react';
 import { usePathname } from 'next/navigation';
-import { useSyncExternalStore } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { isBodyScrollLocked, subscribeBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+export { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
-// OS의 "동작 줄이기(prefers-reduced-motion)" 설정을 구독한다.
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
-
-function subscribeReducedMotion(callback: () => void) {
-    const mql = window.matchMedia(REDUCED_MOTION_QUERY);
-    mql.addEventListener('change', callback);
-    return () => mql.removeEventListener('change', callback);
-}
-
-export function usePrefersReducedMotion() {
-    return useSyncExternalStore(
-        subscribeReducedMotion,
-        () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
-        () => false, // 서버 렌더 시에는 false로 가정 (하이드레이션 불일치 방지)
-    );
+/** body 잠금과 Lenis의 가상 스크롤 처리를 함께 멈춘다. */
+function ScrollLockBridge() {
+    const lenis = useLenis();
+    const stoppedByBridge = useRef<typeof lenis>(undefined);
+    const locked = useSyncExternalStore(subscribeBodyScrollLock, isBodyScrollLocked, () => false);
+    useEffect(() => {
+        if (!lenis) return;
+        if (locked && !lenis.isStopped) {
+            lenis.stop();
+            stoppedByBridge.current = lenis;
+        } else if (!locked && stoppedByBridge.current === lenis) {
+            if (lenis.rootElement.classList.contains('lenis')) lenis.start();
+            stoppedByBridge.current = undefined;
+        }
+        return () => {
+            // 설정 변경으로 교체되는 옛 인스턴스는 재시작하지 않는다.
+            // StrictMode 재실행 중에는 소유권을 유지해 마지막 잠금 해제 때만 복원한다.
+            if (stoppedByBridge.current === lenis && !isBodyScrollLocked() && lenis.rootElement.classList.contains('lenis')) {
+                lenis.start();
+                stoppedByBridge.current = undefined;
+            }
+        };
+    }, [lenis, locked]);
+    return null;
 }
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
@@ -27,13 +39,15 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     // Sanity Studio(/admin), 관리 화면(/manage)에서는 Lenis 비활성화
     // — 폼 입력, 드롭다운 등 관리 화면 조작과 충돌 방지, 안정성 우선
-    // 동작 줄이기 설정 시에도 비활성화 — 스크롤 하이재킹은 어지럼증을 유발할 수 있음
-    if (pathname.startsWith('/admin') || pathname.startsWith('/manage') || prefersReducedMotion) {
+    if (pathname.startsWith('/admin') || pathname.startsWith('/manage')) {
         return <>{children}</>;
     }
 
     return (
-        <ReactLenis root options={{ lerp: 0.15, smoothWheel: true }}>
+        // 설정 변경 시 Provider 자체는 유지해 열린 모달·입력값이 초기화되지 않게 한다.
+        // 동작 줄이기에서는 가상 보간과 프레임 루프 없이 브라우저의 기본 스크롤을 쓴다.
+        <ReactLenis root autoRaf={!prefersReducedMotion} options={{ lerp: 0.15, smoothWheel: !prefersReducedMotion, syncTouch: false }}>
+            <ScrollLockBridge />
             {children}
         </ReactLenis>
     );

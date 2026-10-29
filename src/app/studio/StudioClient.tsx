@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { usePublicMotion } from "@/hooks/usePublicMotion";
+
+import { useId, useState } from "react";
 import { motion } from "motion/react";
-import Image from "next/image";
+import Image from "@/components/CmsImage";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
@@ -14,7 +16,7 @@ import type { StudioInfo } from "@/lib/studio-info";
 // RoomCarousel — single-image carousel with ‹ › navigation
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RoomCarousel({
+export function RoomCarousel({
     images,
     roomName,
 }: {
@@ -22,23 +24,30 @@ function RoomCarousel({
     roomName: string;
 }) {
     const [current, setCurrent] = useState(0);
+    const photoId = useId();
+    // 공개 중 사진이 줄어도 이전 선택 위치에서 undefined를 전달하지 않는다.
+    const selected = Math.min(current, Math.max(0, images.length - 1));
+    if (current !== selected) setCurrent(selected);
     if (images.length === 0) return null;
-    const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
-    const next = () => setCurrent((c) => (c + 1) % images.length);
+    const move = (delta: number) => setCurrent((c) => (Math.min(c, images.length - 1) + delta + images.length) % images.length);
+    const prev = () => move(-1);
+    const next = () => move(1);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "ArrowLeft") prev();
-        if (e.key === "ArrowRight") next();
+        if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || images.length < 2) return;
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        move(e.key === "ArrowLeft" ? -1 : 1);
     };
 
     return (
-        <div className="space-y-3" onKeyDown={handleKeyDown} tabIndex={0} role="region" aria-label={`${roomName} 사진 캐러셀`}>
+        <div className="space-y-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black" onKeyDown={handleKeyDown} tabIndex={images.length > 1 ? 0 : undefined} role="region" aria-roledescription="캐러셀" aria-label={`${roomName} 사진`}>
             {/* Photo frame — aspect ratio container */}
             <div className="relative aspect-[4/3]">
-                <div className="relative h-full overflow-hidden shadow-xl">
+                <div id={photoId} role="group" aria-roledescription="슬라이드" aria-label={`${selected + 1} / ${images.length}`} aria-live="polite" aria-atomic="false" className="relative h-full overflow-hidden shadow-xl">
                     <Image
-                        src={images[current]}
-                        alt={`${roomName} ${current + 1}`}
+                        src={images[selected]}
+                        alt={`${roomName} 사진 ${selected + 1}`}
                         fill
                         className="object-cover"
                         sizes="(max-width: 1024px) 100vw, 50vw"
@@ -49,27 +58,31 @@ function RoomCarousel({
                 {images.length > 1 && (
                     <>
                         <button
+                            type="button"
                             onClick={prev}
-                            aria-label="이전 사진"
-                            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow transition-all"
+                            aria-label={`${roomName} 이전 사진`}
+                            aria-controls={photoId}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg aria-hidden="true" focusable="false" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <button
+                            type="button"
                             onClick={next}
-                            aria-label="다음 사진"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow transition-all"
+                            aria-label={`${roomName} 다음 사진`}
+                            aria-controls={photoId}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center shadow transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg aria-hidden="true" focusable="false" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
 
                         {/* Photo counter */}
-                        <div className="absolute bottom-2 right-3 z-20 text-[10px] font-bold text-white/70 tracking-widest tabular-nums select-none">
-                            {current + 1} / {images.length}
+                        <div aria-hidden="true" className="absolute bottom-2 right-3 z-20 text-[10px] font-bold text-white/70 tracking-widest tabular-nums select-none">
+                            {selected + 1} / {images.length}
                         </div>
                     </>
                 )}
@@ -77,17 +90,18 @@ function RoomCarousel({
 
             {/* Dot indicators */}
             {images.length > 1 && (
-                <div className="flex justify-center gap-2">
+                <div role="group" aria-label={`${roomName} 사진 선택`} className="flex flex-wrap justify-center gap-1">
                     {images.map((_, i) => (
                         <button
                             key={i}
-                            onClick={() => setCurrent(i)}
-                            className={`rounded-full transition-all duration-300 ${i === current
-                                ? "w-4 h-1.5 bg-black"
-                                : "w-1.5 h-1.5 bg-neutral-300 hover:bg-neutral-400"
-                                }`}
-                            aria-label={`사진 ${i + 1}`}
-                        />
+                            type="button"
+                            onClick={() => { if (i !== selected) setCurrent(i); }}
+                            className="group/dot w-11 h-11 shrink-0 flex items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                            aria-label={`${roomName} 사진 ${i + 1} 보기`}
+                            aria-controls={photoId}
+                            aria-current={i === selected ? "true" : undefined}
+                            aria-disabled={i === selected ? "true" : undefined}
+                        ><span aria-hidden="true" className={`rounded-full transition-all duration-300 ${i === selected ? "w-4 h-1.5 bg-black" : "w-1.5 h-1.5 bg-neutral-300 group-hover/dot:bg-neutral-400"}`} /></button>
                     ))}
                 </div>
             )}
@@ -101,17 +115,18 @@ function RoomCarousel({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function RoomBlock({ room }: { room: StudioSpaceData }) {
+    const { transitionFor } = usePublicMotion();
     // Parse "W.L Studio [B Room]" → brand: "W.L STUDIO", title: "B ROOM"
     const match = room.name.match(/^(.*?)\s*\[(.+)\]$/);
     const brand = (match ? match[1] : "").toUpperCase();
     const title = (match ? match[2] : room.name).toUpperCase();
 
     return (
-        <motion.div
+        <motion.div data-public-motion
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+            transition={transitionFor({ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] })}
             className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
         >
             {/* Top Section: Title */}
@@ -188,6 +203,7 @@ function RoomBlock({ room }: { room: StudioSpaceData }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpaceData[]; lobby: StudioSpaceData | null; info: StudioInfo }) {
+    const { transitionFor } = usePublicMotion();
     const { naverReservationUrl, blogUrl } = useSiteSettings();
     return (
         <main id="main-content" className="relative bg-black min-h-screen w-full overflow-hidden text-white font-sans">
@@ -198,20 +214,20 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                 <div className="absolute inset-0 opacity-40">
                     <Image
                         src="/images/lobby_1.jpg"
-                        alt="Studio Space"
+                        alt=""
                         fill
                         className="object-cover grayscale"
                         sizes="100vw"
                         priority
                     />
                 </div>
-                <motion.div
+                <motion.div data-public-motion
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1 }}
+                    transition={transitionFor({ duration: 1 })}
                     className="relative z-10 text-center"
                 >
-                    <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">
+                    <h1 id="page-title" tabIndex={-1} data-page-path="/studio" className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">
                         STUDIO
                     </h1>
                     <p className="text-sm md:text-base text-neutral-400 tracking-widest uppercase">
@@ -224,16 +240,16 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
             <section className="py-32 bg-black border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-8">
                     {info.services.map((svc, i) => (
-                        <motion.div
+                        <motion.div data-public-motion
                             key={`${svc.title}-${i}`}
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.8, delay: i * 0.2 }}
+                            transition={transitionFor({ duration: 0.8, delay: i * 0.2 })}
                             className="flex flex-col border-l border-white/20 pl-8"
                         >
                             <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">{svc.title}</h2>
-                            <h3 className={`text-2xl font-light text-neutral-400 mb-8 font-mono`}>
+                            <p className={`text-2xl font-light text-neutral-400 mb-8 font-mono`}>
                                 {svc.price}
                                 {svc.priceUnit && (
                                     <>
@@ -241,7 +257,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                                         <span className="text-sm">{svc.priceUnit}</span>
                                     </>
                                 )}
-                            </h3>
+                            </p>
                             <ul className="text-neutral-400 space-y-4 text-sm md:text-base font-light leading-relaxed">
                                 {svc.points.map((pt, j) => (
                                     <li key={j}>{`• ${pt}`}</li>
@@ -255,7 +271,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
             {/* ── Equipment ── */}
             <section id="equipment" className="py-32 bg-white text-black border-b border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12">
-                    <motion.div
+                    <motion.div transition={transitionFor({})} data-public-motion
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -288,32 +304,32 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
             <section id="membership" className="py-32 bg-black text-white relative overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-neutral-900/50 to-transparent pointer-events-none" />
                 <div className="max-w-7xl mx-auto px-4 md:px-12 relative z-10">
-                    <motion.div
+                    <motion.div transition={transitionFor({})} data-public-motion
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         className="text-center mb-20"
                     >
-                        <h2 className="text-sm font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4">
+                        <p className="text-sm font-bold tracking-[0.3em] text-neutral-400 uppercase mb-4">
                             Exclusive Benefits
-                        </h2>
-                        <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">MEMBERSHIP</h3>
+                        </p>
+                        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">MEMBERSHIP</h2>
                     </motion.div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center">
                         {info.memberships.map((item, i) => (
-                            <motion.div
+                            <motion.div data-public-motion
                                 key={i}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.6, delay: i * 0.1 }}
+                                transition={transitionFor({ duration: 0.6, delay: i * 0.1 })}
                                 className="bg-neutral-900 border border-neutral-800 rounded-3xl p-10 text-center flex flex-col items-center hover:border-white/30 transition-colors h-full"
                             >
                                 <span className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-black text-xl mb-6">
                                     {item.num}
                                 </span>
-                                <h4 className="text-2xl font-bold tracking-tight mb-2">{item.label}</h4>
+                                <h3 className="text-2xl font-bold tracking-tight mb-2">{item.label}</h3>
                                 <p className="text-neutral-400 font-medium mb-12 uppercase tracking-widest text-xs">
                                     {item.sub}
                                 </p>
@@ -327,11 +343,11 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                         ))}
                     </div>
 
-                    <motion.div
+                    <motion.div data-public-motion
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
+                        transition={transitionFor({ duration: 0.8, delay: 0.4 })}
                         className="mt-20 text-center"
                     >
                         <p className="text-neutral-400 font-medium text-sm md:text-base leading-relaxed mb-8 max-w-xl mx-auto break-keep">
@@ -352,7 +368,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
             <section id="spaces" className="py-32 bg-neutral-50 text-black border-t border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12">
                     {/* Section header */}
-                    <motion.div
+                    <motion.div transition={transitionFor({})} data-public-motion
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -384,11 +400,11 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
 
                         {/* ── Lobby Block ── */}
                         {lobby && (
-                        <motion.div
+                        <motion.div data-public-motion
                             initial={{ opacity: 0, y: 32 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-80px" }}
-                            transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+                            transition={transitionFor({ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] })}
                             className="flex flex-col border-l-2 border-black pl-6 lg:pl-12"
                         >
                             {/* Top Section: Title */}
@@ -477,7 +493,7 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
             {/* ── Guidelines ── */}
             <section className="py-32 bg-white text-black border-t border-black/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-12 space-y-16">
-                    <motion.div
+                    <motion.div transition={transitionFor({})} data-public-motion
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -491,11 +507,11 @@ export default function StudioClient({ rooms, lobby, info }: { rooms: StudioSpac
                         </p>
                     </motion.div>
 
-                    <motion.div
+                    <motion.div data-public-motion
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
+                        transition={transitionFor({ duration: 0.8, delay: 0.2 })}
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-sm md:text-base pt-6"
                     >
                         <div className="space-y-4">

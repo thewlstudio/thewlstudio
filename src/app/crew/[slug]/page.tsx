@@ -6,6 +6,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CrewDetailClient from "./CrewDetailClient";
 import type { CrewMemberDetail, CrewMemberSummary } from "@/types/sanity";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { decodePublicPageSlug, publicDetailPath, publicStaticParams } from "@/lib/public-routes";
+import { socialImageUrl } from "@/lib/sanity-image";
+import { publicPageMetadata } from "@/lib/public-metadata";
 
 type Props = {
     params: Promise<{ slug: string }>;
@@ -13,54 +17,49 @@ type Props = {
 
 export async function generateStaticParams() {
     const crews = await client.fetch<CrewMemberSummary[]>(crewsQuery);
-    return crews.map((crew) => ({ slug: crew.slug }));
+    return publicStaticParams(crews);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
-    const decodedSlug = decodeURIComponent(slug);
-    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
-
-    if (!member) {
-        return { title: "Crew Not Found | WHITE LIGHT STUDIO" };
-    }
-
-    return {
-        title: `${member.name} (${member.role}) | WHITE LIGHT STUDIO`,
-        description: `White Light Studio Crew: ${member.name} - ${member.koName}`,
-        alternates: { canonical: `/crew/${decodedSlug}` },
-        openGraph: {
-            title: `${member.name} (${member.role}) | WHITE LIGHT STUDIO`,
-            description: `White Light Studio Crew: ${member.name} - ${member.koName}`,
-            images: member.imageUrl ? [member.imageUrl] : [],
-        },
-        twitter: {
-            card: "summary_large_image",
-            title: `${member.name} (${member.role}) | WHITE LIGHT STUDIO`,
-            description: `White Light Studio Crew: ${member.name} - ${member.koName}`,
-            images: member.imageUrl ? [member.imageUrl] : [],
-        }
-    };
-}
-
-export default async function CrewDetailPage({ params }: Props) {
-    const { slug } = await params;
-    const decodedSlug = decodeURIComponent(slug);
-    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug: decodedSlug }, tags: ['crew'] });
+    const path = publicDetailPath("crew", slug);
+    if (!path) notFound();
+    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug }, tags: ['crew'] });
 
     if (!member) {
         notFound();
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app";
+    const shareImage = socialImageUrl(member.imageUrl);
+
+    return publicPageMetadata({
+        title: `${member.name} (${member.role})`,
+        description: `White Light Studio Crew: ${member.name} - ${member.koName}`,
+        path, shareImage,
+    });
+}
+
+export default async function CrewDetailPage({ params }: Props) {
+    const { slug: pageSlug } = await params;
+    const slug = decodePublicPageSlug(pageSlug);
+    if (slug === null) notFound();
+    const path = publicDetailPath("crew", slug);
+    if (!path) notFound();
+    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug }, tags: ['crew'] });
+
+    if (!member) {
+        notFound();
+    }
+
+    const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app").replace(/\/+$/, "");
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "Person",
         name: member.name,
         alternateName: member.koName,
         jobTitle: member.role,
-        image: member.imageUrl ?? undefined,
-        url: `${baseUrl}/crew/${decodedSlug}`,
+        image: socialImageUrl(member.imageUrl) ?? undefined,
+        url: `${baseUrl}${path}`,
         worksFor: {
             "@type": "Organization",
             name: "WHITE LIGHT STUDIO",
@@ -72,11 +71,11 @@ export default async function CrewDetailPage({ params }: Props) {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
             <main id="main-content" className="relative bg-[#fafafa] min-h-screen w-full overflow-hidden text-black font-sans">
                 <Header />
-                <CrewDetailClient member={member} />
+                <CrewDetailClient member={member} path={path} />
                 <Footer />
             </main>
         </>

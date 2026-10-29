@@ -19,6 +19,18 @@ body {
   overflow-x: hidden;
 }
 
+/* 본문 바로가기·메뉴 목적지가 고정 헤더 뒤에 가려지지 않게 한다. */
+#page-title,
+[data-page-focus] {
+  scroll-margin-top: 7rem;
+}
+
+#page-title:focus-visible,
+[data-page-focus]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -48,12 +60,25 @@ body {
  * (Lenis 스무스 스크롤은 SmoothScroll.tsx에서 별도로 비활성화)
  */
 @media (prefers-reduced-motion: reduce) {
+  /* SSR의 숨겨진 초기값과 실행 도중 바뀐 환경설정에도 본문은 즉시 보인다.
+   * Motion이 만든 inline transform만 해제해 로고 확대·정렬용 CSS는 보존한다. */
+  [data-public-motion] {
+    opacity: 1 !important;
+  }
+  [data-public-motion][style*="transform:"] {
+    transform: none !important;
+  }
+  [data-public-motion][style*="filter:"] {
+    filter: none !important;
+  }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }

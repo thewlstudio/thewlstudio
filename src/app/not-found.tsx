@@ -15,7 +15,7 @@ export default function NotFound() {
                 <h1 className="text-[120px] md:text-[200px] font-black leading-none tracking-tighter text-white/10 select-none">
                     404
                 </h1>
-                <p className="text-lg md:text-xl font-bold tracking-widest uppercase text-white mt-2 mb-4">
+                <p id="page-title" tabIndex={-1} className="text-lg md:text-xl font-bold tracking-widest uppercase text-white mt-2 mb-4">
                     Page Not Found
                 </p>
                 <p className="text-sm text-neutral-500 mb-12 tracking-wide">

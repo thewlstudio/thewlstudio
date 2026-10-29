@@ -4,72 +4,65 @@ import { workBySlugQuery, worksQuery } from "@/sanity/lib/queries";
 import WorkDetailClient from "./WorkDetailClient";
 import { notFound } from "next/navigation";
 import type { WorkDetail, WorkSummary } from "@/types/sanity";
+import { jsonLdDate, serializeJsonLd } from "@/lib/json-ld";
+import { decodePublicPageSlug, publicDetailPath, publicStaticParams } from "@/lib/public-routes";
+import { socialImageUrl } from "@/lib/sanity-image";
+import { publicPageMetadata } from "@/lib/public-metadata";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
-    const decodedSlug = decodeURIComponent(slug);
-    const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug: decodedSlug }, tags: ['work'] });
+    const path = publicDetailPath("works", slug);
+    if (!path) notFound();
+    const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug }, tags: ['work'] });
 
     if (!work) {
-        return { title: "Work Not Found | WHITE LIGHT STUDIO" };
+        notFound();
     }
 
-    return {
-        title: `${work.artist} - ${work.title} | WHITE LIGHT STUDIO`,
+    const shareImage = socialImageUrl(work.imageUrl);
+
+    return publicPageMetadata({
+        title: `${work.artist} - ${work.title}`,
         description: `White Light Studio Portfolio: ${work.artist} - ${work.title}`,
-        alternates: { canonical: `/works/${decodedSlug}` },
-        openGraph: {
-            title: `${work.artist} - ${work.title} | WHITE LIGHT STUDIO`,
-            description: `White Light Studio Portfolio: ${work.artist} - ${work.title}`,
-            images: work.imageUrl ? [work.imageUrl] : [],
-        },
-        twitter: {
-            card: "summary_large_image",
-            title: `${work.artist} - ${work.title} | WHITE LIGHT STUDIO`,
-            description: `White Light Studio Portfolio: ${work.artist} - ${work.title}`,
-            images: work.imageUrl ? [work.imageUrl] : [],
-        }
-    };
+        path, shareImage,
+    });
 }
 
 export async function generateStaticParams() {
     // Build-time only — use client directly (no draft mode needed)
     const works = await client.fetch<WorkSummary[]>(worksQuery);
-    return works.map((work) => ({
-        slug: work.slug,
-    }));
+    return publicStaticParams(works);
 }
 
 export default async function WorkPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const decodedSlug = decodeURIComponent(slug);
-    const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug: decodedSlug }, tags: ['work'] });
+    const { slug: pageSlug } = await params;
+    const slug = decodePublicPageSlug(pageSlug);
+    if (slug === null) notFound();
+    const path = publicDetailPath("works", slug);
+    if (!path) notFound();
+    const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug }, tags: ['work'] });
 
     if (!work) {
         return notFound();
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app";
+    const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://whitelightstudio.vercel.app").replace(/\/+$/, "");
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "MusicRecording",
         name: work.title,
         byArtist: { "@type": "Person", name: work.artist },
-        datePublished: work.releaseDate,
-        image: work.imageUrl ?? undefined,
-        url: `${baseUrl}/works/${decodedSlug}`,
-        recordedAt: {
-            "@type": "MusicVenue",
-            name: "WHITE LIGHT STUDIO",
-            url: baseUrl,
-        },
+        datePublished: jsonLdDate(work.releaseDate),
+        image: socialImageUrl(work.imageUrl) ?? undefined,
+        url: `${baseUrl}${path}`,
+        // recordedAt은 장소가 아니라 Event를 요구한다. 실제 이벤트 정보가 없으므로 선언하지 않는다.
     };
 
     return (
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
             <WorkDetailClient initialWork={work} />
         </>

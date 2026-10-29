@@ -1,7 +1,8 @@
 export default function CrewLoading() {
     return (
-        <main className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
-            <section className="pt-40 pb-24 px-4 lg:px-12 mx-auto max-w-[90rem]">
+        <main id="main-content" className="relative bg-white min-h-screen w-full overflow-hidden text-black font-sans">
+            <p role="status" className="sr-only">크루 정보를 불러오고 있습니다.</p>
+            <section aria-hidden="true" className="pt-40 pb-24 px-4 lg:px-12 mx-auto max-w-[90rem]">
                 {/* Header - border-l-4 border-black style */}
                 <div className="mb-24 mt-12 pl-4 md:pl-0 border-l-4 border-neutral-200 animate-pulse">
                     <div className="h-10 md:h-20 w-48 md:w-80 bg-neutral-200 rounded ml-4" />

@@ -25,8 +25,8 @@ export default function ErrorFallback({
     }, [error, logLabel]);
 
     return (
-        <div className={`min-h-screen flex flex-col items-center justify-center ${bg} ${textColor} px-6`}>
-            <h1 className="text-3xl font-black tracking-tight mb-4">{title}</h1>
+        <main id="main-content" className={`min-h-screen flex flex-col items-center justify-center ${bg} ${textColor} px-6`}>
+            <h1 id="page-title" tabIndex={-1} className="text-3xl font-black tracking-tight mb-4">{title}</h1>
             <p className="text-neutral-500 mb-8 text-center max-w-md">{message}</p>
             <div className="flex gap-4">
                 <button
@@ -42,6 +42,6 @@ export default function ErrorFallback({
                     홈으로
                 </Link>
             </div>
-        </div>
+        </main>
     );
 }

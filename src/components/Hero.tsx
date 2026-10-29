@@ -1,10 +1,13 @@
 "use client";
 
+import { usePublicMotion } from "@/hooks/usePublicMotion";
+
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePrefersReducedMotion } from "./SmoothScroll";
 
 export default function Hero() {
+    const { transitionFor } = usePublicMotion();
     const prefersReducedMotion = usePrefersReducedMotion();
     // 동작 줄이기 설정 시 무한 반복 애니메이션을 정지 상태로 대체
     const scrollIndicatorAnimation = prefersReducedMotion
@@ -17,12 +20,12 @@ export default function Hero() {
     return (
         <div className="w-full">
             {/* Section 1: Logo only */}
-            <section className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black">
+            <section id="page-title" tabIndex={-1} data-page-path="/" aria-label="WHITE LIGHT STUDIO" style={{ outlineOffset: '-4px' }} className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black">
                 {/* Background Image / Logo */}
                 <div className="absolute inset-0 z-0 scale-150 md:scale-125">
                     <Image
                         src="/images/studio_logo_2.png"
-                        alt="White Light Studio Logo"
+                        alt="화이트라이트 스튜디오 로고"
                         fill
                         className="object-contain"
                         sizes="100vw"
@@ -33,28 +36,28 @@ export default function Hero() {
                 <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/20 to-transparent" />
 
                 {/* Scroll indicator */}
-                <motion.div
+                <motion.div data-public-motion
                     className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-center opacity-70"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 1, duration: 1 }}
+                    transition={transitionFor({ delay: 1, duration: 1 })}
                 >
                     <span className="text-[10px] tracking-widest text-white uppercase mb-2">Scroll</span>
-                    <motion.div
+                    <motion.div data-public-motion
                         className="w-[1px] h-16 bg-white"
                         animate={scrollIndicatorAnimation}
-                        transition={scrollIndicatorTransition}
+                        transition={transitionFor(scrollIndicatorTransition)}
                     />
                 </motion.div>
             </section>
 
             {/* Section 2: Catchphrase only */}
             <section className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-black text-center px-4 border-t border-white/5">
-                <motion.div
+                <motion.div data-public-motion
                     initial={{ opacity: 0, y: 50 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 1, ease: "easeOut" }}
+                    transition={transitionFor({ duration: 1, ease: "easeOut" })}
                 >
                     <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-white uppercase mb-6">
                         Record Your Sound
@@ -65,18 +68,18 @@ export default function Hero() {
                 </motion.div>
 
                 {/* Scroll indicator */}
-                <motion.div
+                <motion.div data-public-motion
                     className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-center opacity-70"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    transition={{ delay: 1, duration: 1 }}
+                    transition={transitionFor({ delay: 1, duration: 1 })}
                 >
                     <span className="text-[10px] tracking-widest text-white uppercase mb-2">Scroll</span>
-                    <motion.div
+                    <motion.div data-public-motion
                         className="w-[1px] h-16 bg-white"
                         animate={scrollIndicatorAnimation}
-                        transition={scrollIndicatorTransition}
+                        transition={transitionFor(scrollIndicatorTransition)}
                     />
                 </motion.div>
             </section>

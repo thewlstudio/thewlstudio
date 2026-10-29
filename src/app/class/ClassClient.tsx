@@ -1,14 +1,17 @@
 "use client";
 
+import { usePublicMotion } from "@/hooks/usePublicMotion";
+
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { useState, useRef, useCallback, useSyncExternalStore, useId } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
+import Image from "@/components/CmsImage";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { urlFor } from "@/sanity/lib/image";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { usePublicDialog } from "@/hooks/usePublicDialog";
+import { externalHttpUrl } from "@/lib/content-urls";
 
 const emptySubscribe = () => () => {};
 
@@ -40,8 +43,10 @@ export type Instructor = {
 };
 
 export default function ClassClient({ initialInstructors }: { initialInstructors: Instructor[] }) {
+    const { transitionFor } = usePublicMotion();
     const { naverReservationUrl } = useSiteSettings();
     const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
+    const portfolioHref = externalHttpUrl(selectedInstructor?.portfolioUrl);
     // isModalOpen: 모달의 열림/닫힘 "목표 상태" — AnimatePresence가 이 값을 보고
     // 진입/퇴장 애니메이션을 재생한다(퇴장 최대 0.4초).
     // isModalActive: 모달이 화면에 실제로 남아있는 동안(열림 + 퇴장 애니메이션
@@ -51,8 +56,9 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalActive, setIsModalActive] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
-    const triggerRef = useRef<HTMLLIElement | null>(null);
-    const hasOpenedModalRef = useRef(false);
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
+    const openTarget = useRef(false);
+    const modalId = useId();
 
     // 모달을 body에 portal로 그리려면 클라이언트 마운트 이후여야 한다
     const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -60,13 +66,14 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
     // 닫는 방법(Escape, 배경 클릭, X 버튼)과 무관하게 항상 이 함수 하나로 닫는다
     // — 그래야 포커스 복원이 모든 경로에서 동일하게 동작한다.
     const closeModal = useCallback(() => {
+        openTarget.current = false;
         setIsModalOpen(false);
     }, []);
 
-    const openModal = useCallback((instructor: Instructor, triggerEl: HTMLLIElement) => {
+    const openModal = useCallback((instructor: Instructor, triggerEl: HTMLButtonElement) => {
         triggerRef.current = triggerEl;
         setSelectedInstructor(instructor);
-        hasOpenedModalRef.current = true;
+        openTarget.current = true;
         setIsModalActive(true);
         setIsModalOpen(true);
     }, []);
@@ -76,85 +83,14 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
     // 이 시점에 비워서, 애니메이션이 재생되는 동안엔 계속 올바른 강사 정보가
     // 보이게 한다.
     const handleModalExitComplete = useCallback(() => {
+        if (openTarget.current) return;
         setIsModalActive(false);
         setSelectedInstructor(null);
     }, []);
 
-    // 배경 스크롤 잠금은 헤더 메뉴·Preloader와 공유하는 useBodyScrollLock이
-    // 담당한다 (각자 body.style.overflow를 직접 건드리면 서로 충돌할 수 있음).
-    useBodyScrollLock(isModalActive);
-
-    // 배경 접근성: 모달이 portal로 body에 그려지므로, 열려 있는 동안 본문
-    // (<main id="main-content">)과 본문 바로가기 링크를 inert 처리해 스크린
-    // 리더 가상 커서가 배경으로 새지 않게 한다. 메뉴와 동일한 패턴.
-    useEffect(() => {
-        const mainEl = document.getElementById("main-content");
-        const skipLink = document.getElementById("skip-link");
-        if (isModalActive) {
-            mainEl?.setAttribute("inert", "");
-            skipLink?.setAttribute("inert", "");
-        } else {
-            mainEl?.removeAttribute("inert");
-            skipLink?.removeAttribute("inert");
-        }
-        return () => {
-            mainEl?.removeAttribute("inert");
-            skipLink?.removeAttribute("inert");
-        };
-    }, [isModalActive]);
-
-    // ESC key to close + focus trap. isModalActive 기준으로 유지해 퇴장
-    // 애니메이션 중에도 Tab/Escape가 배경으로 새지 않게 한다.
-    useEffect(() => {
-        if (!isModalActive) return;
-
-        // 모달이 막 열렸을 때만 포커스 이동 (닫히는 중엔 다시 옮기지 않음)
-        if (isModalOpen) {
-            requestAnimationFrame(() => {
-                const closeBtn = modalRef.current?.querySelector<HTMLButtonElement>('[aria-label="Close modal"]');
-                closeBtn?.focus();
-            });
-        }
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") closeModal();
-
-            // Focus trap: Tab 키로 모달 밖으로 나가지 못하도록
-            if (e.key === "Tab" && modalRef.current) {
-                const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                );
-                if (focusable.length === 0) return;
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-
-                if (e.shiftKey) {
-                    if (document.activeElement === first) {
-                        e.preventDefault();
-                        last.focus();
-                    }
-                } else {
-                    if (document.activeElement === last) {
-                        e.preventDefault();
-                        first.focus();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [isModalActive, isModalOpen, closeModal]);
-
-    // 모달을 닫은 뒤 트리거 카드로 포커스 복원. 반드시 위 inert 해제 effect보다
-    // 아래에 선언돼 있어야 순서가 보장된다 (React가 여러 effect를 선언 순서대로
-    // 정리하기 때문). hasOpenedModalRef로 최초 로딩 시 불필요한 포커스 이동도
-    // 막는다.
-    useEffect(() => {
-        if (isModalActive || !hasOpenedModalRef.current) return;
-        triggerRef.current?.focus();
-    }, [isModalActive]);
+    // 실제 표시 수명에는 퇴장 애니메이션도 포함한다.
+    usePublicDialog({ active: isModalActive, dialogRef: modalRef, triggerRef,
+        initialFocus: 'button[aria-label="모달 닫기"]', onClose: closeModal });
 
     return (
         <>
@@ -163,24 +99,24 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
 
             {/* Hero / Curriculum Section */}
             <section className="pt-40 pb-24 px-4 lg:px-12 mx-auto max-w-7xl">
-                <motion.div
+                <motion.div data-public-motion
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
+                    transition={transitionFor({ duration: 0.8 })}
                     className="mb-24 mt-12 pl-4 md:pl-0 border-l-4 border-black"
                 >
-                    <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter ml-4">
+                    <h1 id="page-title" tabIndex={-1} data-page-path="/class" className="text-4xl md:text-7xl font-black uppercase tracking-tighter ml-4">
                         MUSIC CLASS
                     </h1>
                     <p className="text-neutral-500 font-medium tracking-widest mt-4 ml-4">배움을 넘어, 당신의 음악을 완성하는 과정</p>
                 </motion.div>
 
                 {/* Curriculum Details (Editorial / Brutalist Aesthetic) */}
-                <motion.div
+                <motion.div data-public-motion
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
+                    transition={transitionFor({ duration: 0.8, delay: 0.2 })}
                     className="mb-32 md:mb-48 relative text-black"
                 >
                     <div className="mb-10 lg:mb-12 border-b border-black/10 pb-6 px-4 md:px-8 flex flex-col md:flex-row md:items-end md:justify-between">
@@ -191,9 +127,9 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-0 px-4 md:px-8 mt-8 pb-4">
                         {/* 1:1 Classes */}
                         <div className="md:pr-12 md:border-r border-black/10">
-                            <h4 className="flex items-center text-black font-bold mb-6 tracking-[0.2em] text-base uppercase">
+                            <h3 className="flex items-center text-black font-bold mb-6 tracking-[0.2em] text-base uppercase">
                                 1:1 Private Class
-                            </h4>
+                            </h3>
                             <ul className="text-neutral-800 space-y-5 font-semibold text-sm md:text-base pl-5 border-l border-black/10">
                                 <li>작사, 작곡, 편곡</li>
                                 <li>통기타, 일렉기타</li>
@@ -205,10 +141,10 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
 
                         {/* Group Classes */}
                         <div className="md:pl-16">
-                            <h4 className="inline-flex items-center text-black font-bold mb-6 tracking-[0.2em] text-base uppercase">
+                            <h3 className="inline-flex items-center text-black font-bold mb-6 tracking-[0.2em] text-base uppercase">
                                 Group Class
                                 <span className="font-sans text-neutral-500 normal-case tracking-normal ml-3 font-medium text-xs">(2-5인)</span>
-                            </h4>
+                            </h3>
                             <ul className="text-neutral-800 space-y-5 font-semibold text-sm md:text-base pl-5 border-l border-black/10">
                                 <li>통기타 기초 단체수업</li>
                                 <li>싱어송라이터 & 단체수업</li>
@@ -224,32 +160,32 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                 </div>
 
                 {/* Editorial List Layout for Classes */}
-                <ul className="flex flex-col">
+                <ul role="list" aria-label="강사 목록" className="flex flex-col">
                     {initialInstructors.length === 0 ? (
-                        <div className="py-20 text-center text-neutral-500">
-                            등록된 클래스 강사가 없습니다. (Sanity 관리자 페이지에서 추가해주세요)
-                        </div>
+                        <li className="py-20 text-center text-neutral-500">
+                            등록된 클래스 강사가 없습니다.
+                        </li>
                     ) : (
                         initialInstructors.map((cls, index) => (
-                            <motion.li
+                            <motion.li data-public-motion
                                 key={cls._id || index}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.6, delay: Math.min(index * 0.1, 0.5) }}
-                                role="button"
-                                tabIndex={0}
-                                className="group border-b border-black/10 cursor-pointer relative overflow-hidden bg-white hover:bg-neutral-50 transition-colors duration-700 list-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-black"
+                                transition={transitionFor({ duration: 0.6, delay: Math.min(index * 0.1, 0.5) })}
+                                className="group border-b border-black/10 relative overflow-hidden bg-white hover:bg-neutral-50 transition-colors duration-700 list-none"
+                            >
+                            <button
+                                type="button"
+                                aria-label={`${cls.instructorName} 강사 · ${cls.category} 레슨 안내 보기`}
+                                aria-haspopup="dialog"
+                                aria-expanded={isModalActive && selectedInstructor?._id === cls._id}
+                                aria-controls={isModalActive && selectedInstructor?._id === cls._id ? modalId : undefined}
+                                className="relative block w-full text-left cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-black"
                                 onClick={(e) => openModal(cls, e.currentTarget)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        openModal(cls, e.currentTarget);
-                                    }
-                                }}
                             >
                                 {/* Atmospheric Background Image (Right side - Using Instructor's Photo) */}
-                                <div
+                                <span
                                     className="absolute top-0 right-0 w-full md:w-2/3 h-full z-0 opacity-15 group-hover:opacity-30 transition-opacity duration-1000 pointer-events-none overflow-hidden"
                                     style={{ WebkitMaskImage: 'linear-gradient(to left, black 20%, transparent 80%)', maskImage: 'linear-gradient(to left, black 20%, transparent 80%)' }}
                                 >
@@ -262,53 +198,54 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                             className="object-cover object-right-bottom filter grayscale mix-blend-multiply"
                                         />
                                     )}
-                                </div>
+                                </span>
 
-                                <div className="py-8 md:py-12 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between relative z-10 w-full">
+                                <span className="py-8 md:py-12 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between relative z-10 w-full">
 
                                     {/* Left Content */}
-                                    <div className="flex flex-col md:flex-row items-center md:items-center w-full relative text-center md:text-left">
-                                        <div
-                                            className="w-32 sm:w-40 md:w-28 aspect-[3/4] rounded-sm overflow-hidden bg-neutral-100 flex-shrink-0 relative group cursor-pointer border-[3px] border-white shadow-md z-20 mb-6 md:mb-0 md:mr-10"
+                                    <span className="flex flex-col md:flex-row items-center md:items-center w-full relative text-center md:text-left">
+                                        <span
+                                            className="block w-32 sm:w-40 md:w-28 aspect-[3/4] rounded-sm overflow-hidden bg-neutral-100 flex-shrink-0 relative group cursor-pointer border-[3px] border-white shadow-md z-20 mb-6 md:mb-0 md:mr-10"
                                         >
                                             {cls.image && (
                                                 <Image
                                                     src={urlFor(cls.image).url()}
-                                                    alt={cls.instructorName}
+                                                    alt=""
                                                     fill
                                                     className={`object-cover ${cls.imagePosition || 'object-center'} filter grayscale group-hover:grayscale-0 transition-all duration-700 mix-blend-multiply`}
-                                                    sizes="160px"
+                                                    sizes="(min-width: 768px) 112px, (min-width: 640px) 160px, 128px"
                                                 />
                                             )}
-                                        </div>
+                                        </span>
 
                                         {/* Info */}
-                                        <div className="flex flex-col flex-grow z-10 relative md:ml-0 md:items-start items-center">
-                                            <div className="flex flex-col md:flex-row md:items-baseline mb-1 md:mb-2">
-                                                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter md:mr-6 group-hover:text-black text-neutral-800 transition-colors uppercase">
+                                        <span className="flex flex-col flex-grow z-10 relative md:ml-0 md:items-start items-center">
+                                            <span className="flex flex-col md:flex-row md:items-baseline mb-1 md:mb-2">
+                                                <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter md:mr-6 group-hover:text-black text-neutral-800 transition-colors uppercase">
                                                     {cls.category}
-                                                </h3>
-                                            </div>
-                                            <p className="text-neutral-600 font-semibold text-sm md:text-lg tracking-wide">
+                                                </span>
+                                            </span>
+                                            <span className="text-neutral-600 font-semibold text-sm md:text-lg tracking-wide">
                                                 Inst. {cls.instructorName}
-                                            </p>
-                                        </div>
+                                            </span>
+                                        </span>
 
                                         {/* Arrow */}
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 md:translate-y-0 md:top-auto md:relative opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 hidden md:block text-neutral-500">
+                                        <span aria-hidden="true" className="absolute right-0 top-1/2 -translate-y-1/2 md:translate-y-0 md:top-auto md:relative opacity-0 -translate-x-4 group-hover:opacity-100 motion-safe:group-hover:translate-x-0 transition-all duration-500 hidden md:block text-neutral-500">
                                             <span className="text-4xl font-light">→</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                        </span>
+                                    </span>
+                                </span>
+                            </button>
                             </motion.li>
                         ))
                     )}
                 </ul>
 
-                <motion.div
+                <motion.div data-public-motion
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 0.8 }}
+                    transition={transitionFor({ duration: 1, delay: 0.8 })}
                     className="mt-32 text-center"
                 >
                     <a href={naverReservationUrl} target="_blank" rel="noopener noreferrer" className="inline-block px-12 py-4 bg-black text-white font-bold tracking-widest text-sm hover:bg-neutral-800 transition-colors uppercase">
@@ -329,36 +266,42 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
         {mounted && createPortal(
             <AnimatePresence onExitComplete={handleModalExitComplete}>
                 {isModalOpen && selectedInstructor && (
-                    <motion.div
+                    <motion.div data-public-motion
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={transitionFor({ duration: 0.3 })}
                         className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/60 backdrop-blur-sm"
                         onClick={closeModal}
                     >
-                        <motion.div
+                        <motion.div data-public-motion
                             ref={modalRef}
+                            id={modalId}
                             role="dialog"
+                            tabIndex={-1}
+                            data-lenis-prevent
                             aria-modal="true"
                             aria-label={selectedInstructor.instructorName}
                             initial={{ opacity: 0, y: 50, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 30, scale: 0.95 }}
-                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                            className="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-xl shadow-2xl relative flex flex-col"
+                            transition={transitionFor({ duration: 0.4, ease: [0.16, 1, 0.3, 1] })}
+                            className="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden overscroll-contain rounded-xl shadow-2xl relative flex flex-col"
                             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
                         >
-                            {/* Close Button */}
-                            <button
-                                onClick={closeModal}
-                                className="absolute top-4 right-4 md:top-6 md:right-6 lg:top-8 lg:right-8 z-20 w-10 h-10 bg-neutral-100 hover:bg-black text-neutral-500 hover:text-white rounded-full flex items-center justify-center transition-colors"
-                                aria-label="Close modal"
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+                            {/* 높이가 없는 고정 영역이라 기존 배치는 유지하고, 본문을 내려도 닫기는 남긴다. */}
+                            <div className="sticky top-0 h-0 w-full shrink-0 z-20 pointer-events-none">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="absolute top-4 right-4 md:top-6 md:right-6 lg:top-8 lg:right-8 w-11 h-11 bg-neutral-100 hover:bg-black text-neutral-500 hover:text-white rounded-full flex items-center justify-center transition-colors pointer-events-auto"
+                                    aria-label="모달 닫기"
+                                >
+                                    <svg aria-hidden="true" focusable="false" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
 
                             {/* Modal Layout - Split View */}
                             <div className="flex flex-col lg:flex-row w-full min-h-[60vh] lg:min-h-[70vh]">
@@ -368,18 +311,18 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                     <div>
                                         {/* Header */}
                                         <div className="mb-10 sm:mb-12">
-                                            <h2 className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4 sm:mb-6 flex items-center">
+                                            <p className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-neutral-500 uppercase mb-4 sm:mb-6 flex items-center">
                                                 <span className="w-6 sm:w-8 h-px bg-neutral-300 mr-3 sm:mr-4"></span>
                                                 {selectedInstructor.category}
-                                            </h2>
-                                            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black tracking-tighter text-black mb-6 sm:mb-8 leading-[1.2] break-keep">
+                                            </p>
+                                            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black tracking-tighter text-black mb-6 sm:mb-8 leading-[1.2] break-keep">
                                                 {selectedInstructor.subtitle?.split(', ').map((line, i, arr) => (
                                                     <span key={i}>
                                                         {line}
                                                         {i < arr.length - 1 && <>,<br className="md:hidden lg:block lg:pb-1" /> </>}
                                                     </span>
                                                 ))}
-                                            </h1>
+                                            </h2>
                                             <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2">
                                                 <p className="text-lg sm:text-xl md:text-2xl font-black tracking-widest text-neutral-800">
                                                     Inst. {selectedInstructor.instructorName?.split(' ')[0]}
@@ -431,28 +374,28 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
                                                 alt={selectedInstructor.instructorName}
                                                 fill
                                                 className="object-cover object-top mix-blend-multiply"
-                                                sizes="224px"
+                                                sizes="(min-width: 768px) 224px, (min-width: 640px) 192px, 160px"
                                             />
                                         )}
                                     </div>
 
                                     {/* Portfolio */}
                                     <div className="text-center mb-8 sm:mb-12 w-full flex-grow flex flex-col items-center justify-center">
-                                        <h4 className="text-sm sm:text-base font-black tracking-[0.2em] uppercase text-black mb-3">
+                                        <h3 className="text-sm sm:text-base font-black tracking-[0.2em] uppercase text-black mb-3">
                                             Instructor&apos;s Works
-                                        </h4>
+                                        </h3>
                                         <p className="whitespace-pre-line text-neutral-500 text-[11px] sm:text-xs mb-6 sm:mb-8 break-keep leading-relaxed max-w-xs">
                                             {selectedInstructor.portfolioText?.replace(/\\n/g, '\n')}
                                         </p>
-                                        {selectedInstructor.portfolioUrl && (
+                                        {portfolioHref && (
                                             <a
-                                                href={selectedInstructor.portfolioUrl}
+                                                href={portfolioHref}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="inline-flex items-center justify-center px-6 sm:px-8 py-3 text-[10px] sm:text-xs border border-black text-black font-bold tracking-[0.2em] hover:bg-black hover:text-white transition-colors uppercase group"
                                             >
                                                 {selectedInstructor.portfolioBtn || "작업물 보기"}
-                                                <span className="ml-2 sm:ml-3 group-hover:translate-x-1 transition-transform">↗</span>
+                                                <span className="ml-2 sm:ml-3 motion-safe:group-hover:translate-x-1 transition-transform">↗</span>
                                             </a>
                                         )}
                                     </div>

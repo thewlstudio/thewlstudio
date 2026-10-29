@@ -11,7 +11,14 @@ import { useEffect } from "react";
  * 계속 잠가두고 전부 해제됐을 때만 원래 값으로 복원한다.
  */
 const activeLocks = new Set<symbol>();
+const listeners = new Set<() => void>();
 let previousBodyOverflow: string | null = null;
+
+export const isBodyScrollLocked = () => activeLocks.size > 0;
+export const subscribeBodyScrollLock = (listener: () => void) => {
+    listeners.add(listener);
+    return () => { listeners.delete(listener); };
+};
 
 function acquireBodyScrollLock(token: symbol) {
     if (activeLocks.has(token)) return;
@@ -22,6 +29,7 @@ function acquireBodyScrollLock(token: symbol) {
     }
 
     activeLocks.add(token);
+    listeners.forEach((listener) => listener());
 }
 
 function releaseBodyScrollLock(token: symbol) {
@@ -31,6 +39,7 @@ function releaseBodyScrollLock(token: symbol) {
         document.body.style.overflow = previousBodyOverflow ?? "";
         previousBodyOverflow = null;
     }
+    listeners.forEach((listener) => listener());
 }
 
 export function useBodyScrollLock(active: boolean) {
