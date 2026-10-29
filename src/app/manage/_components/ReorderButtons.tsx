@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useContext, useState } from "react";
+import { ListReorderContext, useReorderMutation } from "./useReorderMutation";
+import { useToast } from "./Toast";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -17,19 +18,19 @@ export default function ReorderButtons({
     disableDown: boolean;
     move: (documentId: string, direction: "up" | "down") => Promise<Result>;
 }) {
-    const router = useRouter();
-    const [isPending, startTransition] = useTransition();
+    const sharedMutation = useContext(ListReorderContext);
+    const ownMutation = useReorderMutation();
+    const { isPending, run: saveOrder } = sharedMutation ?? ownMutation;
+    const toast = useToast();
     const [error, setError] = useState<string | null>(null);
 
     const run = (direction: "up" | "down") => {
-        startTransition(async () => {
-            const result = await move(documentId, direction);
-            if (result.ok) {
-                setError(null);
-                router.refresh();
-            } else {
-                setError(result.error);
-            }
+        saveOrder(() => move(documentId, direction), {
+            onStart: () => setError(null),
+            onError: (message) => {
+                setError(message);
+                toast.show({ message, tone: "info" });
+            },
         });
     };
 

@@ -8,18 +8,23 @@ import RestoreButton from "../../_components/RestoreButton";
 import { restoreSpace } from "../actions";
 import ManageNav from "../../ManageNav";
 import UpdatedAt from "../../_components/UpdatedAt";
+import DetailReadFailure from "../../_components/DetailReadFailure";
+import { detailReadIssue } from "@/lib/manage-detail-read";
 
 export const metadata = { title: "공간 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "studioSpace" && _id == $id][0]{
-    _id, _updatedAt, kind, trashed, isActive, name, subtitle, description, features, notes,
+    _id, _type, _rev, _updatedAt, kind, trashed, isActive, name, subtitle, description, features, notes,
+    "sourcePrices": prices,
+    "sourceImages": images,
     "prices": prices[]{ _key, label, value, unit },
     "images": images[]{ _key, "url": asset->url }
 }`;
 
 type Raw = {
     _id?: string;
+    _rev?: string;
     kind?: string;
     trashed?: boolean;
     isActive?: boolean;
@@ -29,21 +34,26 @@ type Raw = {
     features?: string[];
     notes?: string[];
     prices?: { _key?: string; label?: string; value?: string; unit?: string }[];
-    images?: { _key?: string; url?: string }[];
+    images?: { _key?: string; url?: string | null }[];
 };
 
 export default async function EditSpacePage({ params }: { params: Promise<{ id: string }> }) {
     if (!(await isAuthenticated())) redirect("/manage/login");
 
     const { id } = await params;
-    const raw = await client.fetch<Raw | null>(detailQuery, { id: decodeURIComponent(id) });
-    if (!raw?._id) notFound();
+    const documentId = decodeURIComponent(id);
+    const result = await client.fetch<unknown>(detailQuery, { id: documentId });
+    if (result === null) notFound();
+    const issue = detailReadIssue("studioSpace", documentId, result);
+    if (issue) return <DetailReadFailure title="공간 수정" fields={issue.fields} />;
+    const raw = result as Raw & { _id: string };
 
     const writeReady = isWriteConfigured();
     const isTrashed = raw.trashed === true;
 
     const data: SpaceFormData = {
         _id: raw._id,
+        _rev: raw._rev,
         kind: raw.kind === "lobby" ? "lobby" : "room",
         // 기존 데이터에는 이 필드가 없을 수 있다 — 그 경우 "공개"로 취급한다
         isActive: raw.isActive ?? true,
@@ -53,7 +63,8 @@ export default async function EditSpacePage({ params }: { params: Promise<{ id: 
         prices: (raw.prices ?? []).map((p, i) => ({ key: p._key ?? `p-${i}`, label: p.label ?? "", value: p.value ?? "", unit: p.unit ?? "" })),
         features: raw.features ?? [],
         notes: raw.notes ?? [],
-        images: (raw.images ?? []).filter((im) => im.url).map((im, i) => ({ key: im._key ?? `img-${i}`, url: im.url as string })),
+        // 미리보기 URL의 유무와 원본 사진 행의 존재는 다르다. 저장 목록에서 제외하지 않는다.
+        images: (raw.images ?? []).map((im, i) => ({ key: im._key ?? `img-${i}`, url: im.url || null })),
     };
 
     return (

@@ -15,7 +15,7 @@ export type KnownType = keyof typeof SECTION_META;
 export const KNOWN_TYPES = Object.keys(SECTION_META) as KnownType[];
 
 export function isKnownType(t: unknown): t is KnownType {
-    return typeof t === "string" && t in SECTION_META;
+    return typeof t === "string" && Object.hasOwn(SECTION_META, t);
 }
 
 export const LIMITS = { sections: 20, rows: 100, text: 5000, line: 300 } as const;

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "../GuardedLink";
 import { useState, useSyncExternalStore } from "react";
 import { checklist, STEPS } from "./storage";
 

@@ -1,8 +1,8 @@
-import Link from "next/link";
-import Image from "next/image";
+import Link from "../_components/GuardedLink";
+import Image from "@/components/CmsImage";
 import { redirect } from "next/navigation";
+import { CONTENT_ORDER } from "@/lib/content-order";
 import { client } from "@/sanity/lib/client";
-import { urlFor } from "@/sanity/lib/image";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
@@ -10,7 +10,9 @@ import ReorderButtons from "../_components/ReorderButtons";
 import ManagedList, { DragHandle } from "../_components/ManagedList";
 import RestoreButton from "../_components/RestoreButton";
 import { moveInstructorOrder, restoreInstructor, reorderInstructors } from "./actions";
-import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { listReadIssue } from "@/lib/manage-list-read";
+import { manageThumbnail } from "@/lib/manage-thumbnail";
+import ListReadFailure from "../_components/ListReadFailure";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 import EmptyState from "../_components/EmptyState";
 
@@ -24,16 +26,16 @@ type InstructorRow = {
     category?: string;
     _updatedAt?: string;
     order?: number;
-    image?: SanityImageSource;
+    image?: unknown;
     isActive?: boolean;
 };
 
-const listQuery = `*[_type == "instructor" && !(trashed == true)] | order(order asc) {
-    _id, _updatedAt, instructorName, category, order, image, isActive
+const listQuery = `*[_type == "instructor" && !(trashed == true)] | order(${CONTENT_ORDER}) {
+    _id, _type, _updatedAt, instructorName, category, order, image, isActive, trashed
 }`;
 
 const trashedQuery = `*[_type == "instructor" && trashed == true] | order(_updatedAt desc) {
-    _id, _updatedAt, instructorName, category, image
+    _id, _type, _updatedAt, instructorName, category, order, image, isActive, trashed
 }`;
 
 export default async function InstructorListPage({
@@ -49,11 +51,15 @@ export default async function InstructorListPage({
     const isTrashView = view === "trash";
     const writeReady = isWriteConfigured();
 
-    const [instructors, trashedCount] = await Promise.all([
-        client.fetch<InstructorRow[]>(isTrashView ? trashedQuery : listQuery),
+    const [result, countResult] = await Promise.all([
+        client.fetch<unknown>(isTrashView ? trashedQuery : listQuery),
         // 일반 목록에서도 "휴지통 (N)" 링크에 개수를 보여주기 위해 항상 조회
-        isTrashView ? Promise.resolve(0) : client.fetch<number>(`count(*[_type == "instructor" && trashed == true])`),
+        isTrashView ? Promise.resolve(0) : client.fetch<unknown>(`count(*[_type == "instructor" && trashed == true])`),
     ]);
+    const issue = listReadIssue("instructor", result, countResult, isTrashView);
+    if (issue) return <ListReadFailure title={isTrashView ? "휴지통" : "강사 관리"} fields={issue.fields} />;
+    const instructors = result as InstructorRow[];
+    const trashedCount = countResult as number;
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
@@ -130,6 +136,7 @@ export default async function InstructorListPage({
                 statusFilter
                 items={instructors.map((instructor, index) => {
                     const isHidden = instructor.isActive === false;
+                    const thumbnail = manageThumbnail(instructor.image);
                     return {
                         id: instructor._id,
                         search: [instructor.instructorName, instructor.category].filter(Boolean).join(" "),
@@ -154,9 +161,9 @@ export default async function InstructorListPage({
                                     className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                                 >
                                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
-                                        {instructor.image && (
+                                        {thumbnail && (
                                             <Image
-                                                src={urlFor(instructor.image).width(112).height(112).fit("crop").url()}
+                                                src={thumbnail}
                                                 alt=""
                                                 fill
                                                 sizes="56px"

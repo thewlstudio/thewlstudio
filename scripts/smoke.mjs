@@ -25,6 +25,22 @@ for (const p of ["/", "/works", "/crew", "/studio", "/class", "/contact", "/robo
 const sm = await get("/sitemap.xml");
 check("사이트맵 → 200 + urlset", sm.status === 200 && sm.text.includes("<urlset"), `status ${sm.status}`);
 
+// 목록만 정상이면서 상세 본문은 404인 회귀도 잡는다. 사이트맵의 URL은
+// 경로만 사용해, 점검 대상으로 지정한 서버 밖으로 요청하지 않는다.
+const detailPaths = new Set();
+for (const match of sm.text.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/g)) {
+    try {
+        const url = new URL(match[1].replace(/&amp;/g, "&"));
+        if (/^\/(works|crew)\/[^/]+$/.test(url.pathname)) detailPaths.add(url.pathname);
+    } catch {
+        check("사이트맵 URL 형식", false);
+    }
+}
+for (const path of detailPaths) {
+    const r = await get(path);
+    check(`상세 ${path} → 200 + 본문 제목`, r.status === 200 && /<h1(?:\s[^>]*)?>[\s\S]*?<\/h1>/i.test(r.text), `status ${r.status}`);
+}
+
 // 2. 관리 화면은 로그인 없이 열리지 않는다 (307 이동, 또는 스트리밍 화면이면 본문에 데이터가 없어야 함)
 for (const p of ["/manage", "/manage/crew", "/manage/crew/new", "/manage/works", "/manage/works/new", "/manage/studio", "/manage/studio/info", "/manage/contact", "/manage/help", "/manage/map", "/manage/history/crew/x"]) {
     const r = await get(p);

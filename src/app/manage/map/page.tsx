@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "../_components/GuardedLink";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/manage-auth";
 import ManageNav from "../ManageNav";

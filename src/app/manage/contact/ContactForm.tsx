@@ -1,22 +1,24 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import Link from "next/link";
-import { saveSettings, type SaveResult } from "./actions";
+import { useState } from "react";
+import Link from "../_components/GuardedLink";
+import { saveSettings } from "./actions";
 import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider } from "../_components/FormParts";
 import { useGuardedForm } from "../_components/useGuardedForm";
+import { useManagedFormAction, type ManagedFormSession } from "../_components/useManagedFormAction";
 import SaveStatus from "../_components/SaveStatus";
 import { mapEmbedUrl, type SiteSettings } from "@/lib/site-settings";
 
-function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: () => void }) {
-    const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(saveSettings, null);
+function ContactFormInner({ data, onDiscard, session }: { data: SiteSettings; onDiscard: () => void; session: ManagedFormSession }) {
+    const { state, formAction, isPending } = session;
     const [mapQuery, setMapQuery] = useState(data.mapQuery);
     const [shownQuery, setShownQuery] = useState(data.mapQuery);
-    const { isDirty, markDirty, summaryRef, handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state, formAction, isPending);
 
     return (
         <FieldErrorsProvider value={clientErrors}>
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
+            <fieldset disabled={isPending} aria-busy={isPending} className="contents">
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
             <Section tour="contact-loc" step={1} title="위치·연락처" help="Contact 페이지에 나와요. 전화번호를 누르면 방문자 휴대폰에서 **바로 전화**가 걸려요." hint="Contact 페이지에 나오는 정보예요. 모든 칸을 채워 주세요.">
@@ -82,7 +84,7 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">저장하면 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                    <Link href="/manage" className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         허브
                     </Link>
                     {isDirty && (
@@ -106,13 +108,14 @@ function ContactFormInner({ data, onDiscard }: { data: SiteSettings; onDiscard: 
                 </div>
                 <SaveStatus state={state} />
             </div>
+            </fieldset>
         </form>
         </FieldErrorsProvider>
     );
 }
 
 /** "변경 버리기"를 누르면 key를 바꿔 폼 전체를 최신 data로 다시 마운트한다 */
-export default function ContactForm({ data }: { data: SiteSettings }) {
-    const [resetKey, setResetKey] = useState(0);
-    return <ContactFormInner key={resetKey} data={data} onDiscard={() => setResetKey((k) => k + 1)} />;
+export default function ContactForm({ data, revision }: { data: SiteSettings; revision?: string }) {
+    const session = useManagedFormAction(saveSettings, revision);
+    return <ContactFormInner key={session.formKey} data={data} onDiscard={session.onDiscard} session={session} />;
 }

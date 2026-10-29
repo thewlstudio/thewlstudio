@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
+import { useImageInput } from "../../_components/useImageInput";
 import { ExpandControls, Summary, ToggleButton, snippet, useOpenKeys } from "../../_components/Collapse";
 import CropButton from "../../_components/ImageCropper";
+import { externalHttpUrl } from "@/lib/content-urls";
 import {
     BLOCK_META,
     ADDABLE_TYPES,
@@ -113,8 +114,7 @@ function CreditsEditor({ sections, onChange }: { sections: CreditSection[]; onCh
 
 /** 이미지 블록: 사진은 파일 입력(blockImage_<key>)으로 폼에 실려 서버가 올린다 */
 function ImageBlockEditor({ b, onChange }: { b: Extract<BlockState, { type: "imageBlock" }>; onChange: (b: BlockState) => void }) {
-    const [preview, setPreview] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const { preview, error, processing, onChange: onPhotoChange } = useImageInput();
     const shown = preview ?? b.imageUrl;
     const id = `img-${b.key}`;
     return (
@@ -138,31 +138,13 @@ function ImageBlockEditor({ b, onChange }: { b: Extract<BlockState, { type: "ima
                         type="file"
                         accept="image/*"
                         className="sr-only"
-                        onChange={async (e) => {
-                            const input = e.target;
-                            const picked = input.files?.[0];
-                            if (!picked) {
-                                setPreview(null);
-                                setError(null);
-                                return;
-                            }
-                            const prepared = await prepareImageFile(picked);
-                            if ("error" in prepared) {
-                                setError(prepared.error);
-                                input.value = "";
-                                setPreview(null);
-                                return;
-                            }
-                            replaceInputFile(input, prepared.file);
-                            setError(null);
-                            setPreview(URL.createObjectURL(prepared.file));
-                            onChange({ ...b }); // 변경됨 표시
-                        }}
+                        aria-busy={processing}
+                        onChange={(e) => { void onPhotoChange(e); onChange({ ...b }); }}
                     />
                     <span className="inline-block ml-2 align-top">
                         <CropButton inputId={id} currentUrl={b.imageUrl} defaultRatio={null} />
                     </span>
-                    {error ? (
+                    {processing ? <p role="status" className="text-sm text-neutral-600 mt-2">사진을 준비하는 중…</p> : error ? (
                         <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{error}</p>
                     ) : (
                         <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
@@ -217,11 +199,12 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
                     <p className="text-sm text-neutral-500 leading-relaxed">유튜브 영상 주소를 붙여넣어 주세요. 주소가 올바르지 않으면 저장되지 않아요.</p>
                 </div>
             );
-        case "audioBlock":
+        case "audioBlock": {
+            const audioUrl = externalHttpUrl(b.audioUrl);
             return (
                 <div className="space-y-2">
-                    {b.audioUrl ? (
-                        <audio controls preload="none" src={b.audioUrl} className="w-full" aria-label="오디오 미리 듣기" />
+                    {audioUrl ? (
+                        <audio controls preload="none" src={audioUrl} className="w-full" aria-label="오디오 미리 듣기" />
                     ) : (
                         <p className="text-sm text-red-600">오디오 파일이 연결돼 있지 않아요. /admin에서 파일을 다시 올려 주세요.</p>
                     )}
@@ -230,6 +213,7 @@ function BlockBody({ b, onChange }: { b: BlockState; onChange: (b: BlockState) =
                     <p className="text-sm text-neutral-500 leading-relaxed">제목·아티스트만 고칠 수 있어요. 오디오 파일을 새로 올리거나 바꾸려면 /admin에서 해 주세요.</p>
                 </div>
             );
+        }
         case "preserved":
             return (
                 <p className="text-sm text-neutral-600 bg-neutral-100 border border-neutral-200 rounded-lg p-3 leading-relaxed">

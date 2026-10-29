@@ -9,12 +9,16 @@ import RestoreButton from "../../_components/RestoreButton";
 import { restoreInstructor } from "../actions";
 import ManageNav from "../../ManageNav";
 import UpdatedAt from "../../_components/UpdatedAt";
+import DetailReadFailure from "../../_components/DetailReadFailure";
+import { detailReadIssue } from "@/lib/manage-detail-read";
 
 export const metadata = { title: "강사 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "instructor" && _id == $id][0]{
     _id,
+    _type,
+    _rev,
     _updatedAt,
     isActive,
     trashed,
@@ -45,11 +49,15 @@ export default async function EditInstructorPage({
     }
 
     const { id } = await params;
-    const raw = await client.fetch<RawInstructor | null>(detailQuery, {
-        id: decodeURIComponent(id),
+    const documentId = decodeURIComponent(id);
+    const result = await client.fetch<unknown>(detailQuery, {
+        id: documentId,
     });
 
-    if (!raw?._id) notFound();
+    if (result === null) notFound();
+    const issue = detailReadIssue("instructor", documentId, result);
+    if (issue) return <DetailReadFailure title="강사 수정" fields={issue.fields} />;
+    const raw = result as RawInstructor & { _id: string };
 
     const writeReady = isWriteConfigured();
     const isTrashed = raw.trashed === true;
@@ -62,6 +70,7 @@ export default async function EditInstructorPage({
     // 폼은 undefined를 다루지 않도록 여기서 기본값을 채운다
     const data: InstructorFormData = {
         _id: raw._id,
+        _rev: raw._rev,
         // 기존 데이터에는 이 필드가 아예 없을 수 있다 — 그 경우 "공개"로 취급한다
         isActive: raw.isActive ?? true,
         instructorName: raw.instructorName ?? "",

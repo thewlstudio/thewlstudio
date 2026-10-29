@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "./_components/GuardedLink";
 
 /** 관리 화면 안에서 예기치 못한 오류가 났을 때의 안내 (사이트 전체 오류 화면 대신) */
 export default function ManageError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {

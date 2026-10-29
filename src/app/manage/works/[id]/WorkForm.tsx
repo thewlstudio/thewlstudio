@@ -1,19 +1,22 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import Link from "next/link";
-import { saveWork, createWork, type SaveResult } from "../actions";
+import { useState } from "react";
+import Link from "../../_components/GuardedLink";
+import { saveWork, createWork } from "../actions";
 import { Section, Field, ErrorSummary, inputClass, FieldErrorsProvider, InlineError } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { useManagedFormAction, type ManagedFormSession } from "../../_components/useManagedFormAction";
 import SaveStatus from "../../_components/SaveStatus";
-import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
+import { useImageInput } from "../../_components/useImageInput";
 import { toState } from "@/lib/work-blocks";
 import WorkBlocksEditor from "./WorkBlocksEditor";
 import { Eye } from "lucide-react";
+import { publicDetailPath } from "@/lib/public-routes";
 import CropButton from "../../_components/ImageCropper";
 
 export type WorkFormData = {
     _id: string;
+    _rev?: string;
     title: string;
     artist: string;
     slug: string;
@@ -28,21 +31,22 @@ export type WorkFormData = {
 };
 
 
-function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "create" | "edit"; onDiscard: () => void }) {
+function WorkFormInner({ data, mode, onDiscard, session }: { data: WorkFormData; mode: "create" | "edit"; onDiscard: () => void; session: ManagedFormSession }) {
     const isCreate = mode === "create";
-    const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(isCreate ? createWork : saveWork, null);
+    const publicPath = publicDetailPath("works", data.slug);
+    const { state, formAction, isPending } = session;
     const [preview, setPreview] = useState({ title: data.title, artist: data.artist, releaseDate: data.releaseDate });
-    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-    const [photoError, setPhotoError] = useState<string | null>(null);
+    const { preview: photoPreview, error: photoError, processing, onChange: onPhotoChange } = useImageInput();
     const shownPhoto = photoPreview ?? data.imageUrl;
 
-    const { isDirty, markDirty, summaryRef, handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state, formAction, isPending);
 
     const prettyDate = preview.releaseDate ? preview.releaseDate.replace(/-/g, ". ") + "." : "";
 
     return (
         <FieldErrorsProvider value={clientErrors}>
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
+            <fieldset disabled={isPending} aria-busy={isPending} className="contents">
             <input type="hidden" name="documentId" value={data._id} />
 
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
@@ -113,30 +117,13 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                             accept="image/*"
                             required={isCreate}
                             className="sr-only"
-                            onChange={async (e) => {
-                                const input = e.target;
-                                const picked = input.files?.[0];
-                                if (!picked) {
-                                    setPhotoPreview(null);
-                                    setPhotoError(null);
-                                    return;
-                                }
-                                const prepared = await prepareImageFile(picked);
-                                if ("error" in prepared) {
-                                    setPhotoError(prepared.error);
-                                    input.value = "";
-                                    setPhotoPreview(null);
-                                    return;
-                                }
-                                replaceInputFile(input, prepared.file);
-                                setPhotoError(null);
-                                setPhotoPreview(URL.createObjectURL(prepared.file));
-                            }}
+                            aria-busy={processing}
+                            onChange={onPhotoChange}
                         />
                         <span className="inline-block ml-2 align-top">
                             <CropButton inputId={"imageFile"} currentUrl={data.imageUrl} defaultRatio={1} />
                         </span>
-                        {photoError ? (
+                        {processing ? <p role="status" className="text-sm text-neutral-600 mt-2">사진을 준비하는 중…</p> : photoError ? (
                             <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{photoError}</p>
                         ) : (
                             <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
@@ -163,9 +150,9 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
             {!isCreate && (
                 <Section tour="works-blocks" step={4} title="상세 페이지 내용" help="설명·크레딧·트랙리스트·인사말·이미지·유튜브를 **블록**으로 쌓아요. 블록 추가 → 채우기 → 저장 순서예요. 오디오 파일을 새로 올리는 것은 /admin에서만 할 수 있어요." hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
                     <div className="flex justify-end -mt-2">
-                        <a href={`/works/${data.slug}`} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                        {publicPath ? <a href={publicPath} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             진짜 화면 보기 ↗ (저장한 내용 기준)
-                        </a>
+                        </a> : <p className="py-2 text-sm text-neutral-600">공개 주소를 확인하지 못했어요. /admin에서 주소를 확인해 주세요.</p>}
                     </div>
                     <WorkBlocksEditor initial={toState(data.blocks)} onDirty={markDirty} failedState={state && !state.ok ? state : null} />
                 </Section>
@@ -175,7 +162,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage/works" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                    <Link href="/manage/works" className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
                     </Link>
                     {isDirty && (
@@ -199,6 +186,7 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
                 </div>
                 <SaveStatus state={state} />
             </div>
+            </fieldset>
         </form>
         </FieldErrorsProvider>
     );
@@ -206,6 +194,6 @@ function WorkFormInner({ data, mode, onDiscard }: { data: WorkFormData; mode: "c
 
 /** "변경 버리기"를 누르면 key를 바꿔 폼 전체를 최신 data로 다시 마운트한다 */
 export default function WorkForm(props: { data: WorkFormData; mode?: "create" | "edit" }) {
-    const [resetKey, setResetKey] = useState(0);
-    return <WorkFormInner key={resetKey} data={props.data} mode={props.mode ?? "edit"} onDiscard={() => setResetKey((k) => k + 1)} />;
+    const session = useManagedFormAction(props.mode === "create" ? createWork : saveWork, props.data._rev);
+    return <WorkFormInner key={session.formKey} data={props.data} mode={props.mode ?? "edit"} onDiscard={session.onDiscard} session={session} />;
 }

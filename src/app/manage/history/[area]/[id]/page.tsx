@@ -1,9 +1,8 @@
-import Link from "next/link";
+import Link from "../../../_components/GuardedLink";
 import { notFound, redirect } from "next/navigation";
-import { client } from "@/sanity/lib/client";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { getWriteClient, isWriteConfigured } from "@/sanity/lib/writeClient";
-import { changedKeys, docAt, HISTORY_AREAS, isHistoryArea, listRevisions, summarizeValue } from "@/lib/manage-history";
+import { buildHistoryRows, buildRestoredDoc, changedKeys, docAt, HISTORY_AREAS, historyValue, isHistoryArea, isHistoryDocument, isHistoryDocumentId, listRevisions, summarizeValue } from "@/lib/manage-history";
 import { formatAbsolute, formatUpdated } from "@/lib/format-updated";
 import ManageNav from "../../../ManageNav";
 import RestoreRevisionButton from "../../RestoreRevisionButton";
@@ -37,11 +36,12 @@ export default async function HistoryPage({
     const { at } = await searchParams;
     if (!isHistoryArea(area)) notFound();
     const cfg = HISTORY_AREAS[area];
-    const id = decodeURIComponent(rawId);
+    const id = rawId;
+    if (!isHistoryDocumentId(id)) notFound();
     if (cfg.fixedId && cfg.fixedId !== id) notFound();
 
     const back = cfg.back(id);
-    const label = (k: string) => cfg.labels[k] ?? k;
+    const label = (k: string) => Object.hasOwn(cfg.labels, k) ? cfg.labels[k] : k;
 
     if (!isWriteConfigured()) {
         return (
@@ -58,8 +58,10 @@ export default async function HistoryPage({
 
     const sanity = getWriteClient();
     let revisions;
+    let current;
     try {
-        revisions = await listRevisions(sanity, id, 25);
+        // 한 건을 더 읽어 25번째 항목도 바로 이전 기록과 비교한다.
+        [revisions, current] = await Promise.all([listRevisions(sanity, id, 26), sanity.getDocument<Doc>(id)]);
     } catch (err) {
         console.error("[history]", err);
         return (
@@ -71,21 +73,27 @@ export default async function HistoryPage({
             </Shell>
         );
     }
-    if (revisions.length === 0) notFound();
+    if (!isHistoryDocument(current, id, cfg.type)) notFound();
+    if (revisions.length === 0) return (
+        <Shell back={back} title={cfg.title}>
+            <p role="status" className="rounded-2xl border border-neutral-200 bg-white p-5 text-sm leading-relaxed">확인할 수 있는 저장 기록이 없어요. 보관 기간이나 이력 접근 권한에 따라 기록이 보이지 않을 수 있어요. 현재 내용은 수정 화면에서 확인할 수 있어요.</p>
+        </Shell>
+    );
 
     // 각 저장 시점의 내용을 한꺼번에 읽어서, 바로 이전 저장과 비교해 "무엇이 바뀌었는지" 계산한다
-    const [docs, current] = await Promise.all([
-        Promise.all(revisions.map((r) => docAt(sanity, id, r.timestamp).catch(() => null))),
-        client.fetch<Doc | null>(`*[_id == $id][0]`, { id }),
-    ]);
-
-    const rows = revisions.map((r, i) => {
-        const prev = i + 1 < revisions.length ? docs[i + 1] : null;
-        const created = i === revisions.length - 1;
-        return { ...r, doc: docs[i], prev, created, keys: created ? [] : changedKeys(prev, docs[i]) };
-    });
+    const docs = await Promise.all(revisions.map(async (r) => {
+        const doc = await docAt(sanity, id, r.timestamp).catch(() => null);
+        return isHistoryDocument(doc, id, cfg.type) ? doc : null;
+    }));
+    const rows = buildHistoryRows(revisions, docs);
 
     const selected = at ? rows.find((r) => r.timestamp === at) : undefined;
+    const comparisonText = (row: typeof rows[number]) => {
+        if (row.comparison === "created") return "항목을 새로 만든 기록이에요.";
+        if (row.comparison === "boundary") return "이전 기록이 없어 변경 내용을 비교할 수 없어요.";
+        if (row.comparison === "unavailable") return "기록 내용을 읽지 못해 변경 내용을 비교할 수 없어요.";
+        return row.keys.length === 0 ? "눈에 보이는 내용 변경 없음" : `바뀐 항목: ${row.keys.slice(0, 5).map(label).join(", ")}${row.keys.length > 5 ? ` 외 ${row.keys.length - 5}개` : ""}`;
+    };
 
     return (
         <Shell back={back} title={cfg.title}>
@@ -96,29 +104,33 @@ export default async function HistoryPage({
                 </p>
             </div>
 
+            {at && !selected && <p role="status" className="mb-6 text-sm text-amber-800">선택한 기록을 찾지 못했어요. 아래 목록에서 다시 골라 주세요.</p>}
             {selected && (
                 <section aria-labelledby="detail" className="mb-6 rounded-2xl border-2 border-black bg-white p-5">
                     <h3 id="detail" className="text-base font-black mb-1">{formatAbsolute(selected.timestamp)}의 저장</h3>
-                    <p className="text-sm text-neutral-600 mb-3">{selected.created ? "이 문서가 처음 만들어진 때예요." : "이 저장에서 바뀐 내용이에요."}</p>
+                    <p className="text-sm text-neutral-600 mb-3">{comparisonText(selected)}</p>
 
-                    {!selected.created && (
+                    {selected.comparison === "available" && (
                         <ul className="space-y-2 mb-4">
                             {selected.keys.length === 0 && <li className="text-sm text-neutral-500">눈에 보이는 내용 변경은 없어요.</li>}
                             {selected.keys.map((k) => (
                                 <li key={k} className="text-sm leading-relaxed">
                                     <span className="font-bold">{label(k)}</span>
-                                    <span className="text-neutral-600">: {summarizeValue(selected.prev?.[k])} → {summarizeValue(selected.doc?.[k])}</span>
+                                    <span className="text-neutral-600">: {summarizeValue(historyValue(selected.prev, k))} → {summarizeValue(historyValue(selected.doc, k))}</span>
                                 </li>
                             ))}
                         </ul>
                     )}
 
-                    {rows[0].timestamp !== selected.timestamp ? (
+                    {!selected.doc ? (
+                        <p role="alert" className="text-sm font-semibold text-amber-800">이 시점의 내용을 확인할 수 없어 되돌리기는 잠시 막아 두었어요. 보관 기간이 지났거나 읽지 못했을 수 있어요. 화면을 새로고침하거나 다른 기록을 골라 주세요.</p>
+                    ) : selected.doc._rev !== current._rev ? (
                         <>
                             <div className="rounded-xl bg-neutral-100 p-4 mb-4">
                                 <p className="text-sm font-bold mb-2">이 시점으로 되돌리면 지금과 달라지는 내용</p>
                                 {(() => {
-                                    const diff = changedKeys(current, selected.doc).filter((k) => k !== "trashed" && k !== "order");
+                                    const restored = buildRestoredDoc(selected.doc, current);
+                                    const diff = changedKeys(current, restored);
                                     return diff.length === 0 ? (
                                         <p className="text-sm text-neutral-600">지금과 같은 내용이에요.</p>
                                     ) : (
@@ -126,7 +138,7 @@ export default async function HistoryPage({
                                             {diff.map((k) => (
                                                 <li key={k} className="text-sm leading-relaxed">
                                                     <span className="font-bold">{label(k)}</span>
-                                                    <span className="text-neutral-600">: 지금 {summarizeValue(current?.[k])} → 되돌리면 {summarizeValue(selected.doc?.[k])}</span>
+                                                    <span className="text-neutral-600">: 지금 {summarizeValue(historyValue(current, k))} → 되돌리면 {summarizeValue(historyValue(restored, k))}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -134,10 +146,10 @@ export default async function HistoryPage({
                                 })()}
                                 <p className="text-xs text-neutral-500 mt-3">휴지통 상태와 순서는 지금 그대로 유지돼요.</p>
                             </div>
-                            <RestoreRevisionButton area={area} documentId={id} time={selected.timestamp} backHref={back} />
+                            <RestoreRevisionButton area={area} documentId={id} time={selected.timestamp} expectedRevision={current._rev} backHref={back} />
                         </>
                     ) : (
-                        <p className="text-sm font-semibold text-neutral-700">가장 최근 저장이라 지금과 같아요.</p>
+                        <p className="text-sm font-semibold text-neutral-700">지금 저장된 내용과 같은 기록이에요.</p>
                     )}
                 </section>
             )}
@@ -156,21 +168,17 @@ export default async function HistoryPage({
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <time dateTime={r.timestamp} className="text-sm font-bold">{formatAbsolute(r.timestamp)}</time>
                                     {rel && <span className="text-sm text-neutral-500">({rel.replace(" 수정", "")})</span>}
-                                    {i === 0 && <span className="text-[10px] font-bold text-white bg-black px-1.5 py-0.5 rounded">현재</span>}
+                                    {(r.doc?._rev === current._rev || i === 0) && <span className="text-[10px] font-bold text-white bg-black px-1.5 py-0.5 rounded">{r.doc?._rev === current._rev ? "현재" : "최근 기록"}</span>}
                                 </div>
                                 <p className="text-sm text-neutral-600 mt-1 break-keep">
-                                    {r.created
-                                        ? "처음 만들어졌어요"
-                                        : r.keys.length === 0
-                                          ? "눈에 보이는 내용 변경 없음"
-                                          : `바뀐 항목: ${r.keys.slice(0, 5).map(label).join(", ")}${r.keys.length > 5 ? ` 외 ${r.keys.length - 5}개` : ""}`}
+                                    {comparisonText(r)}
                                 </p>
                             </Link>
                         </li>
                     );
                 })}
             </ol>
-            {revisions.length >= 25 && <p className="text-sm text-neutral-500 mt-4">최근 25번의 저장만 보여줘요.</p>}
+            {revisions.length > 25 && <p className="text-sm text-neutral-500 mt-4">최근 25번의 저장만 보여줘요.</p>}
         </Shell>
     );
 }

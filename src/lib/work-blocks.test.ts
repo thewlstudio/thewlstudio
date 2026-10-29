@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sanitizeBlocks } from "./work-blocks-server";
-import { toPayload, toState } from "./work-blocks";
+import { isEditableType, toPayload, toState } from "./work-blocks";
 
 type Raw = Record<string, unknown>;
 const noUpload = async () => null;
@@ -33,6 +33,11 @@ const canon = (v: unknown): unknown =>
     Array.isArray(v) ? v.map(canon) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon((v as Raw)[k])])) : v;
 
 describe("sanitizeBlocks — 작업물 상세 블록 저장 검증", () => {
+    it.each(["__proto__", "constructor", "toString", "hasOwnProperty"])("상속된 이름 %s를 편집 가능한 종류로 오인하지 않고 보존한다", async (type) => {
+        expect(isEditableType(type)).toBe(false);
+        const original = { _key: "custom", _type: type, content: "보존할 원본" };
+        expect(await sanitizeBlocks(toPayload(toState([original])), [original], noUpload)).toEqual({ blocks: [original] });
+    });
     it("편집 상태로 바꿨다가 그대로 저장해도 내용이 달라지지 않는다 (무변경 저장은 무손실)", async () => {
         const payload = JSON.parse(JSON.stringify(toPayload(toState(existing))));
         const r = await sanitizeBlocks(payload, existing, noUpload);
@@ -118,7 +123,7 @@ describe("sanitizeBlocks — 작업물 상세 블록 저장 검증", () => {
     });
 
     describe("크레딧 링크", () => {
-        const block = (linkUrl: string) => [{ _key: "c", _type: "creditGridBlock", sections: [{ _key: "s", title: "T", items: [{ _key: "i", role: "R", value: "V", linkUrl }] }] }];
+        const block = (linkUrl: string) => [{ _key: "c", _type: "creditGridBlock", sections: [{ _key: "s", title: "T", items: [{ _key: "i", role: "R", value: "V", linkText: "링크", linkUrl }] }] }];
 
         it("http(s) 주소만 허용한다", async () => {
             expect("blocks" in (await sanitizeBlocks(block("https://a.com/x"), [], noUpload))).toBe(true);
@@ -140,9 +145,9 @@ describe("sanitizeBlocks — 작업물 상세 블록 저장 검증", () => {
             expect("error" in r).toBe(true);
         });
 
-        it("기존에 없던 오디오 블록은 만들지 않는다 (파일 업로드는 /admin 전용)", async () => {
+        it("기존에 없던 오디오 참조는 조용히 버리지 않고 거부한다 (파일 업로드는 /admin 전용)", async () => {
             const r = await sanitizeBlocks([{ _key: "new-1", _type: "audioBlock", title: "x", artist: "y" }], [], noUpload);
-            expect("blocks" in r && r.blocks).toEqual([]);
+            expect("error" in r).toBe(true);
         });
     });
 

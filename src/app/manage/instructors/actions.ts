@@ -6,7 +6,12 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { labelsEulReul } from "@/lib/josa";
-import { applyOrder } from "@/lib/manage-reorder";
+import { applyOrder, moveOrder, type OrderRow } from "@/lib/manage-reorder";
+import { CONTENT_ORDER } from "@/lib/content-order";
+import { managedWriteError, requireManagedDocument } from "@/lib/manage-target";
+import { isManagedDocumentId } from "@/lib/manage-document-id";
+import { externalHttpUrl } from "@/lib/content-urls";
+import { uploadImageIfPresent, validateManageUploadForm } from "@/lib/manage-upload";
 
 /** 오류가 난 필드의 DOM id와 사람이 읽을 이름 — 상단 오류 요약에서 해당 칸으로 이동할 때 쓴다 */
 export type FieldError = { id: string; label: string };
@@ -35,33 +40,6 @@ function generateInstructorSlug(instructorName: string): string {
     return `${base}-${randomUUID().slice(0, 8)}`;
 }
 
-/** 업로드된 파일이 있으면 Sanity 에셋으로 올리고 참조 객체를 돌려준다 */
-async function uploadImageIfPresent(
-    client: ReturnType<typeof getWriteClient>,
-    file: File | null,
-) {
-    if (!file || file.size === 0) return null;
-
-    if (!file.type.startsWith("image/")) {
-        throw new Error(`이미지 파일만 올릴 수 있어요. (받은 형식: ${file.type || "알 수 없음"})`);
-    }
-    // 과도한 용량 방지 (Sanity 업로드 실패 및 비용 폭증 예방)
-    const MAX_BYTES = 10 * 1024 * 1024;
-    if (file.size > MAX_BYTES) {
-        throw new Error(
-            `사진 용량이 너무 커요 (${(file.size / 1024 / 1024).toFixed(1)}MB). 3MB 이하로 줄여서 올려 주세요.`,
-        );
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const asset = await client.assets.upload("image", buffer, { filename: file.name });
-
-    return {
-        _type: "image" as const,
-        asset: { _type: "reference" as const, _ref: asset._id },
-    };
-}
-
 /** 텍스트류 공통 필드를 파싱하고 필수값을 검증한다 (생성/수정 공용) */
 function parseAndValidateFields(
     formData: FormData,
@@ -88,6 +66,11 @@ function parseAndValidateFields(
     }
 
     const isActive = String(formData.get("isActive") ?? "true") === "true";
+    const portfolioUrl = String(formData.get("portfolioUrl") ?? "").trim();
+    if (portfolioUrl && !externalHttpUrl(portfolioUrl)) return {
+        error: "포트폴리오 주소가 올바르지 않아요. http:// 또는 https://로 시작하는 주소를 입력해 주세요.",
+        missingFields: [{ id: "portfolioUrl", label: "포트폴리오 주소" }],
+    };
 
     return {
         fields: {
@@ -101,7 +84,7 @@ function parseAndValidateFields(
             // order는 여기서 다루지 않는다 — 목록 페이지의 위/아래 버튼(moveInstructorOrder)
             // 으로만 바뀌며, 저장/생성 폼에서는 손대지 않는다 (중복 순서 값 방지).
             imagePosition: String(formData.get("imagePosition") ?? "object-top"),
-            portfolioUrl: String(formData.get("portfolioUrl") ?? "").trim() || undefined,
+            portfolioUrl: portfolioUrl || undefined,
             portfolioText: String(formData.get("portfolioText") ?? "").trim() || undefined,
             portfolioBtn: String(formData.get("portfolioBtn") ?? "").trim() || "작업물 보기",
         },
@@ -114,6 +97,7 @@ export async function saveInstructor(
 ): Promise<SaveResult> {
     try {
         await requireAuth();
+        validateManageUploadForm(formData);
         const client = getWriteClient();
 
         const documentId = String(formData.get("documentId") ?? "").trim();
@@ -123,6 +107,7 @@ export async function saveInstructor(
 
         const parsed = parseAndValidateFields(formData);
         if ("error" in parsed) return { ok: false, error: parsed.error, fields: parsed.missingFields };
+        const current = await requireManagedDocument(client, documentId, "instructor");
 
         const patch: Record<string, unknown> = { ...parsed.fields };
 
@@ -133,7 +118,7 @@ export async function saveInstructor(
             ["bgImage", "bgImageFile"],
         ];
         for (const [field, formKey] of imageFields) {
-            const uploaded = await uploadImageIfPresent(client, formData.get(formKey) as File | null);
+            const uploaded = await uploadImageIfPresent(client, formData.get(formKey));
             if (uploaded) patch[field] = uploaded;
         }
 
@@ -143,7 +128,7 @@ export async function saveInstructor(
         const unsetFields = Object.keys(patch).filter((key) => patch[key] === undefined);
         for (const key of unsetFields) delete patch[key];
 
-        let mutation = client.patch(documentId).set(patch);
+        let mutation = client.patch(documentId).ifRevisionId(current._rev).set(patch);
         if (unsetFields.length > 0) mutation = mutation.unset(unsetFields);
         await mutation.commit();
 
@@ -155,7 +140,7 @@ export async function saveInstructor(
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
+        const message = managedWriteError(err);
         console.error("[saveInstructor]", err);
         return { ok: false, error: message };
     }
@@ -172,6 +157,7 @@ export async function createInstructor(
     let documentId: string;
     try {
         await requireAuth();
+        validateManageUploadForm(formData);
         const client = getWriteClient();
 
         const parsed = parseAndValidateFields(formData);
@@ -216,7 +202,7 @@ export async function createInstructor(
         });
         documentId = created._id;
     } catch (err) {
-        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
+        const message = managedWriteError(err);
         console.error("[createInstructor]", err);
         return { ok: false, error: message };
     }
@@ -233,8 +219,7 @@ export async function createInstructor(
 /**
  * 목록에서 강사를 한 칸 위/아래로 옮긴다.
  * 숫자를 손으로 입력하게 하면 언젠가 값이 겹칠 수 있어서,
- * 현재 정렬 순서를 다시 조회해 바로 옆 강사와 order 값을 맞바꾸는 방식으로 처리한다.
- * (겹치거나 순서가 듬성듬성해도 항상 안전하게 동작한다)
+ * 조회한 목록에서 한 칸 옮긴 뒤 공통 로직으로 중복·누락 순서값도 함께 정리한다.
  */
 export async function moveInstructorOrder(
     documentId: string,
@@ -242,30 +227,14 @@ export async function moveInstructorOrder(
 ): Promise<SaveResult> {
     try {
         await requireAuth();
+        if (!isManagedDocumentId(documentId) || (direction !== "up" && direction !== "down")) return { ok: false, error: "옮길 항목과 방향을 확인하지 못했어요. 목록에서 다시 골라 주세요." };
         const client = getWriteClient();
 
-        const all = await client.fetch<Array<{ _id: string; order: number }>>(
-            `*[_type == "instructor" && !(trashed == true)] | order(order asc) { _id, order }`,
+        const all = await client.fetch<OrderRow[]>(
+            `*[_type == "instructor" && !(trashed == true)] | order(${CONTENT_ORDER}) { _id, _rev, order }`,
         );
-
-        const index = all.findIndex((i) => i._id === documentId);
-        if (index === -1) {
-            return { ok: false, error: "강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
-        }
-
-        const swapIndex = direction === "up" ? index - 1 : index + 1;
-        if (swapIndex < 0 || swapIndex >= all.length) {
-            return { ok: false, error: "더 옮길 곳이 없어요." };
-        }
-
-        const current = all[index];
-        const swapWith = all[swapIndex];
-
-        await client
-            .transaction()
-            .patch(current._id, { set: { order: swapWith.order } })
-            .patch(swapWith._id, { set: { order: current.order } })
-            .commit();
+        const result = await moveOrder(client, all, documentId, direction);
+        if (!result.ok) return result;
 
         updateTag("instructor");
         revalidatePath("/class");
@@ -273,7 +242,7 @@ export async function moveInstructorOrder(
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
+        const message = managedWriteError(err);
         console.error("[moveInstructorOrder]", err);
         return { ok: false, error: message };
     }
@@ -290,13 +259,7 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
         await requireAuth();
         const client = getWriteClient();
 
-        const original = await client.fetch<Record<string, unknown> | null>(
-            `*[_type == "instructor" && _id == $id][0]`,
-            { id: documentId },
-        );
-        if (!original) {
-            return { ok: false, error: "복제할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
-        }
+        const original = await requireManagedDocument(client, documentId, "instructor");
 
         const existingOrders = await client.fetch<number[]>(
             `*[_type == "instructor" && defined(order)].order`,
@@ -333,7 +296,7 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
 
         return { ok: true, newId: created._id };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
+        const message = managedWriteError(err);
         console.error("[duplicateInstructor]", err);
         return { ok: false, error: message };
     }
@@ -353,7 +316,8 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
             return { ok: false, error: "삭제할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
         const client = getWriteClient();
-        await client.patch(documentId).set({ trashed: true }).commit();
+        const current = await requireManagedDocument(client, documentId, "instructor");
+        await client.patch(documentId).ifRevisionId(current._rev).set({ trashed: true }).commit();
 
         updateTag("instructor");
         revalidatePath("/class");
@@ -361,7 +325,7 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
+        const message = managedWriteError(err);
         console.error("[deleteInstructor]", err);
         return { ok: false, error: message };
     }
@@ -375,7 +339,8 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
             return { ok: false, error: "복원할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
         const client = getWriteClient();
-        await client.patch(documentId).set({ trashed: false }).commit();
+        const current = await requireManagedDocument(client, documentId, "instructor");
+        await client.patch(documentId).ifRevisionId(current._rev).set({ trashed: false }).commit();
 
         updateTag("instructor");
         revalidatePath("/class");
@@ -383,7 +348,7 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
 
         return { ok: true };
     } catch (err) {
-        const message = err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요.";
+        const message = managedWriteError(err);
         console.error("[restoreInstructor]", err);
         return { ok: false, error: message };
     }
@@ -393,7 +358,7 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
 export async function reorderInstructors(ids: string[]): Promise<SaveResult> {
     try {
         await requireAuth();
-        const result = await applyOrder(getWriteClient(), `*[_type == "instructor" && !(trashed == true)]{ _id, order }`, {}, ids);
+        const result = await applyOrder(getWriteClient(), `*[_type == "instructor" && !(trashed == true)]{ _id, _rev, order }`, {}, ids);
         if (result.ok) {
             updateTag("instructor");
             revalidatePath("/class");
@@ -402,6 +367,6 @@ export async function reorderInstructors(ids: string[]): Promise<SaveResult> {
         return result;
     } catch (err) {
         console.error("[reorderInstructors]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
+        return { ok: false, error: managedWriteError(err) };
     }
 }

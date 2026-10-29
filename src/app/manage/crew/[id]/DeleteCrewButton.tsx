@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useManageMutation } from "../../_components/useManageMutation";
+import { isManageMutationPending } from "@/lib/manage-mutation-lock";
 import { useRouter } from "next/navigation";
 import { flashToast } from "../../_components/Toast";
 import { eulReul } from "@/lib/josa";
+import { callManageAction } from "../../_components/callManageAction";
 import { deleteCrew } from "../actions";
 
 export default function DeleteCrewButton({
@@ -16,29 +19,35 @@ export default function DeleteCrewButton({
     const router = useRouter();
     const [confirming, setConfirming] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isPending, startTransition] = useTransition();
+    const { isPending, isBusy, startTransition, run } = useManageMutation();
     const cancelButtonRef = useRef<HTMLButtonElement>(null);
     const openButtonRef = useRef<HTMLButtonElement>(null);
+    const requestInFlight = useRef(false);
+    const wasConfirming = useRef(false);
+    useEffect(() => {
+        if (!isPending) requestInFlight.current = false;
+    }, [isPending]);
 
     // 확인창이 뜨면 "안전한" 선택지(취소)로 포커스를 옮기고,
     // Escape로 바로 닫을 수 있게 한다. 닫히면 원래 열었던 버튼으로 되돌린다.
     useEffect(() => {
-        if (!confirming) return;
+        if (!confirming) {
+            if (wasConfirming.current) openButtonRef.current?.focus();
+            wasConfirming.current = false;
+            return;
+        }
+        wasConfirming.current = true;
         cancelButtonRef.current?.focus();
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+            if (e.key === "Escape" && !requestInFlight.current) {
                 setConfirming(false);
                 setError(null);
             }
         };
-        // cleanup 시점에는 ref가 바뀔 수 있으므로 effect 내부에서 값을 캡처해 둔다
-        const triggerButton = openButtonRef.current;
-
         document.addEventListener("keydown", handleKeyDown);
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
-            triggerButton?.focus();
         };
     }, [confirming]);
 
@@ -48,7 +57,8 @@ export default function DeleteCrewButton({
                 data-tour="form-danger"
                 ref={openButtonRef}
                 type="button"
-                onClick={() => setConfirming(true)}
+                disabled={isBusy}
+                onClick={() => { if (!isManageMutationPending()) setConfirming(true); }}
                 className="py-2 text-sm font-semibold text-red-600 hover:text-red-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 rounded-sm"
             >
                 이 크루 삭제하기
@@ -73,7 +83,7 @@ export default function DeleteCrewButton({
                 <button
                     ref={cancelButtonRef}
                     type="button"
-                    disabled={isPending}
+                    disabled={isBusy}
                     onClick={() => {
                         setConfirming(false);
                         setError(null);
@@ -84,13 +94,17 @@ export default function DeleteCrewButton({
                 </button>
                 <button
                     type="button"
-                    disabled={isPending}
+                    disabled={isBusy}
                     onClick={() => {
-                        startTransition(async () => {
-                            const result = await deleteCrew(documentId);
+                        if (requestInFlight.current) return;
+                        run(async (isCurrent) => {
+                            requestInFlight.current = true;
+                            setError(null);
+                            const result = await callManageAction(() => deleteCrew(documentId));
+                            if (!isCurrent()) return;
                             if (result.ok) {
                                 flashToast({ message: `"${memberName || "이 크루"}"${eulReul(memberName || "이 크루")} 휴지통으로 옮겼어요.`, undo: { area: "crew", id: documentId } });
-                                router.push("/manage/crew");
+                                startTransition(() => router.push("/manage/crew"));
                             } else {
                                 setError(result.error);
                             }

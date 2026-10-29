@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useId, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { createContext, useContext, useId, useState } from "react";
 import { useToast } from "./Toast";
+import { ListReorderContext, useReorderMutation } from "./useReorderMutation";
 
 /**
  * 관리 목록 공통: 검색, 공개 상태 필터, 끌어서 순서 바꾸기.
@@ -65,7 +65,6 @@ export default function ManagedList({
     /** 항목이 이보다 적으면 검색·필터 도구를 숨긴다 (항목이 몇 개 없을 때는 거추장스러움) */
     minItemsForTools?: number;
 }) {
-    const router = useRouter();
     const toast = useToast();
     const searchId = useId();
     const [query, setQuery] = useState("");
@@ -73,7 +72,7 @@ export default function ManagedList({
     const [order, setOrder] = useState(() => items.map((i) => i.id));
     const [dragId, setDragId] = useState<string | null>(null);
     const [overId, setOverId] = useState<string | null>(null);
-    const [, startTransition] = useTransition();
+    const mutation = useReorderMutation();
 
     // 서버에서 새 목록이 내려오면(저장·이동 뒤 새로고침) 그 순서를 따른다
     const serverKey = items.map((i) => i.id).join("|");
@@ -88,16 +87,17 @@ export default function ManagedList({
 
     const showTools = items.length >= minItemsForTools;
     // 도구가 보이지 않을 때(항목이 적을 때)는 남아 있는 검색어·필터가 있어도 적용하지 않는다
-    const filtering = showTools && (query.trim() !== "" || status !== "all");
-    const q = norm(query);
-    const visible = ordered.filter((i) => (status === "all" || i.status === status) && (q === "" || norm(i.search).includes(q)));
-    const canDrag = !!reorder && !filtering && items.length > 1;
+    const activeStatus = showTools && statusFilter ? status : "all";
+    const q = showTools ? norm(query) : "";
+    const filtering = q !== "" || activeStatus !== "all";
+    const visible = ordered.filter((i) => (activeStatus === "all" || i.status === activeStatus) && (q === "" || norm(i.search).includes(q)));
+    const canDrag = !!reorder && !filtering && !mutation.isPending && items.length > 1;
 
     const drop = (targetId: string) => {
         const from = dragId;
         setDragId(null);
         setOverId(null);
-        if (!from || from === targetId || !reorder) return;
+        if (!canDrag || !from || from === targetId || !reorder) return;
         const a = byId.get(from);
         const b = byId.get(targetId);
         if (!a || !b || (a.group ?? "") !== (b.group ?? "")) return; // 다른 그룹으로는 옮기지 않는다
@@ -107,20 +107,21 @@ export default function ManagedList({
         next.splice(i, 1);
         next.splice(j, 0, from);
         const previous = order;
-        setOrder(next);
-        startTransition(async () => {
-            const result = await reorder(next);
-            if (result.ok) {
+        mutation.run(() => reorder(next), {
+            onStart: () => setOrder(next),
+            onSuccess: () => {
                 toast.show({ message: "순서를 바꿨어요." });
-                router.refresh();
-            } else {
-                setOrder(previous);
-                toast.show({ message: `순서를 바꾸지 못했어요. ${result.error}`, tone: "info" });
-            }
+            },
+            onError: (message) => {
+                // 저장 중 서버에서 새 목록을 받은 경우, 그 목록을 예전 배열로 덮어쓰지 않는다.
+                setOrder((current) => current === next ? previous : current);
+                toast.show({ message, tone: "info" });
+            },
         });
     };
 
     return (
+        <ListReorderContext.Provider value={mutation}>
         <DragCtx.Provider value={{ canDrag, begin: setDragId, end: () => { setDragId(null); setOverId(null); } }}>
             {showTools && (
                 <div data-tour="list-tools" className="mb-4 space-y-2">
@@ -171,7 +172,7 @@ export default function ManagedList({
 
             {visible.length === 0 && filtering && <p className="text-sm text-neutral-500 py-8 text-center">조건에 맞는 항목이 없어요.</p>}
 
-            <ul className="space-y-3">
+            <ul className="space-y-3" aria-busy={mutation.isPending}>
                 {visible.map((item, rowIndex) => (
                     <li
                         key={item.id}
@@ -193,5 +194,6 @@ export default function ManagedList({
                 ))}
             </ul>
         </DragCtx.Provider>
+        </ListReorderContext.Provider>
     );
 }

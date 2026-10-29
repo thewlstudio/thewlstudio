@@ -1,8 +1,8 @@
-import Link from "next/link";
-import Image from "next/image";
+import Link from "../_components/GuardedLink";
+import Image from "@/components/CmsImage";
 import { redirect } from "next/navigation";
+import { STUDIO_CONTENT_ORDER } from "@/lib/content-order";
 import { client } from "@/sanity/lib/client";
-import { urlFor } from "@/sanity/lib/image";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
@@ -10,18 +10,20 @@ import ReorderButtons from "../_components/ReorderButtons";
 import ManagedList, { DragHandle } from "../_components/ManagedList";
 import RestoreButton from "../_components/RestoreButton";
 import { moveSpaceOrder, restoreSpace, reorderSpaces } from "./actions";
-import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { listReadIssue } from "@/lib/manage-list-read";
+import { manageThumbnail } from "@/lib/manage-thumbnail";
+import ListReadFailure from "../_components/ListReadFailure";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 import EmptyState from "../_components/EmptyState";
 
 export const metadata = { title: "스튜디오 공간 관리" };
 export const dynamic = "force-dynamic";
 
-type Row = { _id: string; _updatedAt?: string; kind?: string; name?: string; isActive?: boolean; cover?: SanityImageSource; photoCount?: number };
+type Row = { _id: string; _updatedAt?: string; kind?: string; name?: string; isActive?: boolean; cover?: unknown; photoCount?: number };
 
-const fields = `_id, _updatedAt, kind, name, isActive, "cover": images[0], "photoCount": count(images)`;
+const fields = `_id, _type, _updatedAt, kind, name, isActive, trashed, order, "cover": images[0], "photoCount": count(images)`;
 // 공개 화면과 같은 순서: 연습실이 먼저, 로비는 그 뒤
-const listQuery = `*[_type == "studioSpace" && !(trashed == true)] | order(select(kind == "lobby" => 1, 0) asc, order asc) { ${fields} }`;
+const listQuery = `*[_type == "studioSpace" && !(trashed == true)] | order(${STUDIO_CONTENT_ORDER}) { ${fields} }`;
 const trashedQuery = `*[_type == "studioSpace" && trashed == true] | order(_updatedAt desc) { ${fields} }`;
 
 export default async function StudioSpacesPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
@@ -31,10 +33,14 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
     const isTrashView = view === "trash";
     const writeReady = isWriteConfigured();
 
-    const [spaces, trashedCount] = await Promise.all([
-        client.fetch<Row[]>(isTrashView ? trashedQuery : listQuery),
-        isTrashView ? Promise.resolve(0) : client.fetch<number>(`count(*[_type == "studioSpace" && trashed == true])`),
+    const [result, countResult] = await Promise.all([
+        client.fetch<unknown>(isTrashView ? trashedQuery : listQuery),
+        isTrashView ? Promise.resolve(0) : client.fetch<unknown>(`count(*[_type == "studioSpace" && trashed == true])`),
     ]);
+    const issue = listReadIssue("studioSpace", result, countResult, isTrashView);
+    if (issue) return <ListReadFailure title={isTrashView ? "스튜디오 공간 휴지통" : "스튜디오 공간 관리"} fields={issue.fields} />;
+    const spaces = result as Row[];
+    const trashedCount = countResult as number;
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
@@ -100,6 +106,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                 statusFilter
                 items={spaces.map((sp, index) => {
                     const hidden = sp.isActive === false;
+                    const thumbnail = manageThumbnail(sp.cover);
                     const isLobby = sp.kind === "lobby";
                     // 순서 이동은 같은 종류끼리만 — 이웃이 다른 종류면 그쪽으로는 이동할 수 없다
                     const sameKind = (other?: Row) => !!other && (other.kind === "lobby") === isLobby;
@@ -120,7 +127,7 @@ export default async function StudioSpacesPage({ searchParams }: { searchParams:
                                 )}
                                 <Link href={`/manage/studio/${encodeURIComponent(sp._id)}`} className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
-                                        {sp.cover && <Image src={urlFor(sp.cover).width(112).height(112).fit("crop").url()} alt="" fill sizes="56px" className="object-cover" />}
+                                        {thumbnail && <Image src={thumbnail} alt="" fill sizes="56px" className="object-cover" />}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">

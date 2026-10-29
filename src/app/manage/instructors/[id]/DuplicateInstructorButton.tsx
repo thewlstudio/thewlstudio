@@ -1,25 +1,36 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useManageMutation } from "../../_components/useManageMutation";
 import { useRouter } from "next/navigation";
 import { duplicateInstructor } from "../actions";
+import { callManageAction } from "../../_components/callManageAction";
+import { confirmLeaveIfDirty } from "@/lib/formDirtyGuard";
 
 export default function DuplicateInstructorButton({ documentId }: { documentId: string }) {
     const router = useRouter();
-    const [isPending, startTransition] = useTransition();
+    const { isPending, isBusy, startTransition, run } = useManageMutation();
     const [error, setError] = useState<string | null>(null);
+    const requestInFlight = useRef(false);
+    useEffect(() => {
+        if (!isPending) requestInFlight.current = false;
+    }, [isPending]);
 
     return (
         <div>
             <button
                 type="button"
-                disabled={isPending}
+                disabled={isBusy}
                 onClick={() => {
-                    startTransition(async () => {
-                        const result = await duplicateInstructor(documentId);
+                    if (requestInFlight.current || !confirmLeaveIfDirty("저장하지 않은 내용이 있어요. 복제는 마지막 저장 내용을 기준으로 만들어요. 그래도 이동할까요?")) return;
+                    run(async (isCurrent) => {
+                        requestInFlight.current = true;
+                        setError(null);
+                        const result = await callManageAction(() => duplicateInstructor(documentId));
+                        if (!isCurrent()) return;
                         if (result.ok) {
                             setError(null);
-                            router.push(`/manage/instructors/${result.newId}`);
+                            startTransition(() => router.push(`/manage/instructors/${result.newId}`));
                         } else {
                             setError(result.error);
                         }

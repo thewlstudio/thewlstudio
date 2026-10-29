@@ -24,6 +24,7 @@ export function InlineError({ id }: { id: string }) {
 /** /manage 폼들이 공유하는 화면 조각 (강사·크루). 스타일은 강사 화면 기준. */
 
 export function Section({
+    id,
     step,
     title,
     hint,
@@ -31,6 +32,8 @@ export function Section({
     tour,
     children,
 }: {
+    /** 오류 요약에서 입력 묶음으로 이동할 때 사용하는 포커스 대상 */
+    id?: string;
     step: number;
     title: string;
     hint?: string;
@@ -41,7 +44,7 @@ export function Section({
     children: React.ReactNode;
 }) {
     return (
-        <section data-tour={tour ?? (step === 1 ? "form-first" : undefined)} className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6">
+        <section id={id} tabIndex={id ? -1 : undefined} data-tour={tour ?? (step === 1 ? "form-first" : undefined)} className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6">
             <div className="mb-5">
                 <div className="flex items-center gap-2.5 mb-1.5">
                     <span

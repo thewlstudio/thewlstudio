@@ -50,6 +50,14 @@ describe("저장 폼 규칙", () => {
         expect(s).toContain("onSubmit={validateOnSubmit}");
         expect(s).toContain("<SaveStatus");
         expect(s).toContain('data-tour="form-save-bar"');
+        expect(s).toContain("useManagedFormAction(");
+        expect(s).toContain("key={session.formKey}");
+        expect(s).toContain("<fieldset disabled={isPending}");
+        expect(s).toContain("_components/GuardedLink");
+    });
+
+    it.each(["instructors/[id]", "crew/[id]", "works/[id]", "studio/[id]", "studio/info", "contact"])("%s — 저장 후 편집기를 갱신할 서버 revision을 조회한다", (area) => {
+        expect(read(path.join(ROOT, area, "page.tsx"))).toContain("_rev");
     });
 
     it("Ctrl+S는 저장 폼(form[data-manage-form])만 제출한다 — 로그아웃 폼을 제출하면 안 된다 (실제 사고)", () => {
@@ -60,6 +68,33 @@ describe("저장 폼 규칙", () => {
 
     it("로그아웃 폼은 저장 폼 표시를 갖지 않는다", () => {
         expect(read(path.join(ROOT, "ManageNav.tsx"))).not.toContain("data-manage-form");
+    });
+    it("수정 시각의 변경 이력 링크와 상단 내비도 같은 이동 보호를 사용한다", () => {
+        expect(read(path.join(ROOT, "_components/UpdatedAt.tsx"))).toContain('from "./GuardedLink"');
+        expect(read(path.join(ROOT, "ManageNav.tsx"))).toContain('from "./_components/GuardedLink"');
+    });
+    it("관리 화면의 Next 링크는 GuardedLink를 통해 작업 중 이동을 보호한다", () => {
+        const direct = files.filter((f) => read(f).includes('import Link from "next/link"')).map(rel);
+        expect(direct).toEqual(["app/manage/_components/GuardedLink.tsx"]);
+    });
+});
+
+describe("서로 다른 변경 요청의 공통 잠금", () => {
+    it.each([
+        "instructors/[id]/DeleteInstructorButton.tsx", "crew/[id]/DeleteCrewButton.tsx",
+        "works/[id]/DeleteWorkButton.tsx", "studio/[id]/DeleteSpaceButton.tsx",
+        "instructors/[id]/DuplicateInstructorButton.tsx", "_components/RestoreButton.tsx",
+        "history/RestoreRevisionButton.tsx", "_components/Toast.tsx", "_components/useReorderMutation.ts", "ManageNav.tsx",
+    ])("%s — 공통 실행기와 오래된 응답 검사를 사용한다", (name) => {
+        const s = read(path.join(ROOT, name));
+        expect(s).toContain("useManageMutation");
+        expect(s).toContain("isCurrent()");
+    });
+    it("폼 저장도 공통 소유권을 획득한 뒤 dispatch하고 요청 정착 시 알린다", () => {
+        const s = read(path.join(ROOT, "_components/useManagedFormAction.ts"));
+        expect(s).toContain("useManageMutationLease");
+        expect(s).toContain("if (lease.acquire()) dispatch(data)");
+        expect(s).toContain("lease.settle()");
     });
 });
 

@@ -1,26 +1,27 @@
-import Link from "next/link";
-import Image from "next/image";
+import Link from "../_components/GuardedLink";
+import Image from "@/components/CmsImage";
 import { redirect } from "next/navigation";
 import { client } from "@/sanity/lib/client";
-import { urlFor } from "@/sanity/lib/image";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
 import RestoreButton from "../_components/RestoreButton";
 import ManagedList from "../_components/ManagedList";
 import { restoreWork } from "./actions";
-import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { listReadIssue } from "@/lib/manage-list-read";
+import { manageThumbnail } from "@/lib/manage-thumbnail";
+import ListReadFailure from "../_components/ListReadFailure";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 import EmptyState from "../_components/EmptyState";
 
 export const metadata = { title: "작업물 관리" };
 export const dynamic = "force-dynamic";
 
-type Row = { _id: string; _updatedAt?: string; title?: string; artist?: string; releaseDate?: string; coverImage?: SanityImageSource };
+type Row = { _id: string; _updatedAt?: string; title?: string; artist?: string; releaseDate?: string; coverImage?: unknown };
 
 // 공개 목록(worksQuery)과 같은 정렬 — 발매일 최신순
-const listQuery = `*[_type == "work" && !(trashed == true)] | order(releaseDate desc) { _id, _updatedAt, title, artist, releaseDate, coverImage }`;
-const trashedQuery = `*[_type == "work" && trashed == true] | order(_updatedAt desc) { _id, _updatedAt, title, artist, releaseDate, coverImage }`;
+const listQuery = `*[_type == "work" && !(trashed == true)] | order(releaseDate desc) { _id, _type, _updatedAt, trashed, title, artist, releaseDate, coverImage }`;
+const trashedQuery = `*[_type == "work" && trashed == true] | order(_updatedAt desc) { _id, _type, _updatedAt, trashed, title, artist, releaseDate, coverImage }`;
 
 export default async function WorksListPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
     if (!(await isAuthenticated())) redirect("/manage/login");
@@ -29,10 +30,14 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
     const isTrashView = view === "trash";
     const writeReady = isWriteConfigured();
 
-    const [works, trashedCount] = await Promise.all([
-        client.fetch<Row[]>(isTrashView ? trashedQuery : listQuery),
-        isTrashView ? Promise.resolve(0) : client.fetch<number>(`count(*[_type == "work" && trashed == true])`),
+    const [result, countResult] = await Promise.all([
+        client.fetch<unknown>(isTrashView ? trashedQuery : listQuery),
+        isTrashView ? Promise.resolve(0) : client.fetch<unknown>(`count(*[_type == "work" && trashed == true])`),
     ]);
+    const issue = listReadIssue("work", result, countResult, isTrashView);
+    if (issue) return <ListReadFailure title={isTrashView ? "작업물 휴지통" : "작업물 관리"} fields={issue.fields} />;
+    const works = result as Row[];
+    const trashedCount = countResult as number;
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
@@ -85,7 +90,7 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
             <ManagedList
                 searchPlaceholder="제목·아티스트로 찾기"
                 items={works.map((w) => {
-
+                    const thumbnail = manageThumbnail(w.coverImage);
                     return {
                         id: w._id,
                         search: [w.title, w.artist, w.releaseDate].filter(Boolean).join(" "),
@@ -93,7 +98,7 @@ export default async function WorksListPage({ searchParams }: { searchParams: Pr
                         <div className="flex items-stretch gap-3 bg-white rounded-2xl border border-neutral-200 hover:border-black hover:shadow-sm transition-all">
                             <Link href={`/manage/works/${encodeURIComponent(w._id)}`} className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                                 <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
-                                    {w.coverImage && <Image src={urlFor(w.coverImage).width(112).height(112).fit("crop").url()} alt="" fill sizes="56px" className="object-cover" />}
+                                    {thumbnail && <Image src={thumbnail} alt="" fill sizes="56px" className="object-cover" />}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="font-bold text-base truncate">{w.title ?? "(제목 없음)"}</p>

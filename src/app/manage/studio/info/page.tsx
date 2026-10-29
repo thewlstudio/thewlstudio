@@ -2,19 +2,20 @@ import { redirect } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
-import { mergeInfo } from "@/lib/studio-info";
+import { mergeInfoForManage } from "@/lib/studio-info";
 import ManageNav from "../../ManageNav";
 import StudioInfoForm from "./StudioInfoForm";
 import UpdatedAt from "../../_components/UpdatedAt";
+import { settingsReadState } from "@/lib/manage-settings-read";
+import SettingsReadNotice from "../../_components/SettingsReadNotice";
 
 export const metadata = { title: "스튜디오 안내 관리" };
 export const dynamic = "force-dynamic";
 
-const query = `*[_type == "studioInfo" && _id == "studioInfo"][0]{
+const query = `*[_id == "studioInfo"][0]{
+    _id, _type, _rev,
     _updatedAt,
-    services[]{ title, price, priceUnit, points },
-    equipment[]{ title, items },
-    memberships[]{ num, label, sub, price },
+    services, equipment, memberships,
     membershipNote, guidelinesIntro, parkingWarning, parkingDetail, parkingFeeLabel, parkingFee,
     amenities, cctvTitle, cctvDetail, dutyText, dutyWarning
 }`;
@@ -22,9 +23,9 @@ const query = `*[_type == "studioInfo" && _id == "studioInfo"][0]{
 export default async function StudioInfoPage() {
     if (!(await isAuthenticated())) redirect("/manage/login");
 
-    // 문서가 없으면 홈페이지가 실제로 쓰는 값(기본값)으로 채워서 보여준다
     const raw = await client.fetch<Record<string, unknown> | null>(query);
-    const data = mergeInfo(raw);
+    const readState = settingsReadState("studioInfo", raw);
+    const data = readState.kind === "blocked" ? null : mergeInfoForManage(raw);
     const writeReady = isWriteConfigured();
 
     return (
@@ -35,7 +36,7 @@ export default async function StudioInfoPage() {
                 <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
                     스튜디오 페이지의 연습실·로비 카드를 뺀 나머지 내용이에요. (연습실·로비는 목록에서 따로 관리해요.)
                 </p>
-                <UpdatedAt iso={raw?._updatedAt as string | undefined} historyHref={`/manage/history/studio-info/studioInfo`} />
+                {readState.kind !== "blocked" && <UpdatedAt iso={raw?._updatedAt as string | undefined} historyHref={`/manage/history/studio-info/studioInfo`} />}
             </div>
             {!writeReady && (
                 <div role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed">
@@ -46,7 +47,8 @@ export default async function StudioInfoPage() {
                     </p>
                 </div>
             )}
-            <StudioInfoForm data={data} />
+            <SettingsReadNotice state={readState} />
+            {data && <StudioInfoForm data={data} revision={raw?._rev as string | undefined} />}
         </main>
     );
 }

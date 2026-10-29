@@ -8,14 +8,18 @@ import RestoreButton from "../../_components/RestoreButton";
 import { restoreWork } from "../actions";
 import ManageNav from "../../ManageNav";
 import UpdatedAt from "../../_components/UpdatedAt";
+import DetailReadFailure from "../../_components/DetailReadFailure";
+import { detailReadIssue } from "@/lib/manage-detail-read";
 
 export const metadata = { title: "작업물 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "work" && _id == $id][0]{
-    _id, _updatedAt, trashed, title, artist, "slug": slug.current, releaseDate,
+    _id, _type, _rev, _updatedAt, trashed, title, artist, "slug": slug.current, releaseDate,
+    "sourceSlug": slug,
     youtubeUrl, instagramId, instagramUrl,
     "imageUrl": coverImage.asset->url,
+    "sourceBlocks": contentBlocks,
     contentBlocks[]{
         ...,
         _type == "imageBlock" => { ..., "imageUrl": image.asset->url },
@@ -25,6 +29,7 @@ const detailQuery = `*[_type == "work" && _id == $id][0]{
 
 type Raw = {
     _id?: string;
+    _rev?: string;
     trashed?: boolean;
     title?: string;
     artist?: string;
@@ -47,14 +52,19 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
     if (!(await isAuthenticated())) redirect("/manage/login");
 
     const { id } = await params;
-    const raw = await client.fetch<Raw | null>(detailQuery, { id: decodeURIComponent(id) });
-    if (!raw?._id) notFound();
+    const documentId = decodeURIComponent(id);
+    const result = await client.fetch<unknown>(detailQuery, { id: documentId });
+    if (result === null) notFound();
+    const issue = detailReadIssue("work", documentId, result);
+    if (issue) return <DetailReadFailure title="작업물 수정" fields={issue.fields} />;
+    const raw = result as Raw & { _id: string };
 
     const writeReady = isWriteConfigured();
     const isTrashed = raw.trashed === true;
 
     const data: WorkFormData = {
         _id: raw._id,
+        _rev: raw._rev,
         title: raw.title ?? "",
         artist: raw.artist ?? "",
         slug: raw.slug ?? "",

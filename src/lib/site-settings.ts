@@ -1,4 +1,5 @@
 import { NAVER_MAP_PLACE_URL, NAVER_MAP_URL } from "@/lib/constants";
+import { externalHttpUrl } from "./content-urls";
 
 /** 사이트 공통 연락처·링크. 값은 Sanity(siteSettings)에서 오고, 없거나 조회에 실패하면 FALLBACK을 쓴다. */
 export type SiteSettings = {
@@ -33,15 +34,43 @@ export const FALLBACK_SETTINGS: SiteSettings = {
 
 type Partial_ = Partial<Record<keyof SiteSettings, unknown>> | null | undefined;
 
-/** 비어 있거나 http(s)가 아닌 값은 버리고 기본값을 쓴다 (화면에 잘못된 링크가 나가지 않게) */
+export const SITE_SETTINGS_LINK_HOSTS = {
+    naverMapPlaceUrl: ["naver.com", "naver.me"],
+    naverReservationUrl: ["naver.com", "naver.me"],
+    instagramUrl: ["instagram.com"],
+    blogUrl: [],
+} as const;
+export type SiteSettingsLinkKey = keyof typeof SITE_SETTINGS_LINK_HOSTS;
+
+/** 저장과 공개 조회가 동일한 HTTPS·서비스 호스트 규칙을 사용한다. 블로그는 임의 HTTPS를 허용한다. */
+export function siteSettingsLinkUrl(key: SiteSettingsLinkKey, value: unknown): string | null {
+    if (!Object.hasOwn(SITE_SETTINGS_LINK_HOSTS, key)) return null;
+    const raw = externalHttpUrl(value);
+    if (!raw) return null;
+    const url = new URL(raw);
+    if (url.protocol !== "https:") return null;
+    const hosts: readonly string[] = SITE_SETTINGS_LINK_HOSTS[key];
+    return hosts.length === 0 || hosts.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`)) ? raw : null;
+}
+
+/** 번호의 실제 사용 여부는 확인하지 않고 숫자 포함·기본 서식·줄바꿈 여부만 검사한다. */
+export function siteSettingsPhone(value: unknown): string | null {
+    if (typeof value !== "string") return null;
+    const raw = value.trim();
+    return /^[0-9+() -]{5,30}$/.test(raw) && /[0-9]/.test(raw) ? raw : null;
+}
+
+/** 빈 값·잘못된 전화·저장 기준과 다른 서비스 URL은 항목별로 기존 기본값을 사용한다. */
 export function mergeSettings(raw: Partial_): SiteSettings {
     const out: SiteSettings = { ...FALLBACK_SETTINGS };
     if (!raw) return out;
-    const urlKeys: (keyof SiteSettings)[] = ["naverMapPlaceUrl", "naverReservationUrl", "instagramUrl", "blogUrl"];
+    const urlKeys = Object.keys(SITE_SETTINGS_LINK_HOSTS) as SiteSettingsLinkKey[];
     for (const k of Object.keys(FALLBACK_SETTINGS) as (keyof SiteSettings)[]) {
         const v = raw[k];
         if (typeof v !== "string" || !v.trim()) continue;
-        if (urlKeys.includes(k) && !/^https:\/\//i.test(v.trim())) continue;
+        if (k === "phone" && !siteSettingsPhone(v)) continue;
+        const urlKey = urlKeys.find((key) => key === k);
+        if (urlKey && !siteSettingsLinkUrl(urlKey, v)) continue;
         out[k] = v.trim();
     }
     return out;

@@ -1,18 +1,19 @@
 "use client";
 
-import { useActionState, useState, useMemo, useRef, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { saveInstructor, createInstructor, type SaveResult, type FieldError } from "../actions";
+import { useState, useMemo, useRef } from "react";
+import Link from "../../_components/GuardedLink";
+import { saveInstructor, createInstructor } from "../actions";
 import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider, InlineError } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { useManagedFormAction, type ManagedFormSession } from "../../_components/useManagedFormAction";
 import SaveStatus from "../../_components/SaveStatus";
-import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
+import { useImageInput } from "../../_components/useImageInput";
 import { Eye, MapPin, Image as ImageIcon } from "lucide-react";
 import CropButton from "../../_components/ImageCropper";
 
 export type InstructorFormData = {
     _id: string;
+    _rev?: string;
     isActive: boolean;
     instructorName: string;
     category: string;
@@ -91,8 +92,7 @@ function PhotoInput({
     // name은 이미 usage마다 고유한 값이라(예: modalImageFile, bgImageFile),
     // 오류 요약에서 이 필드로 바로 이동할 수 있도록 그대로 id로 쓴다.
     const id = name;
-    const [preview, setPreview] = useState<string | null>(null);
-    const [fileError, setFileError] = useState<string | null>(null);
+    const { preview, error: fileError, processing, onChange: onPhotoChange } = useImageInput(onPreviewUrl);
     const shown = preview ?? currentUrl;
 
     return (
@@ -137,34 +137,13 @@ function PhotoInput({
                         accept="image/*"
                         required={required && !currentUrl}
                         className="sr-only"
-                        onChange={async (e) => {
-                            const input = e.target;
-                            const picked = input.files?.[0];
-                            if (!picked) {
-                                setFileError(null);
-                                setPreview(null);
-                                onPreviewUrl?.(null);
-                                return;
-                            }
-                            const prepared = await prepareImageFile(picked);
-                            if ("error" in prepared) {
-                                setFileError(prepared.error);
-                                input.value = ""; // 잘못된 선택은 제출되지 않도록 비운다
-                                setPreview(null);
-                                onPreviewUrl?.(null);
-                                return;
-                            }
-                            replaceInputFile(input, prepared.file);
-                            setFileError(null);
-                            const url = URL.createObjectURL(prepared.file);
-                            setPreview(url);
-                            onPreviewUrl?.(url);
-                        }}
+                        aria-busy={processing}
+                        onChange={onPhotoChange}
                     />
                     <span className="inline-block ml-2 align-top">
                         <CropButton inputId={id} currentUrl={currentUrl} defaultRatio={null} />
                     </span>
-                    {fileError ? (
+                    {processing ? <p role="status" className="text-sm text-neutral-600 mt-2">사진을 준비하는 중…</p> : fileError ? (
                         <p role="alert" className="text-sm font-semibold text-red-600 mt-2 leading-relaxed">
                             {fileError}
                         </p>
@@ -351,22 +330,19 @@ function InstructorFormInner({
     data,
     mode = "edit",
     onDiscard,
+    session,
 }: {
     data: InstructorFormData;
     mode?: "create" | "edit";
     onDiscard: () => void;
+    session: ManagedFormSession;
 }) {
     const isCreate = mode === "create";
-    const router = useRouter();
-    const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(
-        isCreate ? createInstructor : saveInstructor,
-        null,
-    );
+    const { state, formAction, isPending } = session;
 
     const [photoPosition, setPhotoPosition] = useState(data.imagePosition || "object-top");
     const [isActive, setIsActive] = useState(data.isActive);
-    const [thumbPreview, setThumbPreview] = useState<string | null>(null);
-    const [thumbFileError, setThumbFileError] = useState<string | null>(null);
+    const { preview: thumbPreview, error: thumbFileError, processing: thumbProcessing, onChange: onThumbChange } = useImageInput();
     const [modalPreview, setModalPreview] = useState<string | null>(null);
     const shownThumb = thumbPreview ?? data.imageUrl;
     const shownModal = modalPreview ?? data.modalImageUrl ?? data.imageUrl;
@@ -397,11 +373,12 @@ function InstructorFormInner({
     );
 
     // 미저장 변경사항 추적·탭 닫기 경고·저장 성공 처리·오류 요약 포커스는 공통 훅이 담당한다
-    const { isDirty, markDirty, summaryRef: errorSummaryRef, handleListClick: handleListLinkClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef: errorSummaryRef, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state, formAction, isPending);
 
     return (
         <FieldErrorsProvider value={clientErrors}>
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
+            <fieldset disabled={isPending} aria-busy={isPending} className="contents">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="imagePosition" value={photoPosition} />
             <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
@@ -530,27 +507,13 @@ function InstructorFormInner({
                                 accept="image/*"
                                 required={isCreate}
                                 className="sr-only"
-                                onChange={async (e) => {
-                                    const input = e.target;
-                                    const picked = input.files?.[0];
-                                    if (!picked) {
-                                        setThumbFileError(null);
-                                        setThumbPreview(null);
-                                        return;
-                                    }
-                                    const prepared = await prepareImageFile(picked);
-                                    if ("error" in prepared) {
-                                        setThumbFileError(prepared.error);
-                                        input.value = "";
-                                        setThumbPreview(null);
-                                        return;
-                                    }
-                                    replaceInputFile(input, prepared.file);
-                                    setThumbFileError(null);
-                                    setThumbPreview(URL.createObjectURL(prepared.file));
-                                }}
+                                aria-busy={thumbProcessing}
+                                onChange={onThumbChange}
                             />
-                            {thumbFileError ? (
+                            <span className="inline-block ml-2 align-top">
+                                <CropButton inputId="imageFile" currentUrl={data.imageUrl} defaultRatio={null} />
+                            </span>
+                            {thumbProcessing ? <p role="status" className="text-sm text-neutral-600 mt-2">사진을 준비하는 중…</p> : thumbFileError ? (
                                 <p role="alert" className="text-sm font-semibold text-red-600 mt-2 leading-relaxed">
                                     {thumbFileError}
                                 </p>
@@ -607,10 +570,6 @@ function InstructorFormInner({
                     aspect="aspect-[3/4]"
                     onPreviewUrl={setModalPreview}
                 />
-                <span className="inline-block ml-2 align-top">
-                    <CropButton inputId={"imageFile"} currentUrl={data.imageUrl} defaultRatio={null} />
-                </span>
-
                 <PhotoInput
                     name="bgImageFile"
                     label="배경 사진"
@@ -744,7 +703,6 @@ function InstructorFormInner({
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link
                         href="/manage/instructors"
-                        onClick={handleListLinkClick}
                         className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                     >
                         목록
@@ -774,13 +732,14 @@ function InstructorFormInner({
 
                 <SaveStatus state={state} />
             </div>
+            </fieldset>
         </form>
         </FieldErrorsProvider>
     );
 }
 
 /**
- * 얇은 래퍼. "변경 버리기"를 누르면 resetKey를 바꿔서 InstructorFormInner
+ * 얇은 래퍼. 저장된 revision 변경 또는 "변경 버리기" 때 InstructorFormInner를
  * 전체를 새로 마운트한다 — 비제어 입력, PhotoInput 내부 state까지
  * 포함해 폼의 모든 상태를 한 번에 원래 값(data)으로 되돌리는 가장 확실한 방법이다.
  */
@@ -788,12 +747,13 @@ export default function InstructorForm(props: {
     data: InstructorFormData;
     mode?: "create" | "edit";
 }) {
-    const [resetKey, setResetKey] = useState(0);
+    const session = useManagedFormAction(props.mode === "create" ? createInstructor : saveInstructor, props.data._rev);
     return (
         <InstructorFormInner
-            key={resetKey}
+            key={session.formKey}
             {...props}
-            onDiscard={() => setResetKey((k) => k + 1)}
+            onDiscard={session.onDiscard}
+            session={session}
         />
     );
 }

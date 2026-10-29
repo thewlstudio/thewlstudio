@@ -1,29 +1,39 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { restoreRevision } from "./actions";
 import { flashToast } from "../_components/Toast";
+import { useManageMutation } from "../_components/useManageMutation";
+import { isManageMutationPending } from "@/lib/manage-mutation-lock";
 
-export default function RestoreRevisionButton({ area, documentId, time, backHref }: { area: string; documentId: string; time: string; backHref: string }) {
+export default function RestoreRevisionButton({ area, documentId, time, expectedRevision, backHref }: { area: string; documentId: string; time: string; expectedRevision: string; backHref: string }) {
     const router = useRouter();
-    const [isPending, startTransition] = useTransition();
+    const { isPending, isBusy, startTransition, run } = useManageMutation();
     const [error, setError] = useState<string | null>(null);
 
     return (
         <div>
             <button
                 type="button"
-                disabled={isPending}
+                disabled={isBusy}
                 onClick={() => {
+                    if (isBusy || isManageMutationPending()) return;
                     if (!window.confirm("이 시점의 내용으로 되돌릴까요? 홈페이지에 바로 반영돼요. 지금 상태도 이력에 남아서 다시 되돌릴 수 있어요.")) return;
-                    startTransition(async () => {
-                        const result = await restoreRevision(area, documentId, time);
-                        if (result.ok) {
-                            flashToast({ message: "이전 상태로 되돌렸어요. 되돌리기 직전 상태도 이력에 남아 있어요." });
-                            router.push(backHref);
-                        } else {
-                            setError(result.error);
+                    run(async (isCurrent) => {
+                        setError(null);
+                        try {
+                            const result = await restoreRevision(area, documentId, time, expectedRevision);
+                            if (!isCurrent()) return;
+                            if (result.ok) {
+                                flashToast({ message: "이전 상태로 되돌렸어요. 되돌리기 직전 상태도 이력에 남아 있어요." });
+                                startTransition(() => router.push(backHref));
+                            } else {
+                                setError(result.error);
+                            }
+                        } catch {
+                            if (!isCurrent()) return;
+                            setError("통신 상태 때문에 복원 결과를 확인하지 못했어요. 화면을 새로고침해 확인해 주세요.");
                         }
                     });
                 }}

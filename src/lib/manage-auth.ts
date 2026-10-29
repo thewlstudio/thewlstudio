@@ -77,26 +77,23 @@ export async function destroySession(): Promise<void> {
 
 /** 현재 요청이 인증된 세션인지 */
 export async function isAuthenticated(): Promise<boolean> {
-    const secret = getSecret();
-    if (!secret) return false;
-
-    const raw = (await cookies()).get(COOKIE_NAME)?.value;
-    if (!raw) return false;
-
-    const [expiresRaw, signature] = raw.split(".");
-    const expiresAt = Number(expiresRaw);
-    if (!expiresAt || !signature) return false;
-    if (Date.now() > expiresAt) return false;
-
-    return safeEqual(signature, sign(expiresAt, secret));
+    return (await getSessionExpiry()) !== null;
 }
 
 /** 유효한 세션이면 만료 시각(ms)을, 아니면 null을 돌려준다 — 화면에서 "곧 만료" 안내에 쓴다. */
 export async function getSessionExpiry(): Promise<number | null> {
-    if (!(await isAuthenticated())) return null;
-    const raw = (await cookies()).get(COOKIE_NAME)?.value ?? "";
-    const expiresAt = Number(raw.split(".")[0]);
-    return expiresAt || null;
+    const secret = getSecret();
+    // 로그인 설정이 해제된 상태에서는 예전에 발급한 쿠키도 허용하지 않는다.
+    if (!secret || !getPassword()) return null;
+    const raw = (await cookies()).get(COOKIE_NAME)?.value;
+    if (!raw) return null;
+
+    // 발급하는 형식만 허용한다. 뒤에 붙은 구간·숫자의 다른 표기는 받아들이지 않는다.
+    const match = /^([1-9]\d*)\.([a-f0-9]{64})$/.exec(raw);
+    if (!match || match[0] !== raw) return null;
+    const expiresAt = Number(match[1]);
+    if (!Number.isSafeInteger(expiresAt) || expiresAt <= Date.now()) return null;
+    return safeEqual(match[2], sign(expiresAt, secret)) ? expiresAt : null;
 }
 
 /** 서버 액션 진입점에서 호출. 인증 안 됐으면 예외를 던진다. */

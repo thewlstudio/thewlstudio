@@ -6,6 +6,9 @@ import { restoreCrew } from "../crew/actions";
 import { restoreInstructor } from "../instructors/actions";
 import { restoreWork } from "../works/actions";
 import { restoreSpace } from "../studio/actions";
+import { callManageAction } from "./callManageAction";
+import { useManageMutation } from "./useManageMutation";
+import { confirmLeaveIfDirty } from "@/lib/formDirtyGuard";
 
 /**
  * 관리 화면 공통 알림(토스트). 삭제·복원·생성처럼 "결과가 화면에 안 남는" 동작의 결과를 알려 주고,
@@ -27,6 +30,22 @@ const RESTORERS: Record<Area, (id: string) => Promise<{ ok: true } | { ok: false
     instructors: restoreInstructor,
 };
 
+/** 오래되거나 손상된 브라우저 저장값으로 화면이나 되돌리기 호출이 깨지지 않게 한다. */
+function readFlash(raw: string): ToastInput | null {
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const row = value as Record<string, unknown>;
+    if (typeof row.message !== "string" || !row.message) return null;
+    const result: ToastInput = { message: row.message, tone: row.tone === "info" ? "info" : "success" };
+    if (row.undo && typeof row.undo === "object" && !Array.isArray(row.undo)) {
+        const undo = row.undo as Record<string, unknown>;
+        if (typeof undo.area === "string" && Object.hasOwn(RESTORERS, undo.area) && typeof undo.id === "string" && undo.id) {
+            result.undo = { area: undo.area as Area, id: undo.id };
+        }
+    }
+    return result;
+}
+
 /** 화면 이동 뒤에 보여 줄 알림을 예약한다 (이동하는 동작에서 호출) */
 export function flashToast(t: ToastInput) {
     try {
@@ -46,6 +65,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<Item[]>([]);
     const seq = useRef(0);
     const timers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+    const pendingUndo = useRef(new Set<number>());
+    const mutation = useManageMutation();
 
     const dismiss = useCallback((id: number) => {
         setItems((list) => list.filter((x) => x.id !== id));
@@ -70,7 +91,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             const raw = sessionStorage.getItem(FLASH_KEY);
             if (raw) {
                 sessionStorage.removeItem(FLASH_KEY);
-                show(JSON.parse(raw) as ToastInput);
+                const item = readFlash(raw);
+                if (item) show(item);
             }
         } catch {
             /* 무시 */
@@ -88,16 +110,26 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         return () => map.forEach((t) => clearTimeout(t));
     }, []);
 
-    const undo = async (item: Item) => {
-        if (!item.undo) return;
-        dismiss(item.id);
-        const result = await RESTORERS[item.undo.area](item.undo.id);
-        if (result.ok) {
-            show({ message: "복원했어요." });
-            router.refresh();
-        } else {
-            show({ message: `복원하지 못했어요. ${result.error}`, tone: "info" });
-        }
+    const undo = (item: Item) => {
+        const target = item.undo;
+        if (!target || pendingUndo.current.has(item.id)) return;
+        if (!confirmLeaveIfDirty("저장하지 않은 내용이 있어요. 복원 후 화면을 다시 불러오면 입력한 내용이 사라질 수 있어요. 그래도 복원할까요?")) return;
+        mutation.run(async (isCurrent) => {
+            pendingUndo.current.add(item.id);
+            dismiss(item.id);
+            try {
+                const result = await callManageAction(() => RESTORERS[target.area](target.id));
+                if (!isCurrent()) return;
+                if (result.ok) {
+                    show({ message: "복원했어요." });
+                    mutation.startTransition(() => router.refresh());
+                } else {
+                    show({ message: result.error, tone: "info" });
+                }
+            } finally {
+                pendingUndo.current.delete(item.id);
+            }
+        });
     };
 
     return (
@@ -113,6 +145,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                         {item.undo && (
                             <button
                                 type="button"
+                                disabled={mutation.isBusy}
                                 onClick={() => undo(item)}
                                 className="shrink-0 h-9 px-3 rounded-lg bg-white text-black text-sm font-bold hover:bg-neutral-200 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                             >

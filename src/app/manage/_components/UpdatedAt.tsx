@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./GuardedLink";
 import { formatAbsolute, formatUpdated } from "@/lib/format-updated";
 
 /** 수정 화면 제목 아래의 "마지막 수정" 표시. 마우스를 올리면 정확한 시각이 나온다. */

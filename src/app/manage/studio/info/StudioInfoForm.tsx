@@ -1,15 +1,16 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import Link from "next/link";
-import { saveStudioInfo, type SaveResult } from "./actions";
+import { useEffect, useState } from "react";
+import Link from "../../_components/GuardedLink";
+import { saveStudioInfo } from "./actions";
 import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { useManagedFormAction, type ManagedFormSession } from "../../_components/useManagedFormAction";
 import SaveStatus from "../../_components/SaveStatus";
 import { LinesEditor, dangerBtn, dashedBtn, move, smallBtn } from "../../_components/listUi";
 import { ExpandControls, Summary, ToggleButton, snippet, useOpenKeys } from "../../_components/Collapse";
 import { eulReul } from "@/lib/josa";
-import type { StudioInfo } from "@/lib/studio-info";
+import type { StudioInfoForManage } from "@/lib/studio-info";
 
 let seq = 0;
 const newKey = () => `new-${Date.now().toString(36)}-${++seq}`;
@@ -38,9 +39,9 @@ function RowTools({ name, i, count, onMove, onRemove, toggle }: { name: string; 
     );
 }
 
-function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard: () => void }) {
-    const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(saveStudioInfo, null);
-    const { isDirty, markDirty, summaryRef, handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
+function StudioInfoFormInner({ data, onDiscard, session }: { data: StudioInfoForManage; onDiscard: () => void; session: ManagedFormSession }) {
+    const { state, formAction, isPending } = session;
+    const { isDirty, markDirty, summaryRef, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state, formAction, isPending);
 
     const [services, setServices] = useState(() => withKeys(data.services, "svc"));
     const [equipment, setEquipment] = useState(() => withKeys(data.equipment, "eq"));
@@ -76,9 +77,9 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
     };
 
     const dataJson = JSON.stringify({
-        services: services.map((s) => ({ _key: s.key, title: s.title, price: s.price, priceUnit: s.priceUnit, points: s.points })),
-        equipment: equipment.map((e) => ({ _key: e.key, title: e.title, items: e.items })),
-        memberships: memberships.map((m) => ({ _key: m.key, num: m.num, label: m.label, sub: m.sub, price: m.price })),
+        services: services.map((s) => ({ _key: s._key, title: s.title, price: s.price, priceUnit: s.priceUnit, points: s.points })),
+        equipment: equipment.map((e) => ({ _key: e._key, title: e.title, items: e.items })),
+        memberships: memberships.map((m) => ({ _key: m._key, num: m.num, label: m.label, sub: m.sub, price: m.price })),
         ...text,
         amenities,
     });
@@ -86,6 +87,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
     return (
         <FieldErrorsProvider value={clientErrors}>
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
+            <fieldset disabled={isPending} aria-busy={isPending} className="contents">
             <input type="hidden" name="dataJson" value={dataJson} />
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
@@ -228,7 +230,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                     </Field>
                 </div>
 
-                <div className="rounded-xl border border-neutral-200 p-4 space-y-3">
+                <div id="amenities" tabIndex={-1} className="rounded-xl border border-neutral-200 p-4 space-y-3">
                     <p className="text-sm font-black">편의시설 (Amenities)</p>
                     <LinesEditor lines={amenities} onChange={set(setAmenities)} label="편의시설" placeholder="예: 냉·온·얼음 정수기" />
                 </div>
@@ -254,7 +256,7 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">저장하면 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage/studio" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                    <Link href="/manage/studio" className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
                     </Link>
                     {isDirty && (
@@ -278,13 +280,14 @@ function StudioInfoFormInner({ data, onDiscard }: { data: StudioInfo; onDiscard:
                 </div>
                 <SaveStatus state={state} />
             </div>
+            </fieldset>
         </form>
         </FieldErrorsProvider>
     );
 }
 
 /** "변경 버리기"를 누르면 key를 바꿔 폼 전체를 최신 data로 다시 마운트한다 */
-export default function StudioInfoForm({ data }: { data: StudioInfo }) {
-    const [resetKey, setResetKey] = useState(0);
-    return <StudioInfoFormInner key={resetKey} data={data} onDiscard={() => setResetKey((k) => k + 1)} />;
+export default function StudioInfoForm({ data, revision }: { data: StudioInfoForManage; revision?: string }) {
+    const session = useManagedFormAction(saveStudioInfo, revision);
+    return <StudioInfoFormInner key={session.formKey} data={data} onDiscard={session.onDiscard} session={session} />;
 }

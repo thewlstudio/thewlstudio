@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import Link from "next/link";
-import { saveSpace, createSpace, type SaveResult } from "../actions";
+import { useState } from "react";
+import Link from "../../_components/GuardedLink";
+import { saveSpace, createSpace } from "../actions";
 import { Section, Field, ErrorSummary, inputClass, textareaClass, FieldErrorsProvider } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { useManagedFormAction, type ManagedFormSession } from "../../_components/useManagedFormAction";
 import SaveStatus from "../../_components/SaveStatus";
-import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
+import { useImageInput } from "../../_components/useImageInput";
 import { LinesEditor, dangerBtn, dashedBtn, move, smallBtn } from "../../_components/listUi";
 import CropButton from "../../_components/ImageCropper";
 
@@ -15,6 +16,7 @@ type ImageRow = { key: string; url: string | null };
 
 export type SpaceFormData = {
     _id: string;
+    _rev?: string;
     kind: "room" | "lobby";
     isActive: boolean;
     name: string;
@@ -24,7 +26,7 @@ export type SpaceFormData = {
     features: string[];
     notes: string[];
     /** 저장돼 있는 사진 (생성 화면에서는 빈 배열) */
-    images: { key: string; url: string }[];
+    images: { key: string; url: string | null }[];
 };
 
 const MAX_PRICES = 10;
@@ -36,8 +38,7 @@ const newKey = () => `new-${Date.now().toString(36)}-${++seq}`;
 /** 사진 한 장 행: 새 사진이면 파일 입력(spaceImage_<key>)으로 폼에 실려 서버가 올린다 */
 function ImageItem({ row, index, count, onMove, onRemove, onPicked }: { row: ImageRow; index: number; count: number; onMove: (to: number) => void; onRemove: () => void; onPicked: () => void }) {
     const isNew = row.key.startsWith("new-");
-    const [preview, setPreview] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const { preview, error, processing, onChange: onPhotoChange } = useImageInput();
     const shown = preview ?? row.url;
     const id = `spaceImage-${row.key}`;
     return (
@@ -68,35 +69,17 @@ function ImageItem({ row, index, count, onMove, onRemove, onPicked }: { row: Ima
                     type="file"
                     accept="image/*"
                     className="sr-only"
-                    onChange={async (e) => {
-                        const input = e.target;
-                        const picked = input.files?.[0];
-                        if (!picked) {
-                            setPreview(null);
-                            setError(null);
-                            return;
-                        }
-                        const prepared = await prepareImageFile(picked);
-                        if ("error" in prepared) {
-                            setError(prepared.error);
-                            input.value = "";
-                            setPreview(null);
-                            return;
-                        }
-                        replaceInputFile(input, prepared.file);
-                        setError(null);
-                        setPreview(URL.createObjectURL(prepared.file));
-                        onPicked();
-                    }}
+                    aria-busy={processing}
+                    onChange={(e) => { void onPhotoChange(e); onPicked(); }}
                 />
                 <span className="inline-block ml-2 align-top">
                     <CropButton inputId={id} currentUrl={row.url} defaultRatio={4 / 3} />
                 </span>
-                {error ? (
+                {processing ? <p role="status" className="text-sm text-neutral-600 mt-1.5">사진을 준비하는 중…</p> : error ? (
                     <p role="alert" className="text-sm font-semibold text-red-600 mt-1.5">{error}</p>
                 ) : (
                     <p className="text-sm text-neutral-600 mt-1.5 leading-relaxed">
-                        {preview ? "새 사진을 골랐어요. 저장하면 바뀌어요." : isNew ? "사진을 선택해 주세요. 없으면 저장할 때 빠져요." : "고르지 않으면 지금 사진이 유지돼요."}
+                        {preview ? "새 사진을 골랐어요. 저장하면 바뀌어요." : isNew ? "사진을 선택해 주세요. 없으면 저장할 때 빠져요." : !row.url ? "미리보기 주소를 읽지 못했어요. 저장해도 기존 사진 정보는 유지돼요. 필요하면 다른 사진으로 바꿔 주세요." : "고르지 않으면 지금 사진이 유지돼요."}
                     </p>
                 )}
             </div>
@@ -104,9 +87,9 @@ function ImageItem({ row, index, count, onMove, onRemove, onPicked }: { row: Ima
     );
 }
 
-function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: "create" | "edit"; onDiscard: () => void }) {
+function SpaceFormInner({ data, mode, onDiscard, session }: { data: SpaceFormData; mode: "create" | "edit"; onDiscard: () => void; session: ManagedFormSession }) {
     const isCreate = mode === "create";
-    const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(isCreate ? createSpace : saveSpace, null);
+    const { state, formAction, isPending } = session;
 
     const [kind, setKind] = useState<"room" | "lobby">(data.kind);
     const [isActive, setIsActive] = useState(data.isActive);
@@ -115,7 +98,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
     const [notes, setNotes] = useState<string[]>(data.notes);
     const [images, setImages] = useState<ImageRow[]>(data.images);
 
-    const { isDirty, markDirty, summaryRef, handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state, formAction, isPending);
     const isLobby = kind === "lobby";
 
     const listsJson = JSON.stringify({
@@ -137,6 +120,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
     return (
         <FieldErrorsProvider value={clientErrors}>
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
+            <fieldset disabled={isPending} aria-busy={isPending} className="contents">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="kind" value={kind} />
             <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
@@ -216,7 +200,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section tour="form-photo" step={2} title="사진" help="넘겨 보는 사진이에요. **첫 번째 사진**이 처음에 보이고, 순서는 ▲▼로 바꿔요." hint="홈페이지 사진 넘기기에 이 순서대로 나와요. 첫 번째 사진이 처음에 보여요.">
+            <Section id="images" tour="form-photo" step={2} title="사진" help="넘겨 보는 사진이에요. **첫 번째 사진**이 처음에 보이고, 순서는 ▲▼로 바꿔요." hint="홈페이지 사진 넘기기에 이 순서대로 나와요. 첫 번째 사진이 처음에 보여요.">
                 {images.length === 0 && <p className="text-sm text-neutral-500">아직 사진이 없어요. 아래에서 추가해 주세요.</p>}
                 {images.map((im, i) => (
                     <ImageItem
@@ -236,7 +220,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section step={3} title="가격" help="라벨(기본·회원), 금액, 단위를 따로 적어요. 라벨과 금액이 모두 비어 있으면 저장할 때 빠져요." hint="예: 라벨 '기본' / 금액 '6,000' / 단위 '원 / 1H'. 라벨과 금액이 모두 비면 저장할 때 빠져요.">
+            <Section id="prices" step={3} title="가격" help="라벨(기본·회원), 금액, 단위를 따로 적어요. 라벨과 금액이 모두 비어 있으면 저장할 때 빠져요." hint="예: 라벨 '기본' / 금액 '6,000' / 단위 '원 / 1H'. 라벨과 금액이 모두 비면 저장할 때 빠져요.">
                 {prices.map((p, i) => (
                     <div key={p.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
                         <div className="flex items-center justify-between gap-3">
@@ -263,11 +247,11 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 )}
             </Section>
 
-            <Section step={4} title={isLobby ? "이용 규칙·특징" : "장비·특징"} hint="한 줄씩 적어 주세요. 홈페이지에 줄 앞에 — 표시와 함께 나와요. 비워 둔 줄은 저장할 때 빠져요.">
+            <Section id="features" step={4} title={isLobby ? "이용 규칙·특징" : "장비·특징"} hint="한 줄씩 적어 주세요. 홈페이지에 줄 앞에 — 표시와 함께 나와요. 비워 둔 줄은 저장할 때 빠져요.">
                 <LinesEditor lines={features} onChange={apply(setFeatures)} label="특징" placeholder="예: 삼익 업라이트 피아노" />
             </Section>
 
-            <Section step={5} title="안내 문구" help="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요." hint="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요. (예: * 방음문 사용 안내)">
+            <Section id="notes" step={5} title="안내 문구" help="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요." hint="붉은 글씨로 맨 아래에 나와요. 없으면 비워 두세요. (예: * 방음문 사용 안내)">
                 <LinesEditor lines={notes} onChange={apply(setNotes)} label="안내 문구" placeholder="예: * 방음문: 열때는 아래로…" />
             </Section>
 
@@ -275,7 +259,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage/studio" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                    <Link href="/manage/studio" className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
                     </Link>
                     {isDirty && (
@@ -299,6 +283,7 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
                 </div>
                 <SaveStatus state={state} />
             </div>
+            </fieldset>
         </form>
         </FieldErrorsProvider>
     );
@@ -306,6 +291,6 @@ function SpaceFormInner({ data, mode, onDiscard }: { data: SpaceFormData; mode: 
 
 /** "변경 버리기"를 누르면 key를 바꿔 폼 전체를 최신 data로 다시 마운트한다 */
 export default function SpaceForm(props: { data: SpaceFormData; mode?: "create" | "edit" }) {
-    const [resetKey, setResetKey] = useState(0);
-    return <SpaceFormInner key={resetKey} data={props.data} mode={props.mode ?? "edit"} onDiscard={() => setResetKey((k) => k + 1)} />;
+    const session = useManagedFormAction(props.mode === "create" ? createSpace : saveSpace, props.data._rev);
+    return <SpaceFormInner key={session.formKey} data={props.data} mode={props.mode ?? "edit"} onDiscard={session.onDiscard} session={session} />;
 }

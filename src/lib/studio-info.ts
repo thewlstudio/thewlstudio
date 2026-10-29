@@ -24,6 +24,13 @@ export type StudioInfo = {
     dutyWarning: string;
 };
 
+/** 관리자 전용 모델. 공개 화면 모델에는 넣지 않는 원본 배열 키를 선택적으로 보존한다. */
+export type StudioInfoForManage = Omit<StudioInfo, "services" | "equipment" | "memberships"> & {
+    services: (StudioService & { _key?: string })[];
+    equipment: (StudioEquipment & { _key?: string })[];
+    memberships: (StudioMembership & { _key?: string })[];
+};
+
 /** 5~8단계 이전 시점의 하드코딩 값과 같다 */
 export const FALLBACK_INFO: StudioInfo = {
     services: [
@@ -106,5 +113,23 @@ export function mergeInfo(raw: Raw): StudioInfo {
         cctvDetail: str(raw.cctvDetail) ?? f.cctvDetail,
         dutyText: str(raw.dutyText) ?? f.dutyText,
         dutyWarning: str(raw.dutyWarning) ?? f.dutyWarning,
+    };
+}
+
+/** 내용·기본값 규칙은 공개 모델과 같게 두고, 같은 원본 행의 키만 추가한다. */
+export function mergeInfoForManage(raw: Raw): StudioInfoForManage {
+    const info = mergeInfo(raw);
+    const withSourceKeys = <T extends object,>(rows: T[], source: unknown): (T & { _key?: string })[] => {
+        const originals = objList(source);
+        return rows.map((row, i) => {
+            const key = str(originals?.[i]?._key);
+            return { ...row, _key: key || undefined };
+        });
+    };
+    return {
+        ...info,
+        services: withSourceKeys(info.services, raw?.services),
+        equipment: withSourceKeys(info.equipment, raw?.equipment),
+        memberships: withSourceKeys(info.memberships, raw?.memberships),
     };
 }

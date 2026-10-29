@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./_components/GuardedLink";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/manage-auth";
 import ManageNav from "./ManageNav";
@@ -6,6 +6,7 @@ import FirstTimeGuide from "./FirstTimeGuide";
 import SetupChecklist from "./_components/checklist/SetupChecklist";
 import { client } from "@/sanity/lib/client";
 import { formatAbsolute, formatUpdated } from "@/lib/format-updated";
+import { HUB_RECENT_META, readHubCounts, readHubRecent, type HubCounts } from "@/lib/manage-hub-read";
 
 // title.template 상속이 이 세그먼트(레이아웃과 같은 위치의 page.tsx)에서는
 // 이상하게 루트 레이아웃 쪽 템플릿을 타는 현상이 있어, 최종 문자열을 직접 지정
@@ -27,8 +28,6 @@ const SECTIONS: Section[] = [
     { key: "contact", label: "Contact", description: "전화·주소·지도, 예약·SNS 링크, 홈페이지 소개 문구", href: "/manage/contact" },
 ];
 
-type Recent = { _id: string; _type: string; _updatedAt: string; title?: string };
-
 const COUNT_QUERY = `{
     "instructors": count(*[_type == "instructor" && !(trashed == true)]),
     "instructorsHidden": count(*[_type == "instructor" && !(trashed == true) && isActive == false]),
@@ -39,10 +38,8 @@ const COUNT_QUERY = `{
     "lobbies": count(*[_type == "studioSpace" && !(trashed == true) && kind == "lobby"])
 }`;
 
-type Counts = Record<"instructors" | "instructorsHidden" | "crew" | "crewHidden" | "works" | "rooms" | "lobbies", number>;
-
 /** 허브 카드에 붙는 현황 문구 (게임의 "보유 1/30"처럼 지금 상태를 한눈에) */
-function statusText(key: string, c: Counts | null): string | null {
+function statusText(key: string, c: HubCounts | null): string | null {
     if (!c) return null;
     const hid = (n: number) => (n > 0 ? ` · 비공개 ${n}` : "");
     switch (key) {
@@ -59,23 +56,18 @@ const RECENT_QUERY = `*[_type in ["instructor","crew","work","studioSpace","stud
     "title": coalesce(instructorName, koName, title, name)
 }`;
 
-const RECENT_META: Record<string, { area: string; href: (id: string) => string; fallback: string }> = {
-    instructor: { area: "강사", href: (id) => `/manage/instructors/${id}`, fallback: "강사" },
-    crew: { area: "Crew", href: (id) => `/manage/crew/${id}`, fallback: "크루" },
-    work: { area: "Works", href: (id) => `/manage/works/${id}`, fallback: "작업물" },
-    studioSpace: { area: "Studio", href: (id) => `/manage/studio/${id}`, fallback: "공간" },
-    studioInfo: { area: "Studio", href: () => "/manage/studio/info", fallback: "서비스·장비·멤버십·이용 안내" },
-    siteSettings: { area: "Contact", href: () => "/manage/contact", fallback: "연락처·링크·홈페이지 소개" },
-};
-
 export default async function ManageHubPage() {
     if (!(await isAuthenticated())) {
         redirect("/manage/login");
     }
 
     // 최근 수정은 보조 정보라, 읽기에 실패해도 허브 자체는 그대로 보여 준다
-    const recent = await client.fetch<Recent[]>(RECENT_QUERY).catch(() => [] as Recent[]);
-    const counts = await client.fetch<Counts>(COUNT_QUERY).catch(() => null);
+    const [recentRaw, countsRaw] = await Promise.all([
+        client.fetch<unknown>(RECENT_QUERY).catch(() => undefined),
+        client.fetch<unknown>(COUNT_QUERY).catch(() => undefined),
+    ]);
+    const recent = readHubRecent(recentRaw);
+    const counts = readHubCounts(countsRaw);
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
@@ -106,6 +98,7 @@ export default async function ManageHubPage() {
                 </div>
             </div>
 
+            {!counts && <p role="status" className="mb-4 text-sm text-amber-800">등록 현황을 불러오지 못했어요. 각 관리 목록에서 최신 내용을 확인해 주세요.</p>}
             <ul data-tour="hub-cards" className="space-y-3">
                 {SECTIONS.map((section) => (
                     <li key={section.key}>
@@ -145,13 +138,13 @@ export default async function ManageHubPage() {
                 ))}
             </ul>
 
-            {recent.length > 0 && (
+            {recent === null && <p role="status" className="mt-6 text-sm text-amber-800">최근 수정 목록을 불러오지 못했어요. 위에서 관리할 항목을 선택할 수 있어요.</p>}
+            {recent && recent.length > 0 && (
                 <section data-tour="hub-recent" aria-labelledby="recent" className="mt-10">
                     <h2 id="recent" className="text-sm font-black tracking-tight mb-3">최근 수정</h2>
                     <ul className="rounded-2xl border border-neutral-200 bg-white divide-y divide-neutral-100">
                         {recent.map((r) => {
-                            const meta = RECENT_META[r._type];
-                            if (!meta) return null;
+                            const meta = HUB_RECENT_META[r._type];
                             return (
                                 <li key={r._id}>
                                     <Link

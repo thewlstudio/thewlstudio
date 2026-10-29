@@ -8,20 +8,25 @@ import { restoreCrew } from "../actions";
 import CrewForm, { type CrewFormData } from "./CrewForm";
 import DeleteCrewButton from "./DeleteCrewButton";
 import UpdatedAt from "../../_components/UpdatedAt";
+import DetailReadFailure from "../../_components/DetailReadFailure";
+import { detailReadIssue } from "@/lib/manage-detail-read";
 
 export const metadata = { title: "크루 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "crew" && _id == $id][0]{
-    _id, _updatedAt, isActive, trashed, name, koName, role,
+    _id, _type, _rev, _updatedAt, isActive, trashed, name, koName, role,
     "slug": slug.current,
+    "sourceSlug": slug,
     "imageUrl": image.asset->url,
     "links": links[]{ _key, url, "iconRef": iconImage.asset._ref },
+    "sourceLinks": links,
     sections
 }`;
 
 type Raw = {
     _id?: string;
+    _rev?: string;
     isActive?: boolean;
     trashed?: boolean;
     name?: string;
@@ -37,14 +42,19 @@ export default async function EditCrewPage({ params }: { params: Promise<{ id: s
     if (!(await isAuthenticated())) redirect("/manage/login");
 
     const { id } = await params;
-    const raw = await client.fetch<Raw | null>(detailQuery, { id: decodeURIComponent(id) });
-    if (!raw?._id) notFound();
+    const documentId = decodeURIComponent(id);
+    const result = await client.fetch<unknown>(detailQuery, { id: documentId });
+    if (result === null) notFound();
+    const issue = detailReadIssue("crew", documentId, result);
+    if (issue) return <DetailReadFailure title="크루 수정" fields={issue.fields} />;
+    const raw = result as Raw & { _id: string };
 
     const writeReady = isWriteConfigured();
     const isTrashed = raw.trashed === true;
 
     const data: CrewFormData = {
         _id: raw._id,
+        _rev: raw._rev,
         // 기존 데이터에 이 필드가 없을 수 있다 — 그 경우 "공개"로 취급
         isActive: raw.isActive ?? true,
         name: raw.name ?? "",
@@ -52,11 +62,10 @@ export default async function EditCrewPage({ params }: { params: Promise<{ id: s
         role: raw.role ?? "",
         slug: raw.slug ?? "",
         imageUrl: raw.imageUrl ?? null,
-        links: (raw.links ?? []).map((l, i) => ({
-            key: l._key ?? `legacy-${i}`,
-            url: l.url ?? "",
-            iconRef: l.iconRef ?? "",
-        })),
+        links: (raw.links ?? []).map((l, i) => {
+            const sourceKey = typeof l._key === "string" && l._key ? l._key : undefined;
+            return { key: sourceKey ? `stored-${i}` : `legacy-${i}`, sourceKey, url: l.url ?? "", iconRef: l.iconRef ?? "" };
+        }),
         sections: raw.sections ?? [],
     };
 

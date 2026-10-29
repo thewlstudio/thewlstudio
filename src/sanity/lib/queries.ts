@@ -1,7 +1,14 @@
 import { groq } from 'next-sanity';
+import { CONTENT_ORDER } from '@/lib/content-order';
+
+export const PUBLIC_WORK_FILTER = '_type == "work" && !(trashed == true) && defined(slug.current)';
+export const PUBLIC_CREW_FILTER = '_type == "crew" && isActive == true && !(trashed == true) && defined(slug.current)';
+
+export const workSitemapQuery = groq`*[${PUBLIC_WORK_FILTER}]{ "slug": slug.current, _updatedAt }`;
+export const crewSitemapQuery = groq`*[${PUBLIC_CREW_FILTER}]{ "slug": slug.current, _updatedAt }`;
 
 export const worksQuery = groq`
-  *[_type == "work" && !(trashed == true)] | order(releaseDate desc) {
+  *[${PUBLIC_WORK_FILTER}] | order(releaseDate desc) {
     title,
     artist,
     "slug": slug.current,
@@ -12,7 +19,7 @@ export const worksQuery = groq`
 `;
 
 export const crewsQuery = groq`
-  *[_type == "crew" && isActive == true && !(trashed == true)] | order(order asc) {
+  *[${PUBLIC_CREW_FILTER}] | order(${CONTENT_ORDER}) {
     name,
     koName,
     role,
@@ -26,7 +33,7 @@ export const crewsQuery = groq`
 `;
 
 export const instructorsQuery = groq`
-  *[_type == "instructor" && !(isActive == false) && !(trashed == true)] | order(order asc) {
+  *[_type == "instructor" && !(isActive == false) && !(trashed == true)] | order(${CONTENT_ORDER}) {
     _id,
     id,
     category,
@@ -48,7 +55,7 @@ export const instructorsQuery = groq`
 `;
 
 export const crewBySlugQuery = groq`
-  *[_type == "crew" && slug.current == $slug && !(trashed == true)][0] {
+  *[${PUBLIC_CREW_FILTER} && slug.current == $slug][0] {
     name,
     koName,
     role,
@@ -62,7 +69,7 @@ export const crewBySlugQuery = groq`
 `;
 
 export const workBySlugQuery = groq`
-  *[_type == "work" && !(trashed == true) && slug.current == $slug][0] {
+  *[${PUBLIC_WORK_FILTER} && slug.current == $slug][0] {
     title,
     artist,
     releaseDate,

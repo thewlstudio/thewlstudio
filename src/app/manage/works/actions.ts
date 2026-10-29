@@ -3,10 +3,13 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/manage-auth";
-import { uploadImageIfPresent } from "@/lib/manage-upload";
+import { uploadImageIfPresent, validateManageUploadForm } from "@/lib/manage-upload";
 import { sanitizeBlocks } from "@/lib/work-blocks-server";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { labelsEulReul } from "@/lib/josa";
+import { managedSlug, managedWriteError, requireManagedDocument } from "@/lib/manage-target";
+import { externalHttpUrl } from "@/lib/content-urls";
+import { publicDetailPath } from "@/lib/public-routes";
 
 export type FieldError = { id: string; label: string };
 export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
@@ -17,17 +20,10 @@ const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 function refresh(slug?: string) {
     updateTag("work");
     revalidatePath("/works");
-    if (slug) revalidatePath(`/works/${slug}`);
+    const detail = publicDetailPath("works", slug);
+    if (detail) revalidatePath(detail);
+    revalidatePath("/sitemap.xml");
     revalidatePath("/manage/works");
-}
-
-function isHttpUrl(value: string): boolean {
-    try {
-        const u = new URL(value);
-        return u.protocol === "http:" || u.protocol === "https:";
-    } catch {
-        return false;
-    }
 }
 
 type Parsed = {
@@ -62,7 +58,7 @@ function parseBasic(formData: FormData): Parsed | { error: string; fields: Field
         ["youtubeUrl", "유튜브 주소", youtubeUrl],
         ["instagramUrl", "인스타그램 주소", instagramUrl],
     ] as const) {
-        if (value && !isHttpUrl(value)) {
+        if (value && !externalHttpUrl(value)) {
             return { error: `${label}가 올바르지 않아요. 브라우저 주소창의 주소를 복사해 붙여넣어 주세요.`, fields: [{ id, label }] };
         }
     }
@@ -76,12 +72,14 @@ function parseBasic(formData: FormData): Parsed | { error: string; fields: Field
 export async function saveWork(_prev: SaveResult | null, formData: FormData): Promise<SaveResult> {
     try {
         await requireAuth();
+        validateManageUploadForm(formData);
         const client = getWriteClient();
         const documentId = String(formData.get("documentId") ?? "").trim();
         if (!documentId) return { ok: false, error: "수정할 작품을 찾지 못했어요. 목록에서 다시 골라 주세요." };
 
         const parsed = parseBasic(formData);
         if ("error" in parsed) return { ok: false, error: parsed.error, fields: parsed.fields };
+        const current = await requireManagedDocument(client, documentId, "work");
 
         const patch: Record<string, unknown> = { ...parsed.fields };
         const unset: string[] = [];
@@ -93,36 +91,36 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
         // 상세 내용 블록: 폼이 blocksJson을 보낸 경우에만 배열 전체를 교체한다.
         // (보내지 않으면 patch에 넣지 않아 기존 블록이 그대로 보존된다)
         const blocksJson = formData.get("blocksJson");
-        if (typeof blocksJson === "string" && blocksJson) {
+        if (formData.has("blocksJson")) {
             let payload: unknown;
             try {
+                if (typeof blocksJson !== "string" || !blocksJson) throw new Error();
                 payload = JSON.parse(blocksJson);
             } catch {
-                return { ok: false, error: "상세 내용 정보를 읽지 못했어요. 화면을 새로고침한 뒤 다시 시도해 주세요." };
+                return { ok: false, error: "상세 내용 정보를 읽지 못해 저장하지 않았어요. 입력 내용을 따로 보관한 뒤 새로고침해 주세요.", fields: [{ id: "blocks", label: "상세 페이지 내용" }] };
             }
-            const existing = await client.fetch<Record<string, unknown>[] | null>(`*[_id == $id][0].contentBlocks`, { id: documentId });
+            const existing = Array.isArray(current.contentBlocks) ? current.contentBlocks : [];
             const cleaned = await sanitizeBlocks(payload, existing ?? [], (clientKey) =>
-                uploadImageIfPresent(client, formData.get(`blockImage_${clientKey}`) as File | null),
+                uploadImageIfPresent(client, formData.get(`blockImage_${clientKey}`)),
             );
             if ("error" in cleaned) {
                 return { ok: false, error: cleaned.error, fields: [{ id: "blocks", label: "상세 페이지 내용" }] };
             }
             patch.contentBlocks = cleaned.blocks;
         }
-        const uploaded = await uploadImageIfPresent(client, formData.get("imageFile") as File | null);
+        const uploaded = await uploadImageIfPresent(client, formData.get("imageFile"));
         if (uploaded) patch.coverImage = uploaded;
 
         // 이 화면이 다루지 않는 필드는 patch에 넣지 않아 그대로 보존된다
-        let p = client.patch(documentId).set(patch);
+        let p = client.patch(documentId).ifRevisionId(current._rev).set(patch);
         if (unset.length > 0) p = p.unset(unset);
         await p.commit();
 
-        const slug = await client.fetch<string | null>(`*[_id == $id][0].slug.current`, { id: documentId });
-        refresh(slug ?? undefined);
+        refresh(managedSlug(current));
         return { ok: true };
     } catch (err) {
         console.error("[saveWork]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
+        return { ok: false, error: managedWriteError(err) };
     }
 }
 
@@ -130,6 +128,7 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
     let documentId: string;
     try {
         await requireAuth();
+        validateManageUploadForm(formData);
         const client = getWriteClient();
 
         const parsed = parseBasic(formData);
@@ -169,7 +168,7 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
         refresh(slug);
     } catch (err) {
         console.error("[createWork]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
+        return { ok: false, error: managedWriteError(err) };
     }
     redirect(`/manage/works/${documentId}?created=1`);
 }
@@ -179,13 +178,13 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         await requireAuth();
         if (!documentId) return { ok: false, error: "작품을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const client = getWriteClient();
-        await client.patch(documentId).set({ trashed }).commit();
-        const slug = await client.fetch<string | null>(`*[_id == $id][0].slug.current`, { id: documentId });
-        refresh(slug ?? undefined);
+        const current = await requireManagedDocument(client, documentId, "work");
+        await client.patch(documentId).ifRevisionId(current._rev).set({ trashed }).commit();
+        refresh(managedSlug(current));
         return { ok: true };
     } catch (err) {
         console.error("[setTrashed:work]", err);
-        return { ok: false, error: err instanceof Error ? err.message : "처리하지 못했어요. 잠시 뒤 다시 시도해 주세요. 계속되면 개발자에게 알려 주세요." };
+        return { ok: false, error: managedWriteError(err) };
     }
 }
 

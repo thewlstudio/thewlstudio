@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sanitizeSections } from "./crew-sections-server";
-import { toPayload, toState } from "./crew-sections";
+import { isKnownType, toPayload, toState } from "./crew-sections";
 
 type Raw = Record<string, unknown>;
 
@@ -16,6 +16,11 @@ const canon = (v: unknown): unknown =>
     Array.isArray(v) ? v.map(canon) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon((v as Raw)[k])])) : v;
 
 describe("sanitizeSections — 크루 프로필 섹션 저장 검증", () => {
+    it.each(["__proto__", "constructor", "toString", "hasOwnProperty"])("상속된 이름 %s를 알려진 섹션으로 오인하지 않고 보존한다", (type) => {
+        expect(isKnownType(type)).toBe(false);
+        const original = { _key: "custom", _type: type, items: ["보존할 원본"] };
+        expect(sanitizeSections(toPayload(toState([original])), [original])).toEqual({ sections: [original] });
+    });
     it("무변경 저장은 무손실이다 (예전 형식 섹션 포함)", () => {
         const payload = JSON.parse(JSON.stringify(toPayload(toState(existing))));
         const r = sanitizeSections(payload, existing);

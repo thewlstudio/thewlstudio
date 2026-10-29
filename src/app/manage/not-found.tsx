@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./_components/GuardedLink";
 
 /** 관리 화면에서 없는 항목(삭제됐거나 잘못된 주소)을 열었을 때의 안내 */
 export default function ManageNotFound() {

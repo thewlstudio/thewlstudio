@@ -18,7 +18,7 @@ export const EDITABLE_TYPES = Object.keys(BLOCK_META) as EditableType[];
 /** 새로 추가할 수 있는 종류 — 오디오는 파일 업로드가 필요해 /admin에서만 새로 만든다 */
 export const ADDABLE_TYPES = EDITABLE_TYPES.filter((t) => t !== "audioBlock");
 export function isEditableType(t: unknown): t is EditableType {
-    return typeof t === "string" && t in BLOCK_META;
+    return typeof t === "string" && Object.hasOwn(BLOCK_META, t);
 }
 
 /** 보존 블록의 화면 표시용 이름 (3차에서 편집 지원 예정) */

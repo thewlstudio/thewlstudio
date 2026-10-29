@@ -1,23 +1,25 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { saveCrew, createCrew, type SaveResult, type FieldError } from "../actions";
+import { useRef, useState } from "react";
+import Link from "../../_components/GuardedLink";
+import { saveCrew, createCrew } from "../actions";
 import { Section, Field, ErrorSummary, inputClass, FieldErrorsProvider, InlineError } from "../../_components/FormParts";
 import { useGuardedForm } from "../../_components/useGuardedForm";
+import { useManagedFormAction, type ManagedFormSession } from "../../_components/useManagedFormAction";
 import SaveStatus from "../../_components/SaveStatus";
-import { prepareImageFile, replaceInputFile } from "../../_components/imageUpload";
+import { useImageInput } from "../../_components/useImageInput";
 import { CREW_ICON_PRESETS } from "@/lib/crew-icons";
 import { toState } from "@/lib/crew-sections";
 import CrewSectionsEditor from "./CrewSectionsEditor";
 import { Eye } from "lucide-react";
 import CropButton from "../../_components/ImageCropper";
+import { publicDetailPath } from "@/lib/public-routes";
 
-export type CrewLinkRow = { key: string; url: string; iconRef: string };
+export type CrewLinkRow = { key: string; sourceKey?: string; url: string; iconRef: string };
 
 export type CrewFormData = {
     _id: string;
+    _rev?: string;
     isActive: boolean;
     name: string;
     koName: string;
@@ -30,21 +32,20 @@ export type CrewFormData = {
 };
 
 const MAX_LINKS = 10;
-function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "create" | "edit"; onDiscard: () => void }) {
+function CrewFormInner({ data, mode, onDiscard, session }: { data: CrewFormData; mode: "create" | "edit"; onDiscard: () => void; session: ManagedFormSession }) {
     const isCreate = mode === "create";
-    const router = useRouter();
-    const [state, formAction, isPending] = useActionState<SaveResult | null, FormData>(isCreate ? createCrew : saveCrew, null);
+    const publicPath = publicDetailPath("crew", data.slug);
+    const { state, formAction, isPending } = session;
 
     const [isActive, setIsActive] = useState(data.isActive);
     const [rows, setRows] = useState<CrewLinkRow[]>(data.links);
     const [preview, setPreview] = useState({ name: data.name, koName: data.koName, role: data.role });
-    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-    const [photoError, setPhotoError] = useState<string | null>(null);
+    const { preview: photoPreview, error: photoError, processing, onChange: onPhotoChange } = useImageInput();
     const keySeq = useRef(0);
     const shownPhoto = photoPreview ?? data.imageUrl;
 
     // 미저장 변경사항 추적·탭 닫기 경고·저장 성공 처리·오류 요약 포커스는 공통 훅이 담당한다
-    const { isDirty, markDirty, summaryRef, handleListClick: handleListClick, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state);
+    const { isDirty, markDirty, summaryRef, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state, formAction, isPending);
 
     const updateRow = (i: number, patch: Partial<CrewLinkRow>) => {
         setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
@@ -54,6 +55,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
     return (
         <FieldErrorsProvider value={clientErrors}>
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
+            <fieldset disabled={isPending} aria-busy={isPending} className="contents">
             <input type="hidden" name="documentId" value={data._id} />
             <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
             <input type="hidden" name="linkCount" value={rows.length} />
@@ -134,7 +136,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 )}
             </Section>
 
-            <Section tour="form-photo" step={2} title="프로필 사진" help="목록과 상세 페이지에 나오는 대표 사진이에요. **사진 자르기**로 비율을 맞출 수 있어요. 3MB가 넘으면 자동으로 줄여서 올라가요.">
+            <Section tour="form-photo" step={2} title="프로필 사진" help="목록과 상세 페이지에 나오는 대표 사진이에요. **사진 자르기**로 비율을 맞출 수 있어요. 큰 사진은 자동으로 줄이며, 준비된 사진은 한 장당 2.8MB 이하여야 해요.">
                 <div className="flex items-start gap-4">
                     <div className="relative w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
                         {shownPhoto ? (
@@ -155,30 +157,13 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                             accept="image/*"
                             required={isCreate}
                             className="sr-only"
-                            onChange={async (e) => {
-                                const input = e.target;
-                                const picked = input.files?.[0];
-                                if (!picked) {
-                                    setPhotoPreview(null);
-                                    setPhotoError(null);
-                                    return;
-                                }
-                                const prepared = await prepareImageFile(picked);
-                                if ("error" in prepared) {
-                                    setPhotoError(prepared.error);
-                                    input.value = "";
-                                    setPhotoPreview(null);
-                                    return;
-                                }
-                                replaceInputFile(input, prepared.file);
-                                setPhotoError(null);
-                                setPhotoPreview(URL.createObjectURL(prepared.file));
-                            }}
+                            aria-busy={processing}
+                            onChange={onPhotoChange}
                         />
                         <span className="inline-block ml-2 align-top">
                             <CropButton inputId={"imageFile"} currentUrl={data.imageUrl} defaultRatio={3 / 4} />
                         </span>
-                        {photoError ? (
+                        {processing ? <p role="status" className="text-sm text-neutral-600 mt-2">사진을 준비하는 중…</p> : photoError ? (
                             <p role="alert" className="text-sm font-semibold text-red-600 mt-2">{photoError}</p>
                         ) : (
                             <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
@@ -193,10 +178,12 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
             <Section step={3} title="소셜 링크" help="프로필에 아이콘으로 나와요. 주소창의 주소를 **통째로 복사해서 붙여넣으면** 돼요. 필요 없는 줄은 이 링크 지우기를 누르세요." hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워 둬도 돼요.">
                 {rows.map((row, i) => {
                     const known = CREW_ICON_PRESETS.some((p) => p.ref === row.iconRef);
+                    // 새 행의 화면 키와 원본 키를 구분한다. sourceKey 없는 이전 props는 기존 규칙을 따른다.
+                    const sourceKey = row.sourceKey ?? (!row.key.startsWith("new-") && !row.key.startsWith("legacy-") ? row.key : undefined);
                     return (
                         <div key={row.key} className="rounded-xl border border-neutral-200 p-4 space-y-3">
-                            {!row.key.startsWith("new-") && !row.key.startsWith("legacy-") && (
-                                <input type="hidden" name={`linkKey_${i}`} value={row.key} />
+                            {sourceKey && (
+                                <input type="hidden" name={`linkKey_${i}`} value={sourceKey} />
                             )}
                             <div className="flex items-center justify-between gap-3">
                                 <p className="text-sm font-bold">링크 {i + 1}</p>
@@ -268,9 +255,9 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                     hint="크루 상세 페이지에 나오는 소개·경력 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요."
                 >
                     <div className="flex justify-end -mt-2">
-                        <a href={`/crew/${data.slug}`} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                        {publicPath ? <a href={publicPath} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-black">
                             진짜 화면 보기 ↗ (저장한 내용 기준)
-                        </a>
+                        </a> : <p className="py-2 text-sm text-neutral-600">공개 주소를 확인하지 못했어요. /admin에서 주소를 확인해 주세요.</p>}
                     </div>
                     <CrewSectionsEditor initial={toState(data.sections)} onDirty={markDirty} failedState={state && !state.ok ? state : null} />
                 </Section>
@@ -280,7 +267,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
-                    <Link href="/manage/crew" onClick={handleListClick} className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                    <Link href="/manage/crew" className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
                     </Link>
                     {isDirty && (
@@ -304,6 +291,7 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
                 </div>
                 <SaveStatus state={state} />
             </div>
+            </fieldset>
         </form>
         </FieldErrorsProvider>
     );
@@ -311,6 +299,6 @@ function CrewFormInner({ data, mode, onDiscard }: { data: CrewFormData; mode: "c
 
 /** "변경 버리기"를 누르면 key를 바꿔 폼 전체를 최신 data로 다시 마운트한다 */
 export default function CrewForm(props: { data: CrewFormData; mode?: "create" | "edit" }) {
-    const [resetKey, setResetKey] = useState(0);
-    return <CrewFormInner key={resetKey} data={props.data} mode={props.mode ?? "edit"} onDiscard={() => setResetKey((k) => k + 1)} />;
+    const session = useManagedFormAction(props.mode === "create" ? createCrew : saveCrew, props.data._rev);
+    return <CrewFormInner key={session.formKey} data={props.data} mode={props.mode ?? "edit"} onDiscard={session.onDiscard} session={session} />;
 }

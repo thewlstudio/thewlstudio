@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "./GuardedLink";
 
 /** 목록이 비어 있을 때의 안내. 만들 수 없는 상태(쓰기 설정 전)에는 버튼 대신 설명만 보여 준다. */
 export default function EmptyState({

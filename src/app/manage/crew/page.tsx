@@ -1,8 +1,8 @@
-import Link from "next/link";
-import Image from "next/image";
+import Link from "../_components/GuardedLink";
+import Image from "@/components/CmsImage";
 import { redirect } from "next/navigation";
+import { CONTENT_ORDER } from "@/lib/content-order";
 import { client } from "@/sanity/lib/client";
-import { urlFor } from "@/sanity/lib/image";
 import { isAuthenticated } from "@/lib/manage-auth";
 import { isWriteConfigured } from "@/sanity/lib/writeClient";
 import ManageNav from "../ManageNav";
@@ -10,17 +10,19 @@ import ReorderButtons from "../_components/ReorderButtons";
 import ManagedList, { DragHandle } from "../_components/ManagedList";
 import RestoreButton from "../_components/RestoreButton";
 import { moveCrewOrder, restoreCrew, reorderCrew } from "./actions";
-import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { listReadIssue } from "@/lib/manage-list-read";
+import { manageThumbnail } from "@/lib/manage-thumbnail";
+import ListReadFailure from "../_components/ListReadFailure";
 import { formatUpdated, formatAbsolute } from "@/lib/format-updated";
 import EmptyState from "../_components/EmptyState";
 
 export const metadata = { title: "크루 관리" };
 export const dynamic = "force-dynamic";
 
-type Row = { _id: string; _updatedAt?: string; name?: string; koName?: string; role?: string; image?: SanityImageSource; isActive?: boolean };
+type Row = { _id: string; _updatedAt?: string; name?: string; koName?: string; role?: string; image?: unknown; isActive?: boolean };
 
-const listQuery = `*[_type == "crew" && !(trashed == true)] | order(order asc) { _id, _updatedAt, name, koName, role, image, isActive }`;
-const trashedQuery = `*[_type == "crew" && trashed == true] | order(_updatedAt desc) { _id, _updatedAt, name, koName, role, image }`;
+const listQuery = `*[_type == "crew" && !(trashed == true)] | order(${CONTENT_ORDER}) { _id, _type, _updatedAt, name, koName, role, image, isActive, trashed, order }`;
+const trashedQuery = `*[_type == "crew" && trashed == true] | order(_updatedAt desc) { _id, _type, _updatedAt, name, koName, role, image, isActive, trashed, order }`;
 
 export default async function CrewListPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
     if (!(await isAuthenticated())) redirect("/manage/login");
@@ -29,10 +31,14 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
     const isTrashView = view === "trash";
     const writeReady = isWriteConfigured();
 
-    const [members, trashedCount] = await Promise.all([
-        client.fetch<Row[]>(isTrashView ? trashedQuery : listQuery),
-        isTrashView ? Promise.resolve(0) : client.fetch<number>(`count(*[_type == "crew" && trashed == true])`),
+    const [result, countResult] = await Promise.all([
+        client.fetch<unknown>(isTrashView ? trashedQuery : listQuery),
+        isTrashView ? Promise.resolve(0) : client.fetch<unknown>(`count(*[_type == "crew" && trashed == true])`),
     ]);
+    const issue = listReadIssue("crew", result, countResult, isTrashView);
+    if (issue) return <ListReadFailure title={isTrashView ? "크루 휴지통" : "크루 관리"} fields={issue.fields} />;
+    const members = result as Row[];
+    const trashedCount = countResult as number;
 
     return (
         <main id="main-content" className="max-w-2xl mx-auto px-5 py-10 md:py-16">
@@ -90,6 +96,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                 statusFilter
                 items={members.map((m, index) => {
                     const hidden = m.isActive === false;
+                    const thumbnail = manageThumbnail(m.image);
                     return {
                         id: m._id,
                         search: [m.koName, m.name, m.role].filter(Boolean).join(" "),
@@ -104,7 +111,7 @@ export default async function CrewListPage({ searchParams }: { searchParams: Pro
                                 )}
                                 <Link href={`/manage/crew/${encodeURIComponent(m._id)}`} className="flex items-center gap-4 flex-1 min-w-0 p-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0">
-                                        {m.image && <Image src={urlFor(m.image).width(112).height(112).fit("crop").url()} alt="" fill sizes="56px" className="object-cover" />}
+                                        {thumbnail && <Image src={thumbnail} alt="" fill sizes="56px" className="object-cover" />}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">

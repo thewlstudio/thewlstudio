@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "./_components/GuardedLink";
 import { useSyncExternalStore } from "react";
 
 const KEY = "wls_manage_guide_dismissed";

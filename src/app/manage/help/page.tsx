@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "../_components/GuardedLink";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/manage-auth";
 import ManageNav from "../ManageNav";
@@ -46,7 +46,7 @@ const GROUPS: Group[] = [
         items: [
             {
                 q: "사진을 바꾸고 싶어요",
-                a: "수정 화면의 사진 칸에서 &lsquo;사진 고르기&rsquo;를 누르세요. 파일을 고르면 미리보기가 바로 바뀌고, &lsquo;저장하기&rsquo;를 눌러야 홈페이지에 반영돼요. 사진이 크면 알아서 줄여서 올려요. (3MB를 넘는 사진은 줄여서 다시 골라 주세요.)",
+                a: "수정 화면의 사진 칸에서 &lsquo;사진 고르기&rsquo;를 누르세요. 파일을 고르면 미리보기가 바로 바뀌고, &lsquo;저장하기&rsquo;를 눌러야 홈페이지에 반영돼요. 큰 사진은 자동으로 줄이며, 준비된 사진은 한 장당 2.8MB 이하여야 해요. 여러 장을 한 번에 보내기 어려우면 나눠 저장해 주세요.",
             },
             {
                 q: "새 항목(강사·크루·작업물·공간)을 추가하려면요?",

@@ -1,4 +1,5 @@
 import "server-only";
+import { publicDetailPath } from "./public-routes";
 import { dataset } from "@/sanity/env";
 import type { getWriteClient } from "@/sanity/lib/writeClient";
 
@@ -44,18 +45,18 @@ export const HISTORY_AREAS: Record<HistoryAreaKey, HistoryArea> = {
         title: "크루",
         type: "crew",
         tag: "crew",
-        paths: ["/crew", "/manage/crew"],
+        paths: ["/crew", "/manage/crew", "/sitemap.xml"],
         back: (id) => `/manage/crew/${id}`,
-        slugPath: (slug) => `/crew/${slug}`,
+        slugPath: (slug) => publicDetailPath("crew", slug) ?? "/crew",
         labels: { name: "영문 이름", koName: "한글 이름", role: "직책", image: "사진", links: "소셜 링크", sections: "프로필 섹션", isActive: "공개 여부", trashed: "휴지통", order: "순서", slug: "주소" },
     },
     works: {
         title: "작업물",
         type: "work",
         tag: "work",
-        paths: ["/works", "/manage/works"],
+        paths: ["/works", "/manage/works", "/sitemap.xml"],
         back: (id) => `/manage/works/${id}`,
-        slugPath: (slug) => `/works/${slug}`,
+        slugPath: (slug) => publicDetailPath("works", slug) ?? "/works",
         labels: { title: "제목", artist: "아티스트", releaseDate: "발매일", coverImage: "커버 이미지", youtubeUrl: "유튜브 주소", instagramId: "인스타그램 아이디", instagramUrl: "인스타그램 주소", contentBlocks: "상세 페이지 내용", trashed: "휴지통", slug: "주소" },
     },
     studio: {
@@ -93,42 +94,74 @@ export const HISTORY_AREAS: Record<HistoryAreaKey, HistoryArea> = {
 };
 
 export function isHistoryArea(v: string): v is HistoryAreaKey {
-    return v in HISTORY_AREAS;
+    return typeof v === "string" && Object.hasOwn(HISTORY_AREAS, v);
 }
 
-export type Revision = { timestamp: string; id: string };
+export { isManagedDocumentId as isHistoryDocumentId } from "./manage-document-id";
+
+export type Revision = { timestamp: string; id: string; created?: boolean };
 type Doc = Record<string, unknown>;
+const isObj = (v: unknown): v is Doc => !!v && typeof v === "object" && !Array.isArray(v);
+
+export function isHistoryDocument(doc: unknown, id: string, type: string): doc is Doc & { _id: string; _type: string; _rev: string } {
+    return isObj(doc) && doc._id === id && doc._type === type && typeof doc._rev === "string" && doc._rev.trim().length > 0;
+}
 
 /** 이 문서의 저장 기록(최신순). History API는 줄마다 JSON인 텍스트로 돌려준다. */
 export async function listRevisions(client: Client, documentId: string, limit = 25): Promise<Revision[]> {
-    const text = await client.request<string>({
+    const text = await client.request<unknown>({
         uri: `/data/history/${dataset}/transactions/${encodeURIComponent(documentId)}`,
         query: { limit: String(limit), excludeContent: "true", reverse: "true" },
         json: false,
     } as never);
-    return String(text)
+    if (typeof text !== "string") throw new Error("저장 기록의 응답 형식을 확인하지 못했어요.");
+    const ids = new Set<string>(); const times = new Set<string>();
+    return text
         .split("\n")
         .map((l) => l.trim())
         .filter(Boolean)
-        .map((l) => JSON.parse(l) as { id: string; timestamp: string })
-        .map((r) => ({ id: r.id, timestamp: r.timestamp }));
+        .map((l) => {
+            const r: unknown = JSON.parse(l);
+            if (!isObj(r) || typeof r.id !== "string" || !r.id.trim() || ids.has(r.id) || typeof r.timestamp !== "string" || !Number.isFinite(Date.parse(r.timestamp)) || times.has(r.timestamp)) {
+                throw new Error("저장 기록의 응답 형식을 확인하지 못했어요.");
+            }
+            ids.add(r.id); times.add(r.timestamp);
+            // 보관 기간·조회 한도의 마지막 항목을 최초 생성으로 추측하지 않는다.
+            const created = Array.isArray(r.mutations) && r.mutations.some((m) => isObj(m) && isObj(m.create) && m.create._id === documentId);
+            return { id: r.id, timestamp: r.timestamp, created };
+        });
 }
 
 /** 특정 저장 시점의 문서 내용. 그 시점에 문서가 없으면 null */
 export async function docAt(client: Client, documentId: string, time: string): Promise<Doc | null> {
-    const res = await client.request<{ documents?: Doc[] }>({
+    const res = await client.request<unknown>({
         uri: `/data/history/${dataset}/documents/${encodeURIComponent(documentId)}`,
         query: { time },
     });
-    return res.documents?.[0] ?? null;
+    if (!isObj(res) || !Array.isArray(res.documents) || res.documents.length > 1 || res.documents.some((doc) => doc !== null && !isObj(doc))) throw new Error("저장 내용의 응답 형식을 확인하지 못했어요.");
+    return res.documents[0] ?? null;
 }
 
 const SYSTEM = new Set(["_id", "_type", "_rev", "_createdAt", "_updatedAt"]);
 
+export function buildHistoryRows(revisions: Revision[], snapshots: (Doc | null)[], limit = 25) {
+    return revisions.slice(0, limit).map((r, i) => {
+        const doc = snapshots[i] ?? null;
+        const prev = snapshots[i + 1] ?? null;
+        const comparison = !doc ? "unavailable" : r.created ? "created" : prev ? "available" : i + 1 < revisions.length ? "unavailable" : "boundary";
+        return { ...r, doc, prev, comparison, keys: comparison === "available" ? changedKeys(prev, doc) : [] };
+    });
+}
+
 /** 두 문서에서 값이 달라진 항목 이름들 (시스템 필드 제외) */
 export function changedKeys(a: Doc | null, b: Doc | null): string[] {
     const keys = new Set<string>([...Object.keys(a ?? {}), ...Object.keys(b ?? {})]);
-    return [...keys].filter((k) => !SYSTEM.has(k) && JSON.stringify(a?.[k] ?? null) !== JSON.stringify(b?.[k] ?? null));
+    return [...keys].filter((k) => !SYSTEM.has(k) && JSON.stringify(historyValue(a, k) ?? null) !== JSON.stringify(historyValue(b, k) ?? null));
+}
+
+/** 존재하지 않는 constructor 등의 필드가 객체 기본 속성으로 표시되지 않게 한다. */
+export function historyValue(doc: Doc | null | undefined, key: string): unknown {
+    return doc && Object.hasOwn(doc, key) ? doc[key] : undefined;
 }
 
 /** 값을 한 줄로 요약 (이력 화면 표시용) */
@@ -144,11 +177,19 @@ export function summarizeValue(v: unknown): string {
 
 /** 되돌릴 때 쓸 문서: 시스템 필드를 정리하고, 휴지통·순서는 지금 값을 유지한다 */
 export function buildRestoredDoc(old: Doc, current: Doc | null): Doc {
-    const next: Doc = {};
-    for (const [k, v] of Object.entries(old)) if (k !== "_rev" && k !== "_updatedAt") next[k] = v;
+    const next: Doc = Object.fromEntries(Object.entries(old).filter(([k]) => k !== "_rev" && k !== "_updatedAt"));
     for (const keep of ["trashed", "order"]) {
-        if (current && keep in current) next[keep] = current[keep];
+        if (current && Object.hasOwn(current, keep)) next[keep] = current[keep];
         else delete next[keep];
     }
     return next;
+}
+
+/** 전체 교체 대신 조건부 patch로 내용을 복원한다. 시스템 필드는 현재 값을 유지한다. */
+export function buildRestorePatch(old: Doc, current: Doc) {
+    const restored = buildRestoredDoc(old, current);
+    return {
+        set: Object.fromEntries(Object.entries(restored).filter(([key]) => !SYSTEM.has(key))),
+        unset: Object.keys(current).filter((key) => !SYSTEM.has(key) && !Object.hasOwn(restored, key)),
+    };
 }
