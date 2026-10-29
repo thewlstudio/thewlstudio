@@ -1,10 +1,11 @@
+import { DEFAULT_SANITY_PROJECT_ID } from './src/config/site';
 import { defineConfig } from 'sanity';
 import { structureTool } from 'sanity/structure';
 import { presentationTool } from 'sanity/presentation';
 import { schema } from './src/sanity/schemaTypes';
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'antidcuz';
+const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || DEFAULT_SANITY_PROJECT_ID;
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
 
 export default defineConfig({

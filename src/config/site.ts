@@ -21,6 +21,12 @@ export const SITE_DESCRIPTION = "서울 광진구 중곡동의 음악 스튜디�
 /** 환경변수가 없을 때 쓰는 기본 주소(개발·미리보기 배포용) */
 export const DEFAULT_SITE_URL = "https://whitelightstudio.vercel.app";
 
+/**
+ * 환경변수가 없을 때 쓰는 Sanity 프로젝트 ID(이 고객의 프로젝트).
+ * 새 고객 설치에서는 반드시 NEXT_PUBLIC_SANITY_PROJECT_ID를 설정하고(`npm run provision -- check`가 확인), 이 값도 그 고객 것으로 바꾼다.
+ */
+export const DEFAULT_SANITY_PROJECT_ID = "antidcuz";
+
 /** 사이트 주소. 끝의 `/`는 제거한다. */
 export function getSiteUrl(): string {
     return (process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_SITE_URL).replace(/\/+$/, "");

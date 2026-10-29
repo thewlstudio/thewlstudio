@@ -42,6 +42,9 @@
 
 ## 2. 개발자: 구조
 
+### 새 고객 설치
+[설치 가이드](docs/INSTALL_GUIDE.md) · [인계 체크리스트](docs/HANDOVER_CHECKLIST.md) · [판매 준비 설계서](docs/SALES_READINESS_DESIGN.md). 환경변수 생성·점검은 `npm run provision -- init|check`.
+
 ### 환경변수 (Vercel)
 `MANAGE_PASSWORD`, `MANAGE_SECRET`(세션 서명), `SANITY_API_WRITE_TOKEN`(Editor 권한), `NEXT_PUBLIC_SITE_URL`, 그리고 Sanity 공개 설정(`NEXT_PUBLIC_SANITY_*`). 자세한 설명은 `.env.example`.
 로컬에는 쓰기 토큰을 두지 않는 것이 기본이라 로컬 `/manage`는 읽기 전용(저장 버튼은 보이지만 쓰기 불가)입니다.
