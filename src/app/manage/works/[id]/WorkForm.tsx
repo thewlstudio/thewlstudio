@@ -1,6 +1,7 @@
 "use client";
 
-import { VisibilityBanner, VisibilityField } from "../../_components/VisibilityField";
+import { previewHref } from "@/lib/preview-path";
+import { VisibilityBanner, VisibilityField, saveNote } from "../../_components/VisibilityField";
 import { useState } from "react";
 import Link from "../../_components/GuardedLink";
 import { saveWork, createWork } from "../actions";
@@ -158,8 +159,8 @@ function WorkFormInner({ data, mode, onDiscard, session }: { data: WorkFormData;
             {!isCreate && (
                 <Section tour="works-blocks" step={4} title="상세 페이지 내용" help="설명·크레딧·트랙리스트·인사말·이미지·유튜브를 **블록**으로 쌓아요. 블록 추가 → 채우기 → 저장 순서예요. 오디오 파일을 새로 올리는 것은 /admin에서만 할 수 있어요." hint="작업물 상세 페이지에 나오는 설명·크레딧·트랙리스트·인사말 블록이에요. 순서는 ▲▼ 버튼이나 끌어서 바꿀 수 있어요.">
                     <div className="flex justify-end -mt-2">
-                        {publicPath ? <a href={publicPath} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
-                            진짜 화면 보기 ↗ (저장한 내용 기준)
+                        {publicPath ? <a href={previewHref(publicPath)} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                            홈페이지에서 미리보기 ↗ (저장한 내용 기준)
                         </a> : <p className="py-2 text-sm text-neutral-600">공개 주소를 확인하지 못했어요. /admin에서 주소를 확인해 주세요.</p>}
                     </div>
                     <WorkBlocksEditor initial={toState(data.blocks)} onDirty={markDirty} failedState={state && !state.ok ? state : null} />
@@ -168,7 +169,7 @@ function WorkFormInner({ data, mode, onDiscard, session }: { data: WorkFormData;
 
             <div data-tour="form-save-bar" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
-                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
+                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{saveNote(isCreate, isActive)}</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link href="/manage/works" className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
@@ -192,7 +193,7 @@ function WorkFormInner({ data, mode, onDiscard, session }: { data: WorkFormData;
                         {isPending ? (isCreate ? "추가하는 중…" : "저장하는 중…") : isCreate ? "추가하기" : "저장하기"}
                     </button>
                 </div>
-                <SaveStatus state={state} />
+                <SaveStatus state={state} hidden={!isActive} />
             </div>
             </fieldset>
         </form>

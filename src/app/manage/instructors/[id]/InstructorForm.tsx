@@ -1,6 +1,7 @@
 "use client";
 
-import { VisibilityBanner, VisibilityField } from "../../_components/VisibilityField";
+import { previewHref } from "@/lib/preview-path";
+import { VisibilityBanner, VisibilityField, saveNote } from "../../_components/VisibilityField";
 import { useState, useMemo, useRef } from "react";
 import Link from "../../_components/GuardedLink";
 import { saveInstructor, createInstructor } from "../actions";
@@ -288,14 +289,14 @@ function LivePreview({
                 <p className="text-sm font-bold text-neutral-600">
                     <Eye size={16} strokeWidth={2} aria-hidden="true" className="inline-block align-[-3px] mr-1.5 shrink-0" />실제로 이렇게 보여요 (입력하면 바로 바뀌어요)
                 </p>
-                <Link
-                    href="/class"
+                <a
+                    href={previewHref("/class")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black rounded-sm"
                 >
-                    진짜 화면 보기 ↗
-                </Link>
+                    홈페이지에서 미리보기 ↗
+                </a>
             </div>
             <div className="space-y-3">
                 <div>
@@ -664,7 +665,7 @@ function InstructorFormInner({
                     </p>
                 )}
                 <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">
-                    {isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.
+                    {saveNote(isCreate, isActive)}
                 </p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link
@@ -696,7 +697,7 @@ function InstructorFormInner({
                     </button>
                 </div>
 
-                <SaveStatus state={state} />
+                <SaveStatus state={state} hidden={!isActive} />
             </div>
             </fieldset>
         </form>

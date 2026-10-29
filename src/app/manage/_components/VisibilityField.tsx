@@ -1,5 +1,11 @@
 "use client";
 
+/** 저장 막대 위 한 줄 안내. 공개면 바로 반영, 비공개면 홈페이지에 안 나온다고 알려 준다. */
+export function saveNote(isCreate: boolean, isActive: boolean): string {
+    const verb = isCreate ? "추가" : "저장";
+    return isActive ? `${verb}하면 홈페이지에 바로 반영돼요.` : `${verb}해도 홈페이지에는 안 나와요. (비공개)`;
+}
+
 /** 비공개일 때 폼 맨 위에 보이는 안내. `where`는 "홈페이지 크루 목록"처럼 이 항목이 나오는 자리. */
 export function VisibilityBanner({ isActive, where }: { isActive: boolean; where: string }) {
     if (isActive) return null;

@@ -1,6 +1,7 @@
 "use client";
 
-import { VisibilityBanner, VisibilityField } from "../../_components/VisibilityField";
+import { previewHref } from "@/lib/preview-path";
+import { VisibilityBanner, VisibilityField, saveNote } from "../../_components/VisibilityField";
 import { useState } from "react";
 import Link from "../../_components/GuardedLink";
 import { saveSpace, createSpace } from "../actions";
@@ -130,6 +131,13 @@ function SpaceFormInner({ data, mode, onDiscard, session }: { data: SpaceFormDat
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
             <VisibilityBanner isActive={isActive} where="홈페이지 스튜디오 페이지" />
+            {!isCreate && (
+                <div className="flex justify-end">
+                    <a href={previewHref("/studio")} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-semibold text-neutral-600 hover:text-black underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                        홈페이지에서 미리보기 ↗ (저장한 내용 기준)
+                    </a>
+                </div>
+            )}
 
             <Section step={1} title="기본 정보" help="연습실은 이름을 **W.L Studio [A Room]** 형태로 적으면 큰 제목이 A ROOM으로 나와요. 로비는 홈페이지에 **한 곳만** 보여요.">
                 {isCreate && (
@@ -235,7 +243,7 @@ function SpaceFormInner({ data, mode, onDiscard, session }: { data: SpaceFormDat
 
             <div data-tour="form-save-bar" className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-neutral-200 px-5 py-3">
                 {isDirty && <p className="max-w-2xl mx-auto text-sm font-bold text-amber-700 mb-1">저장하지 않은 변경사항이 있어요</p>}
-                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{isCreate ? "추가하면" : "저장하면"} 홈페이지에 바로 반영돼요.</p>
+                <p className="max-w-2xl mx-auto text-sm text-neutral-600 mb-2">{saveNote(isCreate, isActive)}</p>
                 <div className="max-w-2xl mx-auto flex items-center gap-3">
                     <Link href="/manage/studio" className="h-12 px-5 rounded-xl border border-neutral-300 font-bold text-sm flex items-center hover:bg-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                         목록
@@ -259,7 +267,7 @@ function SpaceFormInner({ data, mode, onDiscard, session }: { data: SpaceFormDat
                         {isPending ? (isCreate ? "추가하는 중…" : "저장하는 중…") : isCreate ? "추가하기" : "저장하기"}
                     </button>
                 </div>
-                <SaveStatus state={state} />
+                <SaveStatus state={state} hidden={!isActive} />
             </div>
             </fieldset>
         </form>

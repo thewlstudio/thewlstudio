@@ -8,6 +8,7 @@ import { getSiteSettings } from "@/lib/site-settings-server";
 import { serializeJsonLd } from "@/lib/json-ld";
 import SkipLink from "@/components/SkipLink";
 import PageNavigationFocus from "@/components/PageNavigationFocus";
+import PreviewBanner from "@/components/PreviewBanner";
 import { PUBLIC_SHARE_IMAGE } from "@/lib/public-metadata";
 
 const pretendard = localFont({
@@ -81,6 +82,7 @@ export default async function RootLayout({
             {children}
           </SmoothScroll>
           <PageNavigationFocus />
+          <PreviewBanner />
         </SiteSettingsProvider>
       </body>
     </html>

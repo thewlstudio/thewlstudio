@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { previewTarget } from "@/lib/preview-path";
 import { act, Component, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -77,20 +78,23 @@ function publicPreview(area: "works" | "crew", slug: string, mode: "create" | "e
 describe.each(["works", "crew"] as const)("%s 저장된 공개 화면 링크", (area) => {
     it.each(["With_you_n@di", "한글-제목", "100%-live", "literal%2Fname", "a?b#c", "plus+space value"])("원문 slug %s를 경로 한 조각으로 인코딩한다", async (slug) => {
         await render(publicPreview(area, slug));
-        const link = Array.from(host.querySelectorAll("a")).find((node) => node.textContent?.includes("진짜 화면 보기"))!;
-        expect(link.getAttribute("href")).toBe(`/${area}/${encodeURIComponent(slug)}`);
+        const link = Array.from(host.querySelectorAll("a")).find((node) => node.textContent?.includes("홈페이지에서 미리보기"))!;
+        const publicPath = `/${area}/${encodeURIComponent(slug)}`;
+        expect(link.getAttribute("href")).toBe(`/manage/preview?to=${encodeURIComponent(publicPath)}`);
+        // 진입 경로가 이 주소를 그대로 해석해 같은 홈페이지 화면으로 보낸다
+        expect(previewTarget(new URL(link.getAttribute("href")!, "https://x.example").searchParams.get("to"))).toBe(publicPath);
         expect(link.getAttribute("target")).toBe("_blank");
         expect(link.getAttribute("rel")).toBe("noopener noreferrer");
         expect(link.textContent).toContain("저장한 내용 기준");
     });
     it.each(["", "bad/path", "..", "bad\\path", "bad\nslug", "\ud800"])("잘못된 slug #%#는 활성 링크 대신 주소 확인 안내를 표시한다", async (slug) => {
         await render(publicPreview(area, slug));
-        expect(Array.from(host.querySelectorAll("a")).some((node) => node.textContent?.includes("진짜 화면 보기"))).toBe(false);
+        expect(Array.from(host.querySelectorAll("a")).some((node) => node.textContent?.includes("홈페이지에서 미리보기"))).toBe(false);
         expect(host.textContent).toContain("공개 주소를 확인하지 못했어요.");
     });
     it("아직 만들지 않은 문서에는 저장된 공개 화면 링크를 표시하지 않는다", async () => {
         await render(publicPreview(area, "new-page", "create"));
-        expect(host.textContent).not.toContain("진짜 화면 보기");
+        expect(Array.from(host.querySelectorAll("a")).some((node) => node.textContent?.includes("홈페이지에서 미리보기"))).toBe(false);
     });
 });
 
