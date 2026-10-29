@@ -15,7 +15,7 @@ export const metadata = { title: "작업물 수정" };
 export const dynamic = "force-dynamic";
 
 const detailQuery = `*[_type == "work" && _id == $id][0]{
-    _id, _type, _rev, _updatedAt, trashed, title, artist, "slug": slug.current, releaseDate,
+    _id, _type, _rev, _updatedAt, trashed, isActive, title, artist, "slug": slug.current, releaseDate,
     "sourceSlug": slug,
     youtubeUrl, instagramId, instagramUrl,
     "imageUrl": coverImage.asset->url,
@@ -31,6 +31,7 @@ type Raw = {
     _id?: string;
     _rev?: string;
     trashed?: boolean;
+    isActive?: boolean;
     title?: string;
     artist?: string;
     slug?: string;
@@ -65,6 +66,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
     const data: WorkFormData = {
         _id: raw._id,
         _rev: raw._rev,
+        isActive: raw.isActive ?? true,
         title: raw.title ?? "",
         artist: raw.artist ?? "",
         slug: raw.slug ?? "",

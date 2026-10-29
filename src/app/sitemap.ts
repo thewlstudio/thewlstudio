@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { client } from "@/sanity/lib/client";
-import { crewSitemapQuery, workSitemapQuery } from "@/sanity/lib/queries";
+import { crewSitemapQuery, workSitemapQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/lib/queries";
 import { publicDetailPath } from "@/lib/public-routes";
 
 export const revalidate = 86400; // Revalidate sitemap daily (24h)
@@ -12,8 +12,8 @@ type SanitySlugEntry = { slug: string; _updatedAt: string };
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 한 영역의 조회 실패가 다른 영역의 정상 URL까지 없애지 않도록 따로 정착시킨다.
     const results = await Promise.allSettled([
-        client.fetch<SanitySlugEntry[]>(workSitemapQuery),
-        client.fetch<SanitySlugEntry[]>(crewSitemapQuery),
+        client.fetch<SanitySlugEntry[]>(workSitemapQuery, PUBLIC_VISIBILITY_PARAMS),
+        client.fetch<SanitySlugEntry[]>(crewSitemapQuery, PUBLIC_VISIBILITY_PARAMS),
     ]);
     const dynamicUrls: MetadataRoute.Sitemap = [];
     results.forEach((result, index) => {

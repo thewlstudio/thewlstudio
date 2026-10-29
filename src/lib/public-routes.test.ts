@@ -4,7 +4,8 @@ import { getRouteRegex } from "next/dist/shared/lib/router/utils/route-regex";
 import { getDynamicParam } from "next/dist/shared/lib/router/utils/get-dynamic-param";
 import { decodePublicPageSlug, publicDetailPath, publicStaticParams } from "./public-routes";
 import { worksPage, worksPageHref, worksQueryString } from "./works-pagination";
-import { PUBLIC_CREW_FILTER, PUBLIC_WORK_FILTER, crewsQuery, crewBySlugQuery, worksQuery, workBySlugQuery, crewSitemapQuery, workSitemapQuery } from "@/sanity/lib/queries";
+import { readFileSync } from "node:fs";
+import { PUBLIC_CREW_FILTER, PUBLIC_WORK_FILTER, PUBLIC_INSTRUCTOR_FILTER, PUBLIC_STUDIO_SPACE_FILTER, PUBLIC_VISIBILITY, PUBLIC_VISIBILITY_PARAMS, instructorsQuery, crewsQuery, crewBySlugQuery, worksQuery, workBySlugQuery, crewSitemapQuery, workSitemapQuery } from "@/sanity/lib/queries";
 
 describe("공개 상세 주소의 단일 인코딩", () => {
     it.each(["normal-slug", "folkfolio_2", "With_you_n@di", "한글-제목", "100%-live", "literal%2Fname", "a?b#c", "plus+space value"])("%s는 목록·canonical·사이트맵에서 같은 주소를 만든다", (slug) => {
@@ -41,7 +42,7 @@ describe("Page params의 단일 해석과 경로 검증", () => {
 describe("공개 목록·상세·사이트맵의 노출 조건", () => {
     it.each([crewsQuery, crewBySlugQuery, crewSitemapQuery])("Crew 쿼리는 같은 공개 조건을 사용한다", (query) => {
         expect(query).toContain(PUBLIC_CREW_FILTER);
-        expect(query).toContain("isActive == true");
+        expect(query).toContain("!(isActive == false) || $includeHidden == true");
         expect(query).toContain("!(trashed == true)");
         expect(query).toContain("defined(slug.current)");
     });
@@ -49,6 +50,27 @@ describe("공개 목록·상세·사이트맵의 노출 조건", () => {
         expect(query).toContain(PUBLIC_WORK_FILTER);
         expect(query).toContain("!(trashed == true)");
         expect(query).toContain("defined(slug.current)");
+    });
+});
+
+describe("공개 여부(비공개 항목) 규칙", () => {
+    it.each([PUBLIC_WORK_FILTER, PUBLIC_CREW_FILTER, PUBLIC_INSTRUCTOR_FILTER, PUBLIC_STUDIO_SPACE_FILTER])("4개 영역이 같은 공개 조건을 쓴다 #%#", (filter) => {
+        expect(filter).toContain(PUBLIC_VISIBILITY);
+    });
+    it("공개 조건은 공개 여부가 없으면 공개로 보고, 휴지통은 미리보기에서도 제외한다", () => {
+        expect(PUBLIC_VISIBILITY).toBe("(!(isActive == false) || $includeHidden == true) && !(trashed == true)");
+        expect(PUBLIC_VISIBILITY_PARAMS).toEqual({ includeHidden: false });
+    });
+    it("강사 쿼리와 Studio 페이지 쿼리도 같은 조건을 쓴다", () => {
+        expect(instructorsQuery).toContain(PUBLIC_INSTRUCTOR_FILTER);
+        const studio = readFileSync("src/app/studio/page.tsx", "utf8");
+        expect(studio).toContain("PUBLIC_STUDIO_SPACE_FILTER");
+        expect(studio).not.toMatch(/isActive\s*!=\s*false/);
+    });
+    it("$includeHidden를 쓰는 조회는 params 없이 client.fetch로 부르지 않는다", () => {
+        for (const file of ["src/app/crew/[slug]/page.tsx", "src/app/works/[slug]/page.tsx", "src/app/sitemap.ts"]) {
+            for (const call of readFileSync(file, "utf8").match(/client\.fetch<[^>]*>\([^)]*\)/g) ?? []) expect(call, file).toContain("PUBLIC_VISIBILITY_PARAMS");
+        }
     });
 });
 

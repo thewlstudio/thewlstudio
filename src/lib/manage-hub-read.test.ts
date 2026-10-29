@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { HUB_RECENT_META, readHubCounts, readHubRecent } from "./manage-hub-read";
 
-const counts = () => ({ instructors: 7, instructorsHidden: 1, crew: 3, crewHidden: 0, works: 8, rooms: 4, lobbies: 1 });
+const counts = () => ({ instructors: 7, instructorsHidden: 1, crew: 3, crewHidden: 0, works: 8, worksHidden: 0, rooms: 4, lobbies: 1 });
 const recent = (fields = {}) => ({ _id: "document", _type: "crew", _updatedAt: "2026-10-28T00:00:00Z", title: "크루", ...fields });
 describe("허브 현황", () => {
     it.each([undefined, null, [], "wrong", 1])("객체가 아닌 응답 #%#은 현황으로 표시하지 않는다", (raw) => expect(readHubCounts(raw)).toBeNull());
     it.each(Object.keys(counts()))("%s 누락·문자열·음수·소수는 0으로 대체하지 않는다", (field) => {
         for (const value of [undefined, null, "3", {}, -1, 0.5, Infinity, NaN]) expect(readHubCounts({ ...counts(), [field]: value })).toBeNull();
     });
-    it.each(["instructorsHidden", "crewHidden"])("전체보다 많은 %s는 표시하지 않는다", (field) => expect(readHubCounts({ ...counts(), [field]: 99 })).toBeNull());
+    it.each(["instructorsHidden", "crewHidden", "worksHidden"])("전체보다 많은 %s는 표시하지 않는다", (field) => expect(readHubCounts({ ...counts(), [field]: 99 })).toBeNull());
     it("실제 모든 0은 정상 현황이다", () => expect(readHubCounts(Object.fromEntries(Object.keys(counts()).map((field) => [field, 0])))).not.toBeNull());
     it("알 수 없는 필드를 화면 데이터에 반환하지 않는다", () => {
         const raw = { ...counts(), privateValue: "PRIVATE" }; const before = JSON.stringify(raw);

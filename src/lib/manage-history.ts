@@ -57,7 +57,7 @@ export const HISTORY_AREAS: Record<HistoryAreaKey, HistoryArea> = {
         paths: ["/works", "/manage/works", "/sitemap.xml"],
         back: (id) => `/manage/works/${id}`,
         slugPath: (slug) => publicDetailPath("works", slug) ?? "/works",
-        labels: { title: "제목", artist: "아티스트", releaseDate: "발매일", coverImage: "커버 이미지", youtubeUrl: "유튜브 주소", instagramId: "인스타그램 아이디", instagramUrl: "인스타그램 주소", contentBlocks: "상세 페이지 내용", trashed: "휴지통", slug: "주소" },
+        labels: { title: "제목", artist: "아티스트", releaseDate: "발매일", coverImage: "커버 이미지", isActive: "공개 여부", youtubeUrl: "유튜브 주소", instagramId: "인스타그램 아이디", instagramUrl: "인스타그램 주소", contentBlocks: "상세 페이지 내용", trashed: "휴지통", slug: "주소" },
     },
     studio: {
         title: "스튜디오 공간",

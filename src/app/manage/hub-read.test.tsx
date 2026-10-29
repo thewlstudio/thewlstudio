@@ -8,7 +8,7 @@ vi.mock("@/lib/manage-auth", () => ({ isAuthenticated: async () => true }));
 vi.mock("./ManageNav", () => ({ default: () => <nav>관리 허브</nav> }));
 vi.mock("./FirstTimeGuide", () => ({ default: () => null }));
 vi.mock("./_components/checklist/SetupChecklist", () => ({ default: () => null }));
-const validCounts = () => ({ instructors: 7, instructorsHidden: 1, crew: 3, crewHidden: 0, works: 8, rooms: 4, lobbies: 1 });
+const validCounts = () => ({ instructors: 7, instructorsHidden: 1, crew: 3, crewHidden: 0, works: 8, worksHidden: 0, rooms: 4, lobbies: 1 });
 const record = () => ({ _id: "document", _type: "crew", _updatedAt: "2026-10-28T00:00:00Z", title: "최근 수정 크루" });
 let recent: unknown;
 let counts: unknown;

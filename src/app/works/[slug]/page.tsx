@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { client, sanityFetch } from "@/sanity/lib/client";
-import { workBySlugQuery, worksQuery } from "@/sanity/lib/queries";
+import { workBySlugQuery, worksQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/lib/queries";
 import WorkDetailClient from "./WorkDetailClient";
 import { notFound } from "next/navigation";
 import type { WorkDetail, WorkSummary } from "@/types/sanity";
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export async function generateStaticParams() {
     // Build-time only — use client directly (no draft mode needed)
-    const works = await client.fetch<WorkSummary[]>(worksQuery);
+    const works = await client.fetch<WorkSummary[]>(worksQuery, PUBLIC_VISIBILITY_PARAMS);
     return publicStaticParams(works);
 }
 

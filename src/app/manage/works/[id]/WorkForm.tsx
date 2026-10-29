@@ -1,5 +1,6 @@
 "use client";
 
+import { VisibilityBanner, VisibilityField } from "../../_components/VisibilityField";
 import { useState } from "react";
 import Link from "../../_components/GuardedLink";
 import { saveWork, createWork } from "../actions";
@@ -17,6 +18,7 @@ import CropButton from "../../_components/ImageCropper";
 export type WorkFormData = {
     _id: string;
     _rev?: string;
+    isActive: boolean;
     title: string;
     artist: string;
     slug: string;
@@ -38,6 +40,7 @@ function WorkFormInner({ data, mode, onDiscard, session }: { data: WorkFormData;
     const [preview, setPreview] = useState({ title: data.title, artist: data.artist, releaseDate: data.releaseDate });
     const { preview: photoPreview, error: photoError, processing, onChange: onPhotoChange } = useImageInput();
     const shownPhoto = photoPreview ?? data.imageUrl;
+    const [isActive, setIsActive] = useState(data.isActive);
 
     const { isDirty, markDirty, summaryRef, summaryFields, clientErrors, validateOnSubmit } = useGuardedForm(state, formAction, isPending);
 
@@ -48,8 +51,11 @@ function WorkFormInner({ data, mode, onDiscard, session }: { data: WorkFormData;
         <form data-manage-form noValidate action={formAction} onChange={markDirty} onSubmit={validateOnSubmit} className="space-y-5 pb-32">
             <fieldset disabled={isPending} aria-busy={isPending} className="contents">
             <input type="hidden" name="documentId" value={data._id} />
+            <input type="hidden" name="isActive" value={isActive ? "true" : "false"} />
 
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
+
+            <VisibilityBanner isActive={isActive} where="홈페이지 Works 목록" />
 
             {/* 미리보기 */}
             <div data-tour="form-preview" className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
@@ -71,7 +77,9 @@ function WorkFormInner({ data, mode, onDiscard, session }: { data: WorkFormData;
                 </div>
             </div>
 
-            <Section step={1} title="기본 정보" help="**발매일**을 달력에서 고르면 목록이 최신순으로 자동 정렬돼요. 홈페이지 주소(영문)는 만든 뒤에 **바꿀 수 없어요**.">
+            <Section step={1} title="기본 정보" help="**공개/비공개**로 홈페이지 표시를 바꿔요. **발매일**을 달력에서 고르면 목록이 최신순으로 자동 정렬돼요. 홈페이지 주소(영문)는 만든 뒤에 **바꿀 수 없어요**.">
+                <VisibilityField isActive={isActive} where="홈페이지 Works 목록" onChange={(v) => { setIsActive(v); markDirty(); }} />
+
                 <Field label="앨범(작품) 제목" htmlFor="title" required>
                     <input id="title" name="title" defaultValue={data.title} onChange={(e) => setPreview((p) => ({ ...p, title: e.target.value }))} className={inputClass} />
                 </Field>

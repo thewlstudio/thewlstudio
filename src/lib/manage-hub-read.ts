@@ -1,7 +1,7 @@
 import "server-only";
 import { isManagedDocumentId } from "./manage-document-id";
 
-const COUNT_FIELDS = ["instructors", "instructorsHidden", "crew", "crewHidden", "works", "rooms", "lobbies"] as const;
+const COUNT_FIELDS = ["instructors", "instructorsHidden", "crew", "crewHidden", "works", "worksHidden", "rooms", "lobbies"] as const;
 export type HubCounts = Record<typeof COUNT_FIELDS[number], number>;
 type RecentType = "instructor" | "crew" | "work" | "studioSpace" | "studioInfo" | "siteSettings";
 export type HubRecent = { _id: string; _type: RecentType; _updatedAt: string; title?: string };
@@ -21,7 +21,7 @@ export const HUB_RECENT_META: Record<RecentType, { area: string; href: (id: stri
 export function readHubCounts(raw: unknown): HubCounts | null {
     if (!object(raw) || COUNT_FIELDS.some((field) => !Object.hasOwn(raw, field) || typeof raw[field] !== "number" || !Number.isSafeInteger(raw[field]) || raw[field] < 0)) return null;
     const counts = Object.fromEntries(COUNT_FIELDS.map((field) => [field, raw[field]])) as HubCounts;
-    if (counts.instructorsHidden > counts.instructors || counts.crewHidden > counts.crew) return null;
+    if (counts.instructorsHidden > counts.instructors || counts.crewHidden > counts.crew || counts.worksHidden > counts.works) return null;
     return counts;
 }
 

@@ -93,8 +93,8 @@ describe("사이트맵 생성 실패 격리와 데이터 정리", () => {
         const paths = result.map((row) => new URL(row.url).pathname);
         expect(paths).toContain(failed === "works" ? "/crew/kept" : "/works/kept");
         expect(paths).toContain("/contact");
-        expect(fetchList).toHaveBeenCalledWith(workSitemapQuery);
-        expect(fetchList).toHaveBeenCalledWith(crewSitemapQuery);
+        expect(fetchList).toHaveBeenCalledWith(workSitemapQuery, { includeHidden: false });
+        expect(fetchList).toHaveBeenCalledWith(crewSitemapQuery, { includeHidden: false });
     });
     it("잘못된 slug·중복은 제외하고 퍼센트·한글은 경로 인코딩한다", async () => {
         fetchList.mockImplementation(async (query: string) => query === workSitemapQuery ? [

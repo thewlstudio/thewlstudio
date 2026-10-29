@@ -1,5 +1,6 @@
 "use client";
 
+import { VisibilityBanner, VisibilityField } from "../../_components/VisibilityField";
 import { useState, useMemo, useRef } from "react";
 import Link from "../../_components/GuardedLink";
 import { saveInstructor, createInstructor } from "../actions";
@@ -385,11 +386,7 @@ function InstructorFormInner({
 
             <ErrorSummary fields={summaryFields} summaryRef={errorSummaryRef} />
 
-            {!isActive && (
-                <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
-                    지금 비공개 상태예요. 저장해도 홈페이지 목록에는 나오지 않아요.
-                </div>
-            )}
+            <VisibilityBanner isActive={isActive} where="홈페이지 강사 목록" />
 
             <LivePreview
                 preview={preview}
@@ -400,38 +397,7 @@ function InstructorFormInner({
 
             {/* 1. 기본 정보 */}
             <Section step={1} title="기본 정보" help="**공개/비공개**로 홈페이지 노출을 바꿔요. 수업을 잠시 쉬는 강사는 삭제 대신 **비공개**를 쓰세요. 목록 순서는 강사 목록에서 바꿔요.">
-                <fieldset>
-                    <legend className="text-sm font-bold mb-1.5">공개 상태</legend>
-                    <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
-                        휴직이나 개인 사정으로 잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔 주세요. 나중에 다시 공개로 되돌릴 수 있어요.
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => { setIsActive(true); markDirty(); }}
-                            aria-pressed={isActive}
-                            className={`h-11 rounded-xl text-sm font-bold border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${
-                                isActive
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-500"
-                            }`}
-                        >
-                            공개
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => { setIsActive(false); markDirty(); }}
-                            aria-pressed={!isActive}
-                            className={`h-11 rounded-xl text-sm font-bold border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${
-                                !isActive
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-500"
-                            }`}
-                        >
-                            비공개
-                        </button>
-                    </div>
-                </fieldset>
+                <VisibilityField isActive={isActive} where="홈페이지 강사 목록" onChange={(v) => { setIsActive(v); markDirty(); }} />
 
                 <Field label="강사 이름" htmlFor="instructorName" required hint="한글 이름만 적어 주세요. (예: 박인국)">
                     <input

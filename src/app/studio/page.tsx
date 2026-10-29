@@ -1,11 +1,12 @@
 import { sanityFetch } from "@/sanity/lib/client";
+import { PUBLIC_STUDIO_SPACE_FILTER } from "@/sanity/lib/queries";
 import { STUDIO_CONTENT_ORDER } from "@/lib/content-order";
 import { FALLBACK_LOBBY, FALLBACK_ROOMS, type StudioSpaceData } from "@/lib/studio-spaces";
 import { FALLBACK_INFO, mergeInfo, type StudioInfo } from "@/lib/studio-info";
 import StudioClient from "./StudioClient";
 
-// 공개 공간(연습실·로비)만, 관리 화면에서 정한 순서대로. 휴지통·비공개는 제외한다.
-const spacesQuery = `*[_type == "studioSpace" && isActive != false && !(trashed == true)] | order(${STUDIO_CONTENT_ORDER}) {
+// 공개 공간(연습실·로비)만, 관리 화면에서 정한 순서대로. 휴지통·비공개는 제외한다(관리자 미리보기에서는 비공개 포함).
+const spacesQuery = `*[${PUBLIC_STUDIO_SPACE_FILTER}] | order(${STUDIO_CONTENT_ORDER}) {
     kind,
     name,
     subtitle,

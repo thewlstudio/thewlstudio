@@ -41,7 +41,7 @@ function deferred() {
     return { promise, resolve };
 }
 const work: WorkFormData = {
-    _id: "work-1", _rev: "v1", title: "기존 작품", artist: "아티스트", slug: "album", releaseDate: "2026-10-26",
+    _id: "work-1", _rev: "v1", isActive: true, title: "기존 작품", artist: "아티스트", slug: "album", releaseDate: "2026-10-26",
     imageUrl: null, youtubeUrl: "", instagramId: "", instagramUrl: "", blocks: [],
 };
 let root: Root;

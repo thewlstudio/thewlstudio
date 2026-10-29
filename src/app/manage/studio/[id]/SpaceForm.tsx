@@ -1,5 +1,6 @@
 "use client";
 
+import { VisibilityBanner, VisibilityField } from "../../_components/VisibilityField";
 import { useState } from "react";
 import Link from "../../_components/GuardedLink";
 import { saveSpace, createSpace } from "../actions";
@@ -128,11 +129,7 @@ function SpaceFormInner({ data, mode, onDiscard, session }: { data: SpaceFormDat
 
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
-            {!isActive && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-                    지금 비공개 상태예요. 저장해도 홈페이지 스튜디오 페이지에는 나오지 않아요.
-                </div>
-            )}
+            <VisibilityBanner isActive={isActive} where="홈페이지 스튜디오 페이지" />
 
             <Section step={1} title="기본 정보" help="연습실은 이름을 **W.L Studio [A Room]** 형태로 적으면 큰 제목이 A ROOM으로 나와요. 로비는 홈페이지에 **한 곳만** 보여요.">
                 {isCreate && (
@@ -158,26 +155,7 @@ function SpaceFormInner({ data, mode, onDiscard, session }: { data: SpaceFormDat
                     </div>
                 )}
 
-                <div>
-                    <p className="text-sm font-bold mb-1.5">공개 상태</p>
-                    <p className="text-sm text-neutral-600 mb-2 leading-relaxed">잠시 빼고 싶을 때는 삭제 대신 비공개로 바꿔 주세요.</p>
-                    <div className="grid grid-cols-2 gap-2">
-                        {[true, false].map((v) => (
-                            <button
-                                key={String(v)}
-                                type="button"
-                                aria-pressed={isActive === v}
-                                onClick={() => {
-                                    setIsActive(v);
-                                    markDirty();
-                                }}
-                                className={`h-11 rounded-xl text-sm font-bold border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${isActive === v ? "bg-black text-white border-black" : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-500"}`}
-                            >
-                                {v ? "공개" : "비공개"}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <VisibilityField isActive={isActive} where="홈페이지 스튜디오 페이지" onChange={(v) => { setIsActive(v); markDirty(); }} />
 
                 <Field
                     label="이름"

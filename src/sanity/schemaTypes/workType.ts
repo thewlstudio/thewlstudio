@@ -13,6 +13,14 @@ export const workType = defineType({
             initialValue: false,
             hidden: true,
         }),
+        // 공개 여부. false면 홈페이지에서 숨긴다(관리자 미리보기에서는 보인다). 기존 문서에는 없을 수 있으며, 없으면 공개로 취급한다.
+        defineField({
+            name: 'isActive',
+            title: 'Active (Show on Website)',
+            type: 'boolean',
+            description: '끄면 홈페이지 Works 목록과 상세 페이지에서 숨겨집니다. (관리 화면 미리보기에서는 보입니다)',
+            initialValue: true,
+        }),
         defineField({ name: 'title', title: 'Album Title', type: 'string', validation: (rule) => rule.required() }),
         defineField({ name: 'artist', title: 'Artist', type: 'string', validation: (rule) => rule.required() }),
         defineField({

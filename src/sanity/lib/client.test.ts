@@ -22,27 +22,26 @@ describe("공개 Sanity 조회 캐시 설정", () => {
         read.mockResolvedValue(response);
         const params = Object.freeze({ slug: "literal%40name" });
         expect(await sanityFetch({ query: "query", params, tags: [tag] })).toBe(response);
-        expect(read).toHaveBeenCalledExactlyOnceWith("query", params, { next: { revalidate: 3600, tags: [tag] } });
+        expect(read).toHaveBeenCalledExactlyOnceWith("query", { slug: "literal%40name", includeHidden: false }, { next: { revalidate: 3600, tags: [tag] } });
     });
-    it("공개 요청은 읽기 토큰이 설정되어도 초안 옵션을 붙이지 않는다", async () => {
+    it("공개 요청은 읽기 토큰이 설정되어도 토큰·초안 옵션을 붙이지 않고 비공개 항목을 제외한다", async () => {
         vi.stubEnv("SANITY_API_READ_TOKEN", "test-only-token");
         await sanityFetch({ query: "query" });
-        expect(read).toHaveBeenCalledExactlyOnceWith("query", {}, { next: { revalidate: 3600, tags: undefined } });
+        expect(read).toHaveBeenCalledExactlyOnceWith("query", { includeHidden: false }, { next: { revalidate: 3600, tags: undefined } });
         expect(read.mock.calls[0][2]).not.toHaveProperty("token");
         expect(read.mock.calls[0][2]).not.toHaveProperty("perspective");
     });
-    it("초안 요청은 공개 캐시를 재사용하지 않고 기존 초안 옵션을 전달한다", async () => {
+    it("미리보기 요청은 비공개 항목을 포함하되 토큰·초안(drafts.*)을 쓰지 않고 공개 캐시도 재사용하지 않는다", async () => {
         vi.stubEnv("SANITY_API_READ_TOKEN", "test-only-token");
         draft.mockResolvedValue({ isEnabled: true });
-        await sanityFetch({ query: "query", tags: ["work"] });
-        expect(read).toHaveBeenCalledExactlyOnceWith("query", {}, { token: "test-only-token", perspective: "previewDrafts", stega: true, next: { revalidate: 0, tags: ["work"] } });
+        await sanityFetch({ query: "query", params: { slug: "a" }, tags: ["work"] });
+        expect(read).toHaveBeenCalledExactlyOnceWith("query", { slug: "a", includeHidden: true }, { next: { revalidate: 0, tags: ["work"] } });
+        expect(read.mock.calls[0][2]).not.toHaveProperty("token");
+        expect(read.mock.calls[0][2]).not.toHaveProperty("perspective");
     });
-    it("초안 토큰이 없으면 기존 경고를 유지하며 공개 캐시로 대체하지 않는다", async () => {
-        draft.mockResolvedValue({ isEnabled: true });
-        const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
-        await sanityFetch({ query: "query" });
-        expect(warning).toHaveBeenCalledTimes(1);
-        expect(read.mock.calls[0][2]).toMatchObject({ next: { revalidate: 0 } });
+    it("호출자가 includeHidden을 직접 넘겨도 미리보기 상태가 우선한다", async () => {
+        await sanityFetch({ query: "query", params: { includeHidden: true } });
+        expect(read.mock.calls[0][1]).toEqual({ includeHidden: false });
     });
     it("조회 실패를 가짜 성공 데이터로 바꾸지 않는다", async () => {
         read.mockRejectedValue(new Error("read failed"));

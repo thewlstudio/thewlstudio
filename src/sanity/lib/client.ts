@@ -9,6 +9,13 @@ export const client = createClient({
     useCdn: false, // ISR with revalidate requires fresh data from Sanity API
 });
 
+/**
+ * 홈페이지용 조회.
+ *
+ * 미리보기(draftMode)는 로그인한 관리자가 /manage/preview에서만 켠다. 켜져 있으면 비공개 항목도 함께 읽는다.
+ * 비공개 문서도 발행된 문서이므로 읽기 토큰이 필요 없고, 초안(drafts.*)은 읽지 않는다.
+ * 미리보기 요청은 공개 캐시를 쓰지 않는다(revalidate 0). 일반 방문자는 캐시된 공개 내용만 받는다.
+ */
 export async function sanityFetch<QueryResponse>({
     query,
     params = {},
@@ -18,21 +25,11 @@ export async function sanityFetch<QueryResponse>({
     params?: QueryParams;
     tags?: string[];
 }) {
-    const isDraftMode = (await draftMode()).isEnabled;
-    const token = process.env.SANITY_API_READ_TOKEN;
+    const includeHidden = (await draftMode()).isEnabled;
 
-    if (isDraftMode && !token) {
-        console.warn("Draft mode is enabled, but SANITY_API_READ_TOKEN is missing. Drafts may not load if your dataset is private.");
-    }
-
-    return client.fetch<QueryResponse>(query, params, {
-        ...(isDraftMode && {
-            token: token,
-            perspective: 'previewDrafts',
-            stega: true,
-        }),
+    return client.fetch<QueryResponse>(query, { ...params, includeHidden }, {
         next: {
-            revalidate: isDraftMode ? 0 : 3600,
+            revalidate: includeHidden ? 0 : 3600,
             tags,
         },
     });

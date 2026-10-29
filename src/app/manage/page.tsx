@@ -34,6 +34,7 @@ const COUNT_QUERY = `{
     "crew": count(*[_type == "crew" && !(trashed == true)]),
     "crewHidden": count(*[_type == "crew" && !(trashed == true) && isActive == false]),
     "works": count(*[_type == "work" && !(trashed == true)]),
+    "worksHidden": count(*[_type == "work" && !(trashed == true) && isActive == false]),
     "rooms": count(*[_type == "studioSpace" && !(trashed == true) && kind != "lobby"]),
     "lobbies": count(*[_type == "studioSpace" && !(trashed == true) && kind == "lobby"])
 }`;
@@ -45,7 +46,7 @@ function statusText(key: string, c: HubCounts | null): string | null {
     switch (key) {
         case "instructors": return `${c.instructors}명${hid(c.instructorsHidden)}`;
         case "crew": return `${c.crew}명${hid(c.crewHidden)}`;
-        case "works": return `${c.works}개`;
+        case "works": return `${c.works}개${hid(c.worksHidden)}`;
         case "studio": return `연습실 ${c.rooms} · 로비 ${c.lobbies}`;
         default: return null;
     }

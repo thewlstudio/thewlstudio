@@ -46,7 +46,7 @@ export function detailReadIssue(type: DetailDocumentType, id: string, raw: unkno
     };
     scalar(raw._updatedAt, "수정 시간");
     scalar(raw.trashed, "휴지통 상태", "boolean");
-    if (type !== "work") scalar(raw.isActive, "공개 상태", "boolean");
+    scalar(raw.isActive, "공개 상태", "boolean");
 
     if (type === "instructor") {
         for (const [field, label] of Object.entries({ instructorName: "이름", category: "분류", subtitle: "소개 제목", lessonInfo: "레슨 안내", imagePosition: "사진 위치", portfolioUrl: "작업물 주소", portfolioText: "작업물 설명", portfolioBtn: "작업물 버튼", imageUrl: "프로필 사진", modalImageUrl: "상세 사진", bgImageUrl: "배경 사진" })) scalar(raw[field], label);

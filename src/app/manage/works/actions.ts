@@ -27,7 +27,7 @@ function refresh(slug?: string) {
 }
 
 type Parsed = {
-    fields: { title: string; artist: string; releaseDate: string };
+    fields: { isActive: boolean; title: string; artist: string; releaseDate: string };
     optional: { youtubeUrl: string; instagramId: string; instagramUrl: string };
 };
 
@@ -64,7 +64,7 @@ function parseBasic(formData: FormData): Parsed | { error: string; fields: Field
     }
 
     return {
-        fields: { title, artist, releaseDate: `${m[1]}. ${m[2]}. ${m[3]}.` },
+        fields: { isActive: String(formData.get("isActive") ?? "true") === "true", title, artist, releaseDate: `${m[1]}. ${m[2]}. ${m[3]}.` },
         optional: { youtubeUrl, instagramId, instagramUrl },
     };
 }

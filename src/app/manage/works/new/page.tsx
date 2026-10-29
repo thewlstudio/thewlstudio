@@ -11,6 +11,7 @@ export default async function NewWorkPage() {
 
     const empty: WorkFormData = {
         _id: "",
+        isActive: true,
         title: "",
         artist: "",
         slug: "",

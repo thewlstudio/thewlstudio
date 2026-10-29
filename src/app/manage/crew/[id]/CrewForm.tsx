@@ -1,5 +1,6 @@
 "use client";
 
+import { VisibilityBanner, VisibilityField } from "../../_components/VisibilityField";
 import { useRef, useState } from "react";
 import Link from "../../_components/GuardedLink";
 import { saveCrew, createCrew } from "../actions";
@@ -62,11 +63,7 @@ function CrewFormInner({ data, mode, onDiscard, session }: { data: CrewFormData;
 
             <ErrorSummary fields={summaryFields} summaryRef={summaryRef} />
 
-            {!isActive && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-                    지금 비공개 상태예요. 저장해도 홈페이지 크루 목록에는 나오지 않아요.
-                </div>
-            )}
+            <VisibilityBanner isActive={isActive} where="홈페이지 크루 목록" />
 
             {/* 미리보기 */}
             <div data-tour="form-preview" className="bg-neutral-100 rounded-2xl border border-neutral-200 p-4 md:p-5">
@@ -89,28 +86,7 @@ function CrewFormInner({ data, mode, onDiscard, session }: { data: CrewFormData;
             </div>
 
             <Section step={1} title="기본 정보" help="**공개/비공개**로 홈페이지 표시를 바꿔요. 비공개로 두면 내용은 남고 홈페이지에서만 숨겨져요. **홈페이지 주소(영문)**는 만든 뒤에 바꿀 수 없어요.">
-                <div>
-                    <p className="text-sm font-bold mb-1.5">공개 상태</p>
-                    <p className="text-sm text-neutral-600 mb-2 leading-relaxed">
-                        잠시 목록에서 빼고 싶을 때는 삭제 대신 비공개로 바꿔 주세요.
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                        {[true, false].map((v) => (
-                            <button
-                                key={String(v)}
-                                type="button"
-                                aria-pressed={isActive === v}
-                                onClick={() => {
-                                    setIsActive(v);
-                                    markDirty();
-                                }}
-                                className={`h-11 rounded-xl text-sm font-bold border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black ${isActive === v ? "bg-black text-white border-black" : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-500"}`}
-                            >
-                                {v ? "공개" : "비공개"}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <VisibilityField isActive={isActive} where="홈페이지 크루 목록" onChange={(v) => { setIsActive(v); markDirty(); }} />
 
                 <Field label="영문 이름" htmlFor="name" required hint="예: Baek Kwang-heum">
                     <input id="name" name="name" defaultValue={data.name} onChange={(e) => setPreview((p) => ({ ...p, name: e.target.value }))} className={inputClass} />
