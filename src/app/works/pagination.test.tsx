@@ -112,7 +112,7 @@ describe("Works의 서버 렌더링과 페이지 이동", () => {
         const metadata = await generateMetadata({ searchParams: Promise.resolve({ page: "999", campaign: "test" }) });
         expect(metadata.alternates?.canonical).toBe("/works?page=3");
         expect(metadata.openGraph).toMatchObject({ url: "/works?page=3", title: "WORKS | WHITE LIGHT STUDIO", description: "화이트라이트 스튜디오에서 제작된 음악 작업물 포트폴리오", siteName: "WHITE LIGHT STUDIO" });
-        expect(metadata.twitter).toMatchObject({ title: "WORKS | WHITE LIGHT STUDIO", card: "summary" });
+        expect(metadata.twitter).toMatchObject({ title: "WORKS | WHITE LIGHT STUDIO", card: "summary_large_image" });
     });
     it("페이지 링크는 다른 쿼리를 보존하고 replace로 탐색 기록을 덮어쓰지 않는다", async () => {
         await render(<WorksClient initialWorks={works(25)} currentPage={1} query="campaign=a&campaign=b&page=1&page=2" />);

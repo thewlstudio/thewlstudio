@@ -10,7 +10,7 @@ import SkipLink from "@/components/SkipLink";
 import PageNavigationFocus from "@/components/PageNavigationFocus";
 import PreviewBanner from "@/components/PreviewBanner";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_KO, getSiteUrl } from "@/config/site";
-import { PUBLIC_SHARE_IMAGE } from "@/lib/public-metadata";
+import { PUBLIC_LOGO, PUBLIC_SHARE_IMAGE } from "@/lib/public-metadata";
 
 const pretendard = localFont({
   src: "../../public/fonts/PretendardVariable.woff2",
@@ -38,13 +38,10 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    // TODO: 지금은 실제 파일(정사각형 839x839) 크기를 그대로 선언만 해둔 상태.
-    // summary_large_image(가로형)에는 맞지 않으니, 나중에 1200x630 전용
-    // OG 이미지를 따로 제작하면 이 값과 twitter.card를 함께 교체할 것.
     images: [{ ...PUBLIC_SHARE_IMAGE }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     images: [PUBLIC_SHARE_IMAGE.url],
@@ -70,7 +67,7 @@ export default async function RootLayout({
             name: SITE_NAME,
             alternateName: SITE_NAME_KO,
             url: baseUrl,
-            logo: `${baseUrl}${PUBLIC_SHARE_IMAGE.url}`,
+            logo: `${baseUrl}${PUBLIC_LOGO.url}`,
             description: SITE_DESCRIPTION,
             // 자유 입력 주소를 시·구로 추측 분할하지 않고 공개된 전체 주소를 전달한다.
             address: { "@type": "PostalAddress", streetAddress: settings.addressKo },

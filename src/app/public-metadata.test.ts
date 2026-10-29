@@ -4,7 +4,7 @@ import { metadata as crewMetadata } from "./crew/layout";
 import { metadata as studioMetadata } from "./studio/layout";
 import { metadata as classMetadata } from "./class/layout";
 import { metadata as contactMetadata } from "./contact/page";
-import { PUBLIC_SECTIONS, PUBLIC_SHARE_IMAGE, PUBLIC_SITE_NAME, publicPageMetadata } from "@/lib/public-metadata";
+import { PUBLIC_LOGO, PUBLIC_SECTIONS, PUBLIC_SHARE_IMAGE, PUBLIC_SITE_NAME, publicPageMetadata } from "@/lib/public-metadata";
 
 vi.mock("@/components/Header", () => ({ default: () => null }));
 vi.mock("@/components/Footer", () => ({ default: () => null }));
@@ -23,7 +23,7 @@ describe("공개 페이지별 검색·공유 메타데이터", () => {
         expect(metadata).toMatchObject({
             title: { absolute: fullTitle }, description, alternates: { canonical: path },
             openGraph: { title: fullTitle, description, url: path, siteName: PUBLIC_SITE_NAME, locale: "ko_KR", type: "website", images: [PUBLIC_SHARE_IMAGE] },
-            twitter: { title: fullTitle, description, card: "summary", images: [PUBLIC_SHARE_IMAGE.url] },
+            twitter: { title: fullTitle, description, card: "summary_large_image", images: [PUBLIC_SHARE_IMAGE.url] },
         });
     });
     it("상세 공유는 기존 콘텐츠 이미지·소개와 제목을 유지하며 OG 공통 정보도 포함한다", () => {
@@ -34,10 +34,10 @@ describe("공개 페이지별 검색·공유 메타데이터", () => {
             twitter: { title: "아티스트 - 작품 | WHITE LIGHT STUDIO", card: "summary_large_image", images: ["https://cdn.sanity.io/cover.jpg?w=1200"] },
         });
     });
-    it.each([undefined, null, ""])("콘텐츠 이미지가 %s이면 실측 크기의 기존 로고와 정사각형 카드를 쓴다", (shareImage) => {
+    it.each([undefined, null, ""])("콘텐츠 이미지가 %s이면 가로형(1200x630) 기본 공유 이미지와 큰 카드를 쓴다", (shareImage) => {
         const metadata = publicPageMetadata({ title: "작품", description: "소개", path: "/works/one", shareImage });
-        expect(metadata.openGraph?.images).toEqual([{ url: "/images/studio_logo.jpg", width: 839, height: 839, alt: PUBLIC_SITE_NAME }]);
-        expect(metadata.twitter).toMatchObject({ card: "summary", images: [PUBLIC_SHARE_IMAGE.url] });
+        expect(metadata.openGraph?.images).toEqual([{ url: "/images/og_default.jpg", width: 1200, height: 630, alt: PUBLIC_SITE_NAME }]);
+        expect(metadata.twitter).toMatchObject({ card: "summary_large_image", images: [PUBLIC_SHARE_IMAGE.url] });
     });
     it.each(["/works?page=3", "/works/With_you_n%40di", "/crew/literal%252Fname"])("%s의 정규 주소와 공유 주소를 일치시키며 다시 인코딩하지 않는다", (path) => {
         const metadata = publicPageMetadata({ title: "제목", description: "소개", path });
@@ -49,6 +49,7 @@ describe("공개 페이지별 검색·공유 메타데이터", () => {
         const b = publicPageMetadata(PUBLIC_SECTIONS.crew);
         expect(a.openGraph?.images).not.toBe(b.openGraph?.images);
         expect((a.openGraph?.images as object[])[0]).not.toBe((b.openGraph?.images as object[])[0]);
-        expect(PUBLIC_SHARE_IMAGE).toEqual({ url: "/images/studio_logo.jpg", width: 839, height: 839, alt: PUBLIC_SITE_NAME });
+        expect(PUBLIC_SHARE_IMAGE).toEqual({ url: "/images/og_default.jpg", width: 1200, height: 630, alt: PUBLIC_SITE_NAME });
+        expect(PUBLIC_LOGO).toEqual({ url: "/images/studio_logo.jpg", width: 839, height: 839 }); // 구조화 데이터용 정사각형 로고는 그대로
     });
 });

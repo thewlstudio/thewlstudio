@@ -30,7 +30,7 @@ describe.each([
         const title = area === "works" ? "아티스트 - 작품 | WHITE LIGHT STUDIO" : "크루 (프로듀서) | WHITE LIGHT STUDIO";
         expect(meta.title).toEqual({ absolute: title });
         expect(meta.openGraph).toMatchObject({ title, url: `/${area}/one`, siteName: "WHITE LIGHT STUDIO", locale: "ko_KR", type: "website" });
-        expect(meta.twitter).toMatchObject({ title, card: "summary", images: ["/images/studio_logo.jpg"] });
+        expect(meta.twitter).toMatchObject({ title, card: "summary_large_image", images: ["/images/og_default.jpg"] });
     });
     it("공유 메타데이터와 JSON-LD는 원본 대신 크기를 제한한 이미지를 사용한다", async () => {
         const source = `https://cdn.sanity.io/images/${projectId}/${dataset}/abcdef-3000x4000.png`;
