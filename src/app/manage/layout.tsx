@@ -5,6 +5,9 @@ import SessionWatcher from "./_components/SessionWatcher";
 import { TourProvider } from "./_components/tour/TourProvider";
 import ChecklistTracker from "./_components/checklist/ChecklistTracker";
 
+// 인증 쿠키를 읽는 분기나 개별 페이지 설정과 무관하게 관리 화면 전체를 비캐시로 유지한다.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
     title: { default: "홈페이지 관리", template: "%s | 홈페이지 관리" },
     // 관리 화면은 검색엔진에 절대 노출되면 안 된다

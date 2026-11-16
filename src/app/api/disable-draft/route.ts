@@ -1,5 +1,4 @@
 import { draftMode } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { sanitizeRedirectPath } from '@/lib/internal-redirect'
 
 export async function GET(request: Request) {
@@ -8,5 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const redirectPath = sanitizeRedirectPath(searchParams.get('slug'))
 
-    redirect(redirectPath)
+    return new Response(null, {
+        status: 307,
+        headers: { Location: redirectPath, 'Cache-Control': 'private, no-store' },
+    })
 }

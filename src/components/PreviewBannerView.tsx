@@ -2,10 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import { PREVIEW_EXIT_HREF } from "@/lib/preview-path";
+import { isManagePath } from "@/lib/page-focus";
 
 export default function PreviewBannerView() {
     const pathname = usePathname();
-    if (pathname.startsWith("/manage")) return null;
+    if (isManagePath(pathname)) return null;
     return (
         <div role="region" aria-label="미리보기" className="fixed bottom-4 left-1/2 z-[200] -translate-x-1/2 w-[calc(100%-2rem)] max-w-md rounded-2xl bg-amber-300 text-black shadow-xl px-4 py-3 flex items-center gap-3 font-sans">
             <p className="text-sm font-bold leading-snug flex-1">미리보기 중이에요. 비공개 항목도 보여요.</p>

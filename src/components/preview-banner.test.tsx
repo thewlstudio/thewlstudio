@@ -8,6 +8,7 @@ import { PREVIEW_EXIT_HREF } from "@/lib/preview-path";
 
 const { enabled, pathname } = vi.hoisted(() => ({ enabled: { value: false }, pathname: { value: "/crew" } }));
 vi.mock("next/headers", () => ({ draftMode: async () => ({ isEnabled: enabled.value }) }));
+vi.mock("@/lib/manage-auth", () => ({ isAuthenticated: async () => true }));
 vi.mock("next/navigation", () => ({ usePathname: () => pathname.value }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -31,7 +32,13 @@ describe("미리보기 띠", () => {
         expect(exit.getAttribute("href")).toBe(PREVIEW_EXIT_HREF);
         expect(exit.textContent).toContain("미리보기 끝내기");
     });
-    it.each(["/manage", "/manage/crew"])("관리 화면(%s)에서는 보이지 않는다", (path) => {
+    it.each(["/management", "/manage-help", "/administrator", "/admin-help", "/manage%2Fcrew", "/admin%2Fdesk", "/studio"])("일반 경로(%s)에서는 미리보기 안내를 잘못 숨기지 않는다", (path) => {
+        pathname.value = path;
+        act(() => root.render(<PreviewBannerView />));
+        expect(host.querySelector('[aria-label="미리보기"]')).not.toBeNull();
+        expect(host.querySelector("a")?.getAttribute("href")).toBe(PREVIEW_EXIT_HREF);
+    });
+    it.each(["/manage", "/manage/", "/manage/crew", "/manage/crew/new"])("관리 화면(%s)에서는 보이지 않는다", (path) => {
         pathname.value = path;
         act(() => root.render(<PreviewBannerView />));
         expect(host.textContent).toBe("");

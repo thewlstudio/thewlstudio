@@ -1,14 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sanityFetch } from "./client";
 
-const { read, draft, configuration } = vi.hoisted(() => ({ read: vi.fn(), draft: vi.fn(), configuration: { value: undefined as unknown } }));
+const { read, draft, authed, configuration } = vi.hoisted(() => ({ read: vi.fn(), draft: vi.fn(), authed: vi.fn(), configuration: { value: undefined as unknown } }));
 vi.mock("next-sanity", () => ({ createClient: (options: unknown) => { configuration.value = options; return { fetch: read }; } }));
 vi.mock("next/headers", () => ({ draftMode: draft }));
+vi.mock("@/lib/manage-auth", () => ({ isAuthenticated: authed }));
 
 beforeEach(() => {
     vi.resetAllMocks();
     vi.stubEnv("SANITY_API_READ_TOKEN", "");
     draft.mockResolvedValue({ isEnabled: false });
+    authed.mockResolvedValue(true);
     read.mockResolvedValue({ value: "응답" });
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });

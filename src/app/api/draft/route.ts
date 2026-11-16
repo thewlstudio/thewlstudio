@@ -3,5 +3,5 @@
 // SANITY_API_READ_TOKEN을 발급해 Studio 미리보기를 다시 쓸 때는 next-sanity의 defineEnableDraftMode(시크릿 검증)로 교체한다.
 // 그 전까지 이 경로는 아무것도 켜지 않는다.
 export async function GET() {
-    return new Response("Forbidden", { status: 403, headers: { "Cache-Control": "no-store" } })
+    return new Response("Forbidden", { status: 403, headers: { "Cache-Control": "private, no-store" } })
 }

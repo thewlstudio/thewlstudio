@@ -11,6 +11,7 @@ import PageNavigationFocus from "@/components/PageNavigationFocus";
 import PreviewBanner from "@/components/PreviewBanner";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_NAME_KO, getSiteUrl } from "@/config/site";
 import { PUBLIC_LOGO, PUBLIC_SHARE_IMAGE } from "@/lib/public-metadata";
+import { isManagedPreview } from "@/lib/manage-preview";
 
 const pretendard = localFont({
   src: "../../public/fonts/PretendardVariable.woff2",
@@ -19,7 +20,7 @@ const pretendard = localFont({
   variable: "--font-pretendard",
 });
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
     default: SITE_NAME,
@@ -47,6 +48,12 @@ export const metadata: Metadata = {
     images: [PUBLIC_SHARE_IMAGE.url],
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  if (!(await isManagedPreview())) return baseMetadata;
+  // 인증된 미리보기의 검색 방지는 하위 공개 페이지에도 상속된다.
+  return { ...baseMetadata, robots: { index: false, follow: false, nocache: true } };
+}
 
 export default async function RootLayout({
   children,
