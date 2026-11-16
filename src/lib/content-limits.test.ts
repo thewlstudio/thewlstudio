@@ -58,7 +58,11 @@ describe("Works 기존 한도 초과는 잘라 저장하지 않는다", () => {
         expect(upload).not.toHaveBeenCalled();
         expect(JSON.stringify(payload)).toBe(before);
         const valid = { _key: "existing", ...make(max) };
-        const previous = [{ ...valid, image: { asset: { _ref: "image-existing" } }, audioFile: { asset: { _ref: "file-existing" } } }];
+        // 각 종류가 실제로 쓰는 미디어만 연결한다. 다른 종류의 원본 필드는 이제 손실 보호 대상이다.
+        const previous = [{ ...valid,
+            ...(valid._type === "imageBlock" ? { image: { asset: { _ref: "image-existing" } } } : {}),
+            ...(valid._type === "audioBlock" ? { audioFile: { asset: { _ref: "file-existing" } } } : {}),
+        }];
         const result = await sanitizeBlocks(workPayloadFixture([valid]), previous, upload);
         expect(result).toHaveProperty("blocks");
         const saved = "blocks" in result ? result.blocks as Raw[] : [];

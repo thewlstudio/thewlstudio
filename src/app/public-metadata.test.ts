@@ -25,6 +25,7 @@ describe("공개 페이지별 검색·공유 메타데이터", () => {
             openGraph: { title: fullTitle, description, url: path, siteName: PUBLIC_SITE_NAME, locale: "ko_KR", type: "website", images: [PUBLIC_SHARE_IMAGE] },
             twitter: { title: fullTitle, description, card: "summary_large_image", images: [PUBLIC_SHARE_IMAGE.url] },
         });
+        expect(metadata.robots).toBeUndefined(); // 루트의 요청별 미리보기 검색 방지를 상속한다.
     });
     it("상세 공유는 기존 콘텐츠 이미지·소개와 제목을 유지하며 OG 공통 정보도 포함한다", () => {
         const metadata = publicPageMetadata({ title: "아티스트 - 작품", description: "기존 소개", path: "/works/one", shareImage: "https://cdn.sanity.io/cover.jpg?w=1200" });

@@ -5,6 +5,7 @@ import { usePublicMotion } from "@/hooks/usePublicMotion";
 import { motion } from "motion/react";
 import Image from "@/components/CmsImage";
 import type { CrewMemberDetail } from "@/types/sanity";
+import { publicContentKey } from "@/lib/public-content-key";
 
 export default function CrewDetailClient({ member, path }: { member: CrewMemberDetail; path: string }) {
     const { transitionFor } = usePublicMotion();
@@ -46,7 +47,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
 
                     if (section._type === 'aboutSection') {
                         return (
-                            <motion.div transition={transitionFor({})} data-public-motion key={section._key || index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
+                            <motion.div transition={transitionFor({})} data-public-motion key={publicContentKey(section._key, index)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
                                 <div className="w-full lg:w-1/3 mb-8 lg:mb-0">
                                     <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-neutral-800 flex items-center">
                                         <span className="w-[3px] h-6 bg-black mr-4"></span>
@@ -64,7 +65,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
 
                     if (section._type === 'discographySection') {
                         return (
-                            <motion.div transition={transitionFor({})} data-public-motion key={section._key || index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
+                            <motion.div transition={transitionFor({})} data-public-motion key={publicContentKey(section._key, index)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
                                 <div className="w-full lg:w-1/3 mb-10 lg:mb-0">
                                     <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-neutral-800 flex items-center">
                                         <span className="w-[3px] h-6 bg-neutral-300 group-hover:bg-black transition-colors mr-4"></span>
@@ -74,7 +75,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                 <div className="w-full lg:w-2/3">
                                     <div className="flex flex-col space-y-20">
                                         {section.years?.map((group, idx) => (
-                                            <div key={group._key ?? idx} className="flex flex-col md:flex-row gap-4 md:gap-8 group/yearblock items-start">
+                                            <div key={publicContentKey(group._key, idx)} className="flex flex-col md:flex-row gap-4 md:gap-8 group/yearblock items-start">
                                                 <div className="w-full md:w-28 shrink-0">
                                                     <p className="text-2xl md:text-4xl font-extrabold italic tracking-tight text-neutral-500 group-hover/yearblock:text-black transition-colors duration-500 leading-none -mt-1 md:-mt-1.5">
                                                         {group.year}
@@ -82,7 +83,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                                 </div>
                                                 <div className="w-full flex-grow space-y-2">
                                                     {group.tracks?.map((track, i) => (
-                                                        <div key={track._key ?? i} className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200/60 pb-4 group/track cursor-default overflow-hidden transition-colors duration-300 hover:border-black">
+                                                        <div key={publicContentKey(track._key, i)} className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200/60 pb-4 group/track cursor-default overflow-hidden transition-colors duration-300 hover:border-black">
                                                             <h3 className="text-sm md:text-xl font-bold text-neutral-500 tracking-tight group-hover/track:text-black motion-safe:group-hover/track:translate-x-3 transition-all duration-300 ease-out">{track.title}</h3>
                                                             {track.desc && <span className="text-[10px] md:text-xs font-bold text-neutral-500 uppercase tracking-widest mt-1 md:mt-0 font-mono group-hover/track:text-black transition-colors duration-300 shrink-0">{track.desc}</span>}
                                                         </div>
@@ -98,7 +99,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
 
                     if (section._type === 'careerSection') {
                         return (
-                            <motion.div transition={transitionFor({})} data-public-motion key={section._key || index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
+                            <motion.div transition={transitionFor({})} data-public-motion key={publicContentKey(section._key, index)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
                                 <div className="w-full lg:w-1/3 mb-10 lg:mb-0">
                                     <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-neutral-800 flex items-center">
                                         <span className="w-[3px] h-6 bg-neutral-300 group-hover:bg-black transition-colors mr-4"></span>
@@ -107,7 +108,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                 </div>
                                 <div className="w-full lg:w-2/3 space-y-12">
                                     {section.items?.map((item, idx) => (
-                                        <div key={item._key ?? idx} className="relative pl-6 md:pl-8 border-l-[1.5px] border-neutral-200 group/career">
+                                        <div key={publicContentKey(item._key, idx)} className="relative pl-6 md:pl-8 border-l-[1.5px] border-neutral-200 group/career">
                                             <span className="absolute -left-[3.5px] top-1.5 w-[5px] h-[5px] bg-neutral-300 group-hover/career:bg-black transition-colors"></span>
                                             <p className="text-[10px] md:text-sm font-bold text-neutral-500 tracking-widest mb-2 font-mono group-hover/career:text-black transition-colors duration-300">{item.date}</p>
                                             <h3 className="text-base md:text-xl font-bold text-neutral-600 tracking-tight mb-2 group-hover/career:text-black motion-safe:group-hover/career:translate-x-1.5 transition-all duration-300 ease-out">{item.title}</h3>
@@ -121,7 +122,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
 
                     if (section._type === 'awardsAndActivitiesSection') {
                         return (
-                            <motion.div transition={transitionFor({})} data-public-motion key={section._key || index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
+                            <motion.div transition={transitionFor({})} data-public-motion key={publicContentKey(section._key, index)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
                                 <div className="w-full lg:w-1/3 mb-10 lg:mb-0">
                                     <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-neutral-800 flex items-stretch">
                                         <span className="w-[3px] self-stretch bg-neutral-300 group-hover:bg-black transition-colors mr-4 py-1"></span>
@@ -137,7 +138,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                             </h3>
                                             <ul className="space-y-5 pt-1">
                                                 {section.awards.map((item, idx) => (
-                                                    <li key={item._key ?? `award-${idx}`} className="flex gap-4 group/list">
+                                                    <li key={publicContentKey(item._key, idx)} className="flex gap-4 group/list">
                                                         <span className="text-xs font-bold text-neutral-500 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
                                                         <span className="text-xs md:text-base font-semibold text-neutral-500 break-words group-hover/list:text-black motion-safe:group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>
@@ -154,7 +155,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
                                             </h3>
                                             <ul className="space-y-5 pt-1">
                                                 {section.activities.map((item, idx) => (
-                                                    <li key={item._key ?? `activity-${idx}`} className="flex gap-4 group/list">
+                                                    <li key={publicContentKey(item._key, idx)} className="flex gap-4 group/list">
                                                         <span className="text-xs font-bold text-neutral-500 font-mono mt-0.5 shrink-0 group-hover/list:text-black transition-colors duration-300">{item.date}</span>
                                                         <span className="text-xs md:text-base font-semibold text-neutral-500 break-words group-hover/list:text-black motion-safe:group-hover/list:translate-x-1 transition-all duration-300 ease-out">{item.title}</span>
                                                     </li>
@@ -169,7 +170,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
 
                     if (section._type === 'educationSection') {
                         return (
-                            <motion.div transition={transitionFor({})} data-public-motion key={section._key || index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
+                            <motion.div transition={transitionFor({})} data-public-motion key={publicContentKey(section._key, index)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
                                 <div className="w-full lg:w-1/3 mb-10 lg:mb-0">
                                     <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-neutral-800 flex items-center">
                                         <span className="w-[3px] h-6 bg-neutral-300 group-hover:bg-black transition-colors mr-4"></span>
@@ -192,7 +193,7 @@ export default function CrewDetailClient({ member, path }: { member: CrewMemberD
 
                     if (section._type === 'certificationsSection') {
                         return (
-                            <motion.div transition={transitionFor({})} data-public-motion key={section._key || index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
+                            <motion.div transition={transitionFor({})} data-public-motion key={publicContentKey(section._key, index)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className={`flex flex-col lg:flex-row pb-16 lg:pb-24 group ${!isFirst && 'border-t border-neutral-300 pt-16 lg:pt-24'}`}>
                                 <div className="w-full lg:w-1/3 mb-10 lg:mb-0">
                                     <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-neutral-800 flex items-center">
                                         <span className="w-[3px] h-6 bg-neutral-300 group-hover:bg-black transition-colors mr-4"></span>

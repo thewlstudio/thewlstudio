@@ -12,6 +12,7 @@ import type { AudioBlock, WorkDetail } from "@/types/sanity";
 import { externalHttpUrl, instagramProfileUrl, youTubeVideoId } from "@/lib/content-urls";
 import { useWorkAudio } from "@/hooks/useWorkAudio";
 import { publicDetailPath } from "@/lib/public-routes";
+import { publicContentKey } from "@/lib/public-content-key";
 
 export function AudioPlayerBlock({ block }: { block: AudioBlock }) {
     const source = externalHttpUrl(block.audioUrl) ?? "";
@@ -66,7 +67,7 @@ export function AudioPlayerBlock({ block }: { block: AudioBlock }) {
     );
 }
 
-export default function WorkDetailClient({ initialWork }: { initialWork: WorkDetail }) {
+export default function WorkDetailClient({ initialWork, path }: { initialWork: WorkDetail; path?: string }) {
     const { reduced, transitionFor } = usePublicMotion();
     const itemVariants: Variants = {
         hidden: { opacity: reduced ? 1 : 0, y: reduced ? 0 : 30 },
@@ -83,7 +84,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
             <section className="pt-40 pb-0 px-4 flex flex-col items-center justify-center">
                 {/* Title Area */}
                 <motion.div data-public-motion
-                    id="page-title" tabIndex={-1} data-page-path={publicDetailPath('works', initialWork.slug) ?? undefined}
+                    id="page-title" tabIndex={-1} data-page-path={path ?? publicDetailPath('works', initialWork.slug) ?? undefined}
                     role="group" aria-label={`${artist} - ${title}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -162,7 +163,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                         case 'descriptionBlock':
                             return (
                                 <motion.div data-public-motion
-                                    key={block._key}
+                                    key={publicContentKey(block._key, idx)}
                                     initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: "-100px" }}
@@ -182,7 +183,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                         case 'tracklistBlock':
                             return (
                                 <motion.div data-public-motion
-                                    key={block._key}
+                                    key={publicContentKey(block._key, idx)}
                                     initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: "-100px" }}
@@ -205,7 +206,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                         case 'signatureMessageBlock':
                             return (
                                 <motion.div data-public-motion
-                                    key={block._key}
+                                    key={publicContentKey(block._key, idx)}
                                     initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: "-100px" }}
@@ -227,7 +228,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
 
                         case 'creditGridBlock':
                             return (
-                                <section key={block._key} className="bg-white pb-24 pt-8 md:pt-16 w-full mt-8">
+                                <section key={publicContentKey(block._key, idx)} className="bg-white pb-24 pt-8 md:pt-16 w-full mt-8">
                                     <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
                                         {block.sections?.map((section, i) => (
                                             <motion.div transition={transitionFor({})} data-public-motion key={i} variants={itemVariants} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }}>
@@ -263,7 +264,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
 
                         case 'imageBlock':
                             return (
-                                <div key={block._key} className="w-full max-w-4xl mx-auto px-6 mb-16 mt-8 flex flex-col items-center">
+                                <div key={publicContentKey(block._key, idx)} className="w-full max-w-4xl mx-auto px-6 mb-16 mt-8 flex flex-col items-center">
                                     {block.imageUrl && (
                                         <Image src={block.imageUrl} alt={block.caption || `${title} 관련 이미지 ${idx + 1}`} width={1200} height={800} sizes="(min-width: 896px) 848px, calc(100vw - 48px)" style={{ width: '100%', height: 'auto' }} className="rounded-sm shadow-sm" />
                                     )}
@@ -277,7 +278,7 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
                             const videoId = youTubeVideoId(block.url);
                             if (!videoId) return null;
                             return (
-                                <div key={block._key} className="w-full max-w-4xl mx-auto px-6 mb-16 mt-8">
+                                <div key={publicContentKey(block._key, idx)} className="w-full max-w-4xl mx-auto px-6 mb-16 mt-8">
                                     <div className="relative w-full aspect-video shadow-xl">
                                         <iframe
                                             src={`https://www.youtube.com/embed/${videoId}`}
@@ -292,13 +293,13 @@ export default function WorkDetailClient({ initialWork }: { initialWork: WorkDet
 
                         case 'freeformTextBlock':
                             return block.content ? (
-                                <div key={block._key} className="w-full max-w-3xl mx-auto px-6 mb-16 mt-8 text-sm md:text-base text-neutral-700 leading-loose">
+                                <div key={publicContentKey(block._key, idx)} className="w-full max-w-3xl mx-auto px-6 mb-16 mt-8 text-sm md:text-base text-neutral-700 leading-loose">
                                     <WorkRichText value={block.content} />
                                 </div>
                             ) : null;
 
                         case 'audioBlock':
-                            return <AudioPlayerBlock key={block._key} block={block} />;
+                            return <AudioPlayerBlock key={publicContentKey(block._key, idx)} block={block} />;
 
                         default:
                             return null;

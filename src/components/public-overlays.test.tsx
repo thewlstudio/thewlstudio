@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, StrictMode, useCallback, useRef, type ReactNode } from "react";
+import { act, StrictMode, Suspense, useCallback, useRef, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPortal } from "react-dom";
@@ -72,6 +72,11 @@ async function finish(label: string) {
     await act(async () => mocks.exits.get(label)!());
 }
 function HeaderPage() { return <main id="main-content"><Header /><button>배경 버튼</button></main>; }
+const pendingPage = new Promise<void>(() => {});
+function PendingPage({ suspended, children }: { suspended: boolean; children: ReactNode }) {
+    if (suspended) throw pendingPage;
+    return children;
+}
 const image = { _type: "image" as const, asset: { _type: "reference" as const, _ref: "image-test" } };
 const instructor: Instructor = { _id: "i1", id: "i1", category: "VOCAL", instructorName: "강사", image, bgImage: image, subtitle: "소개", lessonInfo: "수업", about: ["설명"], process: ["과정"], portfolioUrl: "https://example.com" };
 
@@ -112,6 +117,41 @@ afterEach(async () => {
 });
 
 describe("공개 메뉴의 실제 표시 수명", () => {
+    it.each(["menu", "modal"])("%s 포털의 기존 인라인 표시 값과 우선순위를 재표시 때 복원한다", async (mode) => {
+        const frame = (suspended: boolean) => <Suspense fallback={<p>로딩</p>}><PendingPage suspended={suspended}>{mode === "menu" ? <HeaderPage /> : <ClassClient initialInstructors={[instructor]} />}</PendingPage></Suspense>;
+        await render(frame(false));
+        await click(mode === "menu" ? openMenu() : host.querySelector<HTMLElement>('button[aria-haspopup="dialog"]')!);
+        const portal = mode === "menu" ? dialog() : dialog().parentElement!;
+        portal.style.setProperty("visibility", "visible", "important");
+        await render(frame(true));
+        expect(portal.style.getPropertyValue("visibility")).toBe("hidden");
+        await render(frame(false));
+        expect(portal.style.getPropertyValue("visibility")).toBe("visible");
+        expect(portal.style.getPropertyPriority("visibility")).toBe("important");
+    });
+    it.each(["menu", "modal"])("Suspense가 %s 화면을 숨기면 로딩 화면에 잠금·포커스 트랩이 남지 않는다", async (mode) => {
+        const frame = (suspended: boolean) => <Suspense fallback={<main id="loading-content"><button>로딩 화면 버튼</button></main>}><PendingPage suspended={suspended}>{mode === "menu" ? <HeaderPage /> : <ClassClient initialInstructors={[instructor]} />}</PendingPage></Suspense>;
+        await render(frame(false));
+        const trigger = mode === "menu" ? openMenu() : host.querySelector<HTMLElement>('button[aria-haspopup="dialog"]')!;
+        await click(trigger);
+        const overlay = dialog();
+        const portal = mode === "menu" ? overlay : overlay.parentElement!;
+        expect(host.querySelector('#main-content')?.hasAttribute('inert')).toBe(true);
+        await render(frame(true));
+        expect(portal.style.visibility).toBe("hidden");
+        expect(document.body.style.overflow).toBe("clip");
+        expect(skip.hasAttribute('inert')).toBe(false);
+        const button = host.querySelector<HTMLButtonElement>('#loading-content button')!;
+        button.focus(); expect(document.activeElement).toBe(button);
+        expect((await key("Escape")).defaultPrevented).toBe(false);
+        await render(frame(false));
+        expect(dialog()).toBe(overlay);
+        expect(portal.style.visibility).not.toBe("hidden");
+        expect(host.contains(trigger)).toBe(true); // 언마운트가 아닌 보존/재표시다.
+        expect(document.body.style.overflow).toBe("hidden");
+        expect(skip.hasAttribute('inert')).toBe(true);
+        expect(dialog().contains(document.activeElement)).toBe(true);
+    });
     it.each(["menu", "modal"])("%s가 열린 동안 설정을 바꿔도 포커스·배경 잠금과 DOM을 유지한다", async (mode) => {
         if (mode === "menu") {
             await render(<HeaderPage />); await click(openMenu());
@@ -221,11 +261,11 @@ describe("공개 메뉴의 실제 표시 수명", () => {
         host.querySelector<HTMLButtonElement>("main > button")!.focus();
         expect(dialog().contains(document.activeElement)).toBe(true);
     });
-    it("새 탭 클릭은 메뉴를 닫지 않고 실제 탐색일 때만 닫는다", async () => {
+    it.each([{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 }])("별도 탐색 클릭 %j는 메뉴를 닫지 않고 실제 탐색일 때만 닫는다", async (props) => {
         await render(<HeaderPage />);
         await click(openMenu());
         const link = dialog().querySelector<HTMLAnchorElement>('a[href="/works"]')!;
-        await act(async () => link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true })));
+        await act(async () => link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ...props })));
         expect(openMenu()).toBeNull();
         expect(mocks.exits.has("menu")).toBe(false);
         await click(link);
@@ -379,7 +419,15 @@ describe("Preloader의 저장소·타이머·종료 처리", () => {
         await finish("preloader");
         expect(document.body.style.overflow).toBe("clip");
     });
-    it.each(["/manage", "/admin"])("%s에서는 저장소·타이머·잠금을 실행하지 않는다", async (path) => {
+    it.each(["/management", "/manage-help", "/administrator", "/admin-help", "/manage%2Fcrew", "/admin%2Fdesk", "/studio"])("일반 경로 %s에서는 관리자 제외로 연출을 잘못 생략하지 않는다", async (path) => {
+        mocks.pathname = path;
+        const read = vi.spyOn(Storage.prototype, "getItem");
+        await render(<Preloader />);
+        expect(read).toHaveBeenCalledWith("wls_preloader_seen");
+        expect(host.querySelector("img")).not.toBeNull();
+        expect(document.body.style.overflow).toBe("hidden");
+    });
+    it.each(["/manage", "/manage/", "/manage/crew/new", "/admin", "/admin/", "/admin/desk"])("%s에서는 저장소·타이머·잠금을 실행하지 않는다", async (path) => {
         mocks.pathname = path;
         const read = vi.spyOn(Storage.prototype, "getItem");
         await render(<Preloader />);

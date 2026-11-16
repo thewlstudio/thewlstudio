@@ -1,22 +1,32 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { SITE_NAME } from "@/config/site";
+import { focusPageElement } from "@/lib/page-focus";
 
 export default function GlobalError({
     error,
-    reset,
+    retry,
 }: {
-    error: Error & { digest?: string };
-    reset: () => void;
+    error: unknown;
+    retry: () => void;
 }) {
+    const titleRef = useRef<HTMLHeadingElement>(null);
     useEffect(() => {
         console.error("[GlobalError]", error);
     }, [error]);
+    useEffect(() => {
+        if (document.activeElement === document.body) focusPageElement(titleRef.current);
+    }, []);
 
     return (
         <html lang="ko">
+            <head>
+                <title>{`문제가 발생했습니다 | ${SITE_NAME}`}</title>
+                <meta name="robots" content="noindex, nofollow" />
+            </head>
             <body style={{ margin: 0, fontFamily: "system-ui, -apple-system, sans-serif" }}>
-                <div style={{
+                <main id="main-content" style={{
                     minHeight: "100vh",
                     display: "flex",
                     flexDirection: "column",
@@ -27,7 +37,7 @@ export default function GlobalError({
                     padding: "1.5rem",
                     textAlign: "center",
                 }}>
-                    <h1 style={{ fontSize: "1.875rem", fontWeight: 900, letterSpacing: "-0.025em", marginBottom: "1rem" }}>
+                    <h1 ref={titleRef} id="page-title" tabIndex={-1} style={{ fontSize: "1.875rem", fontWeight: 900, letterSpacing: "-0.025em", marginBottom: "1rem" }}>
                         문제가 발생했습니다
                     </h1>
                     <p style={{ color: "#999", marginBottom: "2rem", maxWidth: "28rem" }}>
@@ -35,7 +45,8 @@ export default function GlobalError({
                     </p>
                     <div style={{ display: "flex", gap: "1rem" }}>
                         <button
-                            onClick={reset}
+                            type="button"
+                            onClick={retry}
                             style={{
                                 padding: "0.75rem 1.5rem",
                                 backgroundColor: "#fff",
@@ -65,7 +76,7 @@ export default function GlobalError({
                             홈으로
                         </a>
                     </div>
-                </div>
+                </main>
             </body>
         </html>
     );

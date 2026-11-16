@@ -127,7 +127,12 @@ describe("실행 중 동작 줄이기 설정 변경", () => {
         await render(); expect(host.querySelector("input")).not.toBeNull();
         expect(host.querySelector("output")!.dataset.reduced).toBe("false");
     });
-    it.each(["/manage", "/admin"])("%s에는 스크롤 엔진과 페이지 전환 래퍼를 만들지 않는다", async (pathname) => {
+    it.each(["/management", "/manage-help", "/administrator", "/admin-help", "/manage%2Fcrew", "/admin%2Fdesk", "/studio"])("일반 경로 %s를 관리자 화면으로 오인하지 않는다", async (pathname) => {
+        state.pathname = pathname; await render();
+        expect(current).toBeDefined();
+        expect(host.querySelector("[data-public-motion]")).not.toBeNull();
+    });
+    it.each(["/manage", "/manage/", "/manage/crew/new", "/admin", "/admin/", "/admin/desk"])("%s에는 스크롤 엔진과 페이지 전환 래퍼를 만들지 않는다", async (pathname) => {
         state.pathname = pathname; await render();
         expect(current).toBeUndefined(); expect(host.querySelector("[data-public-motion]")).toBeNull();
     });

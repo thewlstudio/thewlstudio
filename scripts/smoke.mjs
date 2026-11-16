@@ -6,9 +6,11 @@
 const base = (process.argv[2] ?? process.env.SMOKE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const failures = [];
 let checks = 0;
+const manageCacheControls = [];
 
 async function get(path) {
     const res = await fetch(base + path, { redirect: "manual" });
+    if (path.startsWith("/manage")) manageCacheControls.push({ path, value: res.headers.get("cache-control") ?? "" });
     return { status: res.status, location: res.headers.get("location") ?? "", text: await res.text().catch(() => "") };
 }
 function check(name, ok, detail = "") {
@@ -24,6 +26,12 @@ for (const p of ["/", "/works", "/crew", "/studio", "/class", "/contact", "/robo
 }
 const sm = await get("/sitemap.xml");
 check("사이트맵 → 200 + urlset", sm.status === 200 && sm.text.includes("<urlset"), `status ${sm.status}`);
+
+const missing = await get("/__smoke_missing_page__");
+check("없는 주소 → 404 + 안내 제목·홈 복귀·noindex", missing.status === 404 &&
+    /<h1\b[^>]*\bid="page-title"[^>]*>\s*Page Not Found\s*<\/h1>/.test(missing.text) &&
+    /<meta\b[^>]*\bname="robots"[^>]*\bcontent="[^"]*noindex/.test(missing.text) &&
+    /<a\b[^>]*\bhref="\/"/.test(missing.text), `status ${missing.status}`);
 
 // 목록만 정상이면서 상세 본문은 404인 회귀도 잡는다. 사이트맵의 URL은
 // 경로만 사용해, 점검 대상으로 지정한 서버 밖으로 요청하지 않는다.
@@ -59,11 +67,24 @@ const preview = await fetch(base + "/manage/preview?to=/", { redirect: "manual" 
 check("미리보기 /manage/preview → 로그인 없이는 로그인으로 이동", (preview.status === 307 || preview.status === 308) && (preview.headers.get("location") ?? "").includes("/manage/login") && !/__prerender_bypass/.test(preview.headers.get("set-cookie") ?? ""), `status ${preview.status}`);
 const legacyDraft = await fetch(base + "/api/draft?slug=/", { redirect: "manual" });
 check("예전 /api/draft → 403 (미리보기 모드를 켜지 않음)", legacyDraft.status === 403 && !/__prerender_bypass/.test(legacyDraft.headers.get("set-cookie") ?? ""), `status ${legacyDraft.status}`);
+const exitPreview = await fetch(base + "/api/disable-draft?slug=%2Fmanage", { redirect: "manual" });
+check("미리보기 종료 → 관리 허브 이동 + 쿠키 만료", exitPreview.status === 307 && exitPreview.headers.get("location") === "/manage" && /__prerender_bypass=;/.test(exitPreview.headers.get("set-cookie") ?? ""), `status ${exitPreview.status}`);
+const exitExternal = await fetch(base + "/api/disable-draft?slug=%2F%2Foutside.example", { redirect: "manual" });
+check("미리보기 종료의 외부 이동 요청 → 홈으로 제한", exitExternal.status === 307 && exitExternal.headers.get("location") === "/", `status ${exitExternal.status}`);
+check("미리보기 진입·종료·차단 응답은 private + no-store", [preview, legacyDraft, exitPreview, exitExternal].every((response) => {
+    const directives = (response.headers.get("cache-control") ?? "").toLowerCase().split(",").map((part) => part.trim());
+    return directives.includes("private") && directives.includes("no-store") && !directives.includes("public");
+}));
 
 // 3. 로그인 화면과 검색엔진 노출 차단
 const login = await get("/manage/login");
 check("관리 로그인 → 200", login.status === 200, `status ${login.status}`);
 check("관리 화면은 검색엔진 노출 차단(noindex)", /<meta name="robots" content="[^"]*noindex/.test(login.text));
+const unsafeManageCache = manageCacheControls.filter(({ value }) => {
+    const directives = value.toLowerCase().split(",").map((part) => part.trim());
+    return !directives.includes("private") || !directives.includes("no-store") || directives.includes("public");
+});
+check("관리 HTML·로그인 이동 응답은 private + no-store", manageCacheControls.length > 0 && unsafeManageCache.length === 0, unsafeManageCache.map(({ path }) => path).join(", "));
 
 // 4. 보안 헤더
 const home = await fetch(base + "/");

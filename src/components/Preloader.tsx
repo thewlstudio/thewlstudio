@@ -6,12 +6,13 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { usePrefersReducedMotion } from "./SmoothScroll";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { isManagePath, isStudioPath } from "@/lib/page-focus";
 
 const emptySubscribe = () => () => {};
 
 export default function Preloader() {
     const pathname = usePathname();
-    const isAdminScreen = pathname.startsWith("/manage") || pathname.startsWith("/admin");
+    const isAdminScreen = isManagePath(pathname) || isStudioPath(pathname);
     // 훅은 조건 없이 항상 호출하고, 건너뛸지 여부는 이 값을 조합해 아래에서 판단한다
     const prefersReducedMotion = usePrefersReducedMotion();
     const skip = isAdminScreen || prefersReducedMotion;

@@ -4,7 +4,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SkipLink from './SkipLink';
 import PageNavigationFocus from './PageNavigationFocus';
-import { focusPageElement, pageFocusTarget } from '@/lib/page-focus';
+import NotFound from '@/app/not-found';
+import { focusPageElement, pageFocusTarget, pagePathMatches } from '@/lib/page-focus';
 
 const state = vi.hoisted(() => ({ pathname: '/crew' }));
 vi.mock('next/navigation', () => ({ usePathname: () => state.pathname }));
@@ -24,8 +25,8 @@ async function click(element: HTMLElement, props: MouseEventInit = {}) {
 function path(value: string) { state.pathname = value.split(/[?#]/)[0]; history.replaceState({}, '', value); }
 const title = () => document.getElementById('page-title')!;
 const skip = () => document.getElementById('skip-link')!;
-function Frame({ ready = true, bodyPath = state.pathname, inert = false }: { ready?: boolean; bodyPath?: string; inert?: boolean }) {
-    return <><SkipLink /><PageNavigationFocus /><input aria-label="직접 선택한 입력" />{ready && <main id="main-content" inert={inert}>
+function Frame({ ready = true, bodyPath = state.pathname, inert = false, hidden = false, ariaHidden = false }: { ready?: boolean; bodyPath?: string; inert?: boolean; hidden?: boolean; ariaHidden?: boolean }) {
+    return <><SkipLink /><PageNavigationFocus /><input aria-label="직접 선택한 입력" />{ready && <main id="main-content" inert={inert} hidden={hidden} aria-hidden={ariaHidden || undefined}>
         <header>{createElement('a', { href: '/' }, '로고')}</header>
         <h1 id="page-title" tabIndex={-1} data-page-path={bodyPath}>페이지 제목</h1>
         <section id="membership"><h2>멤버십</h2><button>가입 안내</button></section>
@@ -50,6 +51,30 @@ afterEach(async () => {
 });
 
 describe('본문 바로가기의 실제 목적지', () => {
+    it('정적 404의 내부 경로와 방문 URL이 달라도 실제 제목에 바로간다', async () => {
+        path('/missing-static'); state.pathname = '/_not-found';
+        await render(<><SkipLink /><PageNavigationFocus /><NotFound /></>);
+        expect(title().dataset.pagePath).toBeUndefined();
+        skip().focus(); await click(skip());
+        expect(document.activeElement).toBe(title());
+    });
+    it('URL만 바뀐 이전 제목에 바로가지 않고 같은 DOM의 새 경로 표식을 기다린다', async () => {
+        await render(<Frame />); path('/works/second'); await render(<Frame bodyPath="/crew" />);
+        skip().focus(); await click(skip()); history.replaceState({}, '', '#page-title');
+        expect(document.activeElement).toBe(skip());
+        await render(<Frame bodyPath="/works/second" />); expect(document.activeElement).toBe(title());
+    });
+    it.each(['hidden', 'ariaHidden'] as const)('이미 존재하지만 %s인 제목의 명시적인 이동도 표시 해제 후 완료한다', async (attribute) => {
+        await render(<Frame {...{ [attribute]: true }} />); skip().focus(); await click(skip());
+        history.replaceState({}, '', '#page-title'); expect(document.activeElement).toBe(skip());
+        await render(<Frame />); expect(document.activeElement).toBe(title());
+    });
+    it.each(['hidden', 'ariaHidden'] as const)('대기 중 도착한 제목이 %s이면 해제될 때 명시적인 본문 이동을 마친다', async (attribute) => {
+        await render(<Frame ready={false} />); skip().focus(); await click(skip());
+        history.replaceState({}, '', '#page-title');
+        await render(<Frame {...{ [attribute]: true }} />); expect(document.activeElement).toBe(skip());
+        await render(<Frame />); expect(document.activeElement).toBe(title());
+    });
     it('헤더를 포함한 main이 아니라 Tab으로 다시 헤더에 가지 않는 제목을 가리킨다', async () => {
         await render(<Frame />);
         expect(skip().getAttribute('href')).toBe('#page-title');
@@ -88,6 +113,36 @@ describe('본문 바로가기의 실제 목적지', () => {
         expect(document.activeElement).toBe(skip());
         expect(scroll).not.toHaveBeenCalled();
     });
+    it.each([
+        { ctrlKey: true }, { metaKey: true }, { altKey: true }, { shiftKey: true }, { button: 1 },
+    ])('현재 탭에서 이미 기다리는 본문 이동은 별도 탐색 클릭 %j로 취소하지 않는다', async (props) => {
+        await render(<Frame ready={false} />);
+        skip().focus(); await click(skip());
+        history.replaceState({}, '', '#page-title');
+        await click(skip(), props);
+        await render(<Frame />);
+        expect(document.activeElement).toBe(title());
+        expect(scroll).toHaveBeenCalledTimes(1);
+    });
+    it('기본 동작이 취소된 클릭은 현재 탭의 기존 본문 대기를 지우지 않는다', async () => {
+        await render(<Frame ready={false} />);
+        skip().focus(); await click(skip());
+        history.replaceState({}, '', '#page-title');
+        skip().addEventListener('click', (event) => event.preventDefault(), { once: true });
+        await click(skip());
+        await render(<Frame />);
+        expect(document.activeElement).toBe(title());
+        expect(scroll).toHaveBeenCalledTimes(1);
+    });
+    it('현재 탭에서 다시 누르면 이전 대기를 교체하고 준비 후 한 번만 이동한다', async () => {
+        await render(<Frame ready={false} />);
+        skip().focus(); await click(skip());
+        history.replaceState({}, '', '#page-title');
+        await click(skip());
+        await render(<Frame />);
+        expect(document.activeElement).toBe(title());
+        expect(scroll).toHaveBeenCalledTimes(1);
+    });
     it('준비를 기다리는 동안 사용자가 입력칸을 선택하면 포커스를 빼앗지 않는다', async () => {
         await render(<Frame ready={false} />);
         skip().focus(); await click(skip());
@@ -108,6 +163,19 @@ describe('본문 바로가기의 실제 목적지', () => {
 });
 
 describe('공개 SPA 이동 후 포커스', () => {
+    it.each(['hidden', 'ariaHidden'] as const)('%s 제목은 표시가 풀릴 때까지 기다린 뒤 포커스를 안내한다', async (attribute) => {
+        await render(<Frame />); path('/works');
+        await render(<Frame {...{ [attribute]: true }} />); expect(document.activeElement).toBe(document.body);
+        await render(<Frame />); expect(document.activeElement).toBe(title());
+    });
+    it.each([
+        ['/works/With_you_n%40di', '/works/With_you_n@di'],
+        ['/crew/%ED%95%9C%EA%B8%80', '/crew/%ed%95%9c%ea%b8%80'],
+        ['/crew/scon', '/crew/%73con'],
+    ])('같은 경로의 안전한 인코딩 표기 차이 %s → %s 때문에 포커스가 멈추지 않는다', async (marker, url) => {
+        await render(<Frame />); path(url); await render(<Frame bodyPath={marker} />);
+        expect(document.activeElement).toBe(title());
+    });
     it('새 경로의 실제 본문이 준비되면 제목을 안내하고 이미 보이는 제목은 스크롤하지 않는다', async () => {
         await render(<Frame />);
         path('/works'); await render(<Frame />);
@@ -194,6 +262,15 @@ describe('공개 SPA 이동 후 포커스', () => {
 });
 
 describe('목적지 선택과 임시 포커스 속성', () => {
+    it.each([
+        ['/works/a%2Fb', '/works/a/b'],
+        ['/works/literal%252Fname', '/works/literal%2Fname'],
+        ['/crew/Name', '/crew/name'],
+        ['/crew/%', '/crew/%25'],
+        ['/crew/a', '/crew/ab'],
+    ])('다른 경로·문자열을 같은 포커스 경로로 합치지 않는다: %s / %s', (left, right) => {
+        expect(pagePathMatches(left, right)).toBe(false);
+    });
     it('명시적인 본문 시작 그룹은 내부 첫 제목으로 바꾸지 않는다', async () => {
         await render(<main id="main-content"><div id="page-title" tabIndex={-1}><h2>아티스트</h2><button>링크</button><h1>작품</h1></div></main>);
         expect(pageFocusTarget('#page-title')).toBe(title());

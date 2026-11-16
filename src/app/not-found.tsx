@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/config/site";
+import PublicRecoveryTitle from "@/components/PublicRecoveryTitle";
 
 export const metadata: Metadata = {
     title: "404 - Page Not Found",
@@ -13,12 +14,12 @@ export default function NotFound() {
                 <p className="text-xs font-bold tracking-[0.4em] text-neutral-500 uppercase mb-6">
                     {SITE_NAME}
                 </p>
-                <h1 className="text-[120px] md:text-[200px] font-black leading-none tracking-tighter text-white/10 select-none">
+                <p aria-hidden="true" className="text-[120px] md:text-[200px] font-black leading-none tracking-tighter text-white/10 select-none">
                     404
-                </h1>
-                <p id="page-title" tabIndex={-1} className="text-lg md:text-xl font-bold tracking-widest uppercase text-white mt-2 mb-4">
-                    Page Not Found
                 </p>
+                <PublicRecoveryTitle className="text-lg md:text-xl font-bold tracking-widest uppercase text-white mt-2 mb-4">
+                    Page Not Found
+                </PublicRecoveryTitle>
                 <p className="text-sm text-neutral-500 mb-12 tracking-wide">
                     요청하신 페이지를 찾을 수 없습니다.
                 </p>

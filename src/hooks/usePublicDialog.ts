@@ -1,10 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, type RefObject } from "react";
+import { useCallback, useLayoutEffect, type RefObject } from "react";
 import { useBodyScrollLock } from "./useBodyScrollLock";
 
 const inertOwners = new WeakMap<HTMLElement, { original: string | null; tokens: Set<symbol> }>();
 const dialogs: symbol[] = [];
+const hiddenDialogs = new WeakMap<HTMLElement, { visibility: string; priority: string }>();
+
+// Suspense는 바깥 페이지를 숨겨도 body의 Portal까지 숨기지는 않는다.
+function hideDialog(root: HTMLElement) {
+    if (!hiddenDialogs.has(root)) hiddenDialogs.set(root, {
+        visibility: root.style.getPropertyValue("visibility"), priority: root.style.getPropertyPriority("visibility"),
+    });
+    // display는 React Suspense도 직접 관리하므로 서로 덮어쓰지 않는다.
+    root.style.setProperty("visibility", "hidden", "important");
+}
+function revealDialog(root: HTMLElement) {
+    const saved = hiddenDialogs.get(root);
+    if (!saved) return;
+    // 숨김 중 다른 코드가 바꾼 표시 상태는 덮어쓰지 않는다.
+    if (root.style.getPropertyValue("visibility") === "hidden" && root.style.getPropertyPriority("visibility") === "important") {
+        if (saved.visibility) root.style.setProperty("visibility", saved.visibility, saved.priority);
+        else root.style.removeProperty("visibility");
+    }
+    hiddenDialogs.delete(root);
+}
 
 function lockBackground(element: HTMLElement, token: symbol) {
     let entry = inertOwners.get(element);
@@ -37,9 +57,10 @@ function focusable(root: HTMLElement): HTMLElement[] {
 }
 
 /** Portal의 실제 표시 수명(퇴장 애니메이션 포함) 동안 배경·키보드·포커스를 보호한다. */
-export function usePublicDialog({ active, dialogRef, triggerRef, initialFocus, onClose, restoreFocus }: {
+export function usePublicDialog({ active, dialogRef, portalRef, triggerRef, initialFocus, onClose, restoreFocus }: {
     active: boolean;
     dialogRef: RefObject<HTMLElement | null>;
+    portalRef?: RefObject<HTMLElement | null>;
     triggerRef: RefObject<HTMLElement | null>;
     initialFocus: string;
     onClose: () => void;
@@ -51,7 +72,8 @@ export function usePublicDialog({ active, dialogRef, triggerRef, initialFocus, o
         if ((!restoreFocus || restoreFocus()) && trigger?.isConnected && !trigger.closest("[inert]")) trigger.focus({ preventScroll: true });
     }, [triggerRef, restoreFocus]);
     // 먼저 해제돼야 아래 포커스 정리에서 트리거가 다시 포커스 가능한 상태다.
-    useEffect(() => {
+    // 일반 effect는 Suspense의 숨김 동안 살아 있으므로 실제 표시 수명에 맞춘다.
+    useLayoutEffect(() => {
         if (!active) return;
         const token = Symbol("public-dialog-background");
         const releases = [document.getElementById("main-content"), document.getElementById("skip-link")]
@@ -60,10 +82,12 @@ export function usePublicDialog({ active, dialogRef, triggerRef, initialFocus, o
         return () => releases.forEach((release) => release());
     }, [active]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!active) return;
         const root = dialogRef.current;
         if (!root) return;
+        const portal = portalRef?.current ?? root;
+        revealDialog(portal);
         const token = Symbol("public-dialog-focus");
         dialogs.push(token);
         const topmost = () => dialogs[dialogs.length - 1] === token;
@@ -92,11 +116,12 @@ export function usePublicDialog({ active, dialogRef, triggerRef, initialFocus, o
         document.addEventListener("focusin", focus);
         moveInside(); // rAF가 정지한 탭에서도 즉시 접근 가능한 대화상자가 된다.
         return () => {
+            hideDialog(portal);
             document.removeEventListener("keydown", key, true);
             document.removeEventListener("focusin", focus);
             const index = dialogs.indexOf(token);
             if (index !== -1) dialogs.splice(index, 1);
             restore();
         };
-    }, [active, dialogRef, initialFocus, onClose, restore]);
+    }, [active, dialogRef, portalRef, initialFocus, onClose, restore]);
 }

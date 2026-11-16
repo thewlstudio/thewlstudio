@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, StrictMode, type ReactNode } from "react";
+import { act, StrictMode, Suspense, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import Lenis from "lenis";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,6 +13,12 @@ let root: Root;
 let host: HTMLDivElement;
 let lenis: Lenis;
 function Lock({ active }: { active: boolean }) { useBodyScrollLock(active); return null; }
+const pending = new Promise<void>(() => {});
+function SuspendedLock({ suspended }: { suspended: boolean }) {
+    useBodyScrollLock(true);
+    if (suspended) throw pending;
+    return <div>잠금을 소유한 화면</div>;
+}
 function Page({ first = false, second = false }: { first?: boolean; second?: boolean }) {
     return <SmoothScroll><Lock active={first} /><Lock active={second} /><main>본문</main><div data-lenis-prevent>모달 내부</div></SmoothScroll>;
 }
@@ -46,6 +52,31 @@ afterEach(async () => {
 });
 
 describe("실제 Lenis와 공통 스크롤 잠금", () => {
+    it("숨겨진 소유자의 잠금만 해제하며 다른 화면의 잠금은 유지한다", async () => {
+        const frame = (suspended: boolean, other: boolean) => <SmoothScroll><Lock active={other} /><Suspense fallback={<p>로딩</p>}><SuspendedLock suspended={suspended} /></Suspense></SmoothScroll>;
+        await render(frame(false, true));
+        await render(frame(true, true));
+        expect(isBodyScrollLocked()).toBe(true);
+        expect(document.body.style.overflow).toBe("hidden");
+        expect(lenis.isStopped).toBe(true);
+        await render(frame(true, false));
+        expect(isBodyScrollLocked()).toBe(false);
+        expect(document.body.style.overflow).toBe("clip");
+        expect(lenis.isStopped).toBe(false);
+    });
+    it("Suspense가 이전 화면을 숨기면 잠금을 풀고 다시 표시하면 재획득한다", async () => {
+        const frame = (suspended: boolean) => <SmoothScroll><Suspense fallback={<p>새 화면 로딩</p>}><SuspendedLock suspended={suspended} /></Suspense></SmoothScroll>;
+        await render(frame(false));
+        expect(isBodyScrollLocked()).toBe(true);
+        await render(frame(true));
+        expect(host.textContent).toContain("새 화면 로딩");
+        expect(isBodyScrollLocked()).toBe(false);
+        expect(document.body.style.overflow).toBe("clip");
+        expect(lenis.isStopped).toBe(false);
+        await render(frame(false));
+        expect(isBodyScrollLocked()).toBe(true);
+        expect(lenis.isStopped).toBe(true);
+    });
     it("body overflow만 숨기면 Lenis의 wheel 경로가 실행되지만 공통 잠금은 그것도 멈춘다", async () => {
         const scroll = vi.spyOn(lenis, "scrollTo");
         await render(<Page />);

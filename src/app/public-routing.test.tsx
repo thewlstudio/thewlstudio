@@ -50,6 +50,7 @@ describe.each([
         expect(meta.alternates?.canonical).toBe(`/${area}/${encodeURIComponent(slug)}`);
         expect(meta.openGraph).toMatchObject({ url: `/${area}/${encodeURIComponent(slug)}` });
         const result = await page({ params: Promise.resolve({ slug: encodeURIComponent(slug) }) }) as ReactElement<{ children: ReactNode[] }>;
+        if (area === "works") expect((result.props.children[1] as ReactElement<{ path: string }>).props.path).toBe(`/works/${encodeURIComponent(slug)}`);
         const script = result.props.children[0] as ReactElement<{ dangerouslySetInnerHTML: { __html: string } }>;
         expect(JSON.parse(script.props.dangerouslySetInnerHTML.__html).url).toContain(`/${area}/${encodeURIComponent(slug)}`);
         expect(fetchDetail).toHaveBeenCalledTimes(2);

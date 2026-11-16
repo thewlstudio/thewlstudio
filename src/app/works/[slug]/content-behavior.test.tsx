@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, StrictMode, type ReactNode } from "react";
+import { act, StrictMode, Suspense, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import WorkDetailClient, { AudioPlayerBlock } from "./WorkDetailClient";
@@ -37,7 +37,21 @@ const data = (audio: HTMLMediaElement) => {
 const audio = (index = 0) => host.querySelectorAll("audio")[index];
 const button = (index = 0) => host.querySelectorAll("button")[index];
 const range = (index = 0) => host.querySelectorAll<HTMLInputElement>('input[type="range"]')[index];
+function setMediaError(code: number, message: string) {
+    const element = audio();
+    // jsdom에는 error getter가 없으므로 해당 테스트 재생기에만 브라우저 상태를 연결한다.
+    Object.defineProperty(element, "error", { configurable: true, get: () => data(element).error });
+    data(element).error = { code, message } as MediaError;
+}
 async function render(node: ReactNode = <AudioPlayerBlock block={block()} />) { await act(async () => root.render(node)); }
+const pendingScreen = new Promise<void>(() => {});
+function Screen({ suspended, children }: { suspended: boolean; children: ReactNode }) {
+    if (suspended) throw pendingScreen;
+    return children;
+}
+function SuspendablePlayer({ suspended }: { suspended: boolean }) {
+    return <Suspense fallback={<p role="status">다음 화면 로딩</p>}><Screen suspended={suspended}><AudioPlayerBlock block={block()} /></Screen></Suspense>;
+}
 async function click(index = 0) { await act(async () => button(index).click()); }
 async function event(type: string, index = 0) { await act(async () => audio(index).dispatchEvent(new Event(type))); }
 async function metadata(duration: number, index = 0) { data(audio(index)).duration = duration; await event("loadedmetadata", index); }
@@ -90,6 +104,67 @@ afterEach(async () => {
 });
 
 describe("공개 오디오 플레이어", () => {
+    it("화면이 숨겨지면 재생·탭 표시를 멈추고 같은 화면이 돌아와도 자동 재생하지 않는다", async () => {
+        await render(<SuspendablePlayer suspended={false} />); const element = audio();
+        await metadata(100); await click(); element.currentTime = 40; await event("timeupdate");
+        await render(<SuspendablePlayer suspended />);
+        expect(element.isConnected).toBe(true); // 언마운트가 아닌 Suspense 숨김이다.
+        expect(element.paused).toBe(true);
+        expect(document.title).toBe("홈페이지 원래 제목"); expect(icon.getAttribute("href")).toBe("/favicon.ico");
+        await render(<SuspendablePlayer suspended={false} />);
+        expect(audio()).toBe(element); expect(button().getAttribute("aria-label")).toBe("재생");
+        expect(range().value).toBe("40"); expect(range().disabled).toBe(false);
+        expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
+        await click(); expect(button().getAttribute("aria-label")).toBe("일시정지");
+    });
+    it("재생 요청 중 숨겼다 돌아오면 준비 표시가 남지 않고 오래된 성공도 재생시키지 않는다", async () => {
+        let finish!: () => void;
+        vi.mocked(HTMLMediaElement.prototype.play).mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve; }));
+        await render(<SuspendablePlayer suspended={false} />); await click(); const element = audio();
+        await render(<SuspendablePlayer suspended />); await render(<SuspendablePlayer suspended={false} />);
+        expect(button().getAttribute("aria-label")).toBe("재생"); expect(host.querySelector('[role="status"]')).toBeNull();
+        await act(async () => { data(element).paused = false; element.dispatchEvent(new Event("playing")); finish(); });
+        expect(element.paused).toBe(true); expect(host.querySelector('[role="alert"]')).toBeNull();
+        expect(document.title).toBe("홈페이지 원래 제목");
+    });
+    it.each(["success", "failure"])("숨겨진 화면의 늦은 재생 %s는 새 화면의 표시를 바꾸지 않는다", async (outcome) => {
+        let finish!: () => void, fail!: (error: Error) => void;
+        vi.mocked(HTMLMediaElement.prototype.play).mockImplementationOnce(() => new Promise<void>((resolve, reject) => { finish = resolve; fail = reject; }));
+        await render(<SuspendablePlayer suspended={false} />); await click(); const element = audio();
+        await render(<SuspendablePlayer suspended />); document.title = "다음 화면 제목";
+        await act(async () => { if (outcome === "success") { data(element).paused = false; finish(); } else fail(new Error("test-only-old-play-failure")); });
+        expect(element.paused).toBe(true); expect(document.title).toBe("다음 화면 제목");
+        expect(icon.getAttribute("href")).toBe("/favicon.ico");
+        await render(<SuspendablePlayer suspended={false} />);
+        expect(button().getAttribute("aria-label")).toBe("재생"); expect(host.querySelector('[role="alert"]')).toBeNull();
+    });
+    it.each(["success", "failure"])("재표시 후 새로 재생하면 오래된 요청의 %s가 최신 재생을 덮어쓰지 않는다", async (outcome) => {
+        let finish!: () => void, fail!: (error: Error) => void;
+        vi.mocked(HTMLMediaElement.prototype.play).mockImplementationOnce(() => new Promise<void>((resolve, reject) => { finish = resolve; fail = reject; }));
+        await render(<SuspendablePlayer suspended={false} />); await click();
+        await render(<SuspendablePlayer suspended />); await render(<SuspendablePlayer suspended={false} />);
+        await click();
+        await act(async () => { if (outcome === "success") finish(); else fail(new Error("test-only-old-play-failure")); });
+        expect(audio().paused).toBe(false); expect(button().getAttribute("aria-label")).toBe("일시정지");
+        expect(document.title).toBe("▶ Playing: 첫 번째 곡"); expect(host.querySelector('[role="alert"]')).toBeNull();
+        expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
+    });
+    it("다른 재생기가 재생 중이면 숨겨지는 화면의 정리가 그 재생기 표시를 지우지 않는다", async () => {
+        const frame = (suspended: boolean) => <><SuspendablePlayer suspended={suspended} /><AudioPlayerBlock block={block("outside", "다른 곡")} /></>;
+        await render(frame(false)); await click(1); const other = audio(1);
+        await render(frame(true));
+        expect(other.paused).toBe(false); expect(document.title).toBe("▶ Playing: 다른 곡");
+        await render(frame(false));
+        expect(other.paused).toBe(false); expect(document.title).toBe("▶ Playing: 다른 곡");
+    });
+    it("숨겨진 동안 준비된 메타데이터는 재표시 때 읽되 소리는 재개하지 않는다", async () => {
+        await render(<SuspendablePlayer suspended={false} />); const element = audio();
+        await render(<SuspendablePlayer suspended />);
+        data(element).duration = 100; element.currentTime = 30;
+        await render(<SuspendablePlayer suspended={false} />);
+        expect(range().disabled).toBe(false); expect(range().value).toBe("30");
+        expect(element.paused).toBe(true); expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+    });
     it("여러 재생기의 동일한 버튼·슬라이더를 곡 이름의 그룹으로 구분한다", async () => {
         await render(<><AudioPlayerBlock block={block('one', '첫 번째 곡')} /><AudioPlayerBlock block={block('two', '두 번째 곡')} /></>);
         const groups = host.querySelectorAll('[role="group"]');
@@ -155,6 +230,66 @@ describe("공개 오디오 플레이어", () => {
         expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
         expect(button().getAttribute("aria-label")).toBe("일시정지");
         expect(host.querySelector('[role="alert"]')).toBeNull();
+    });
+    it("길이를 읽고 재생하던 파일이 실패하면 탐색과 이전 진행률을 함께 해제한다", async () => {
+        await render(); await metadata(100); await click();
+        audio().currentTime = 40; await event("timeupdate");
+        expect(range().disabled).toBe(false); expect(range().value).toBe("40");
+        setMediaError(2, "test-only-network-failure");
+        await event("error");
+        expect(range().disabled).toBe(true); expect(range().value).toBe("0");
+        expect(host.querySelector('[role="alert"]')).not.toBeNull();
+        expect(document.title).toBe("홈페이지 원래 제목");
+        expect(host.textContent).not.toContain("test-only-network-failure");
+    });
+    it("오류가 남은 파일의 늦은 메타데이터·진행 이벤트로 탐색을 되살리지 않는다", async () => {
+        await render(); await metadata(100); await seek("40");
+        setMediaError(3, "test-only-decode-failure");
+        await event("error");
+        await event("loadedmetadata"); await event("durationchange"); await event("timeupdate"); await event("pause");
+        expect(range().disabled).toBe(true); expect(range().value).toBe("0");
+        const previousTime = audio().currentTime;
+        await seek("70"); expect(audio().currentTime).toBe(previousTime);
+        expect(host.querySelector('[role="alert"]')).not.toBeNull();
+        expect(vi.getTimerCount()).toBe(0);
+    });
+    it("실패 뒤 재시도는 새 길이를 확인한 다음 탐색을 다시 허용한다", async () => {
+        await render(); await metadata(100); await seek("40");
+        setMediaError(2, "test-only-network-failure");
+        await event("error"); await click();
+        expect(HTMLMediaElement.prototype.load).toHaveBeenCalledTimes(1);
+        expect(range().disabled).toBe(true); expect(range().value).toBe("0");
+        await metadata(120); await seek("50");
+        expect(range().disabled).toBe(false); expect(audio().currentTime).toBe(60);
+        expect(host.querySelector('[role="alert"]')).toBeNull();
+    });
+    it.each([NaN, Infinity, 0])("재생 길이가 유효했다가 %s가 되면 이전 진행률도 남기지 않는다", async (duration) => {
+        await render(); await metadata(100); await seek("40");
+        await metadata(duration);
+        expect(range().disabled).toBe(true); expect(range().value).toBe("0");
+    });
+    it("길이 변경 안내보다 진행 이벤트가 먼저 와도 알 수 없는 길이의 진행률을 지운다", async () => {
+        await render(); await metadata(100); await seek("40");
+        data(audio()).duration = NaN;
+        await event("timeupdate");
+        expect(range().disabled).toBe(true); expect(range().value).toBe("0");
+    });
+    it("오류 안내가 렌더링되기 전 조작도 실제 파일 오류를 확인해 무시한다", async () => {
+        await render(); await metadata(100); await seek("40");
+        setMediaError(2, "test-only-network-failure");
+        await seek("70");
+        expect(audio().currentTime).toBe(40);
+        await event("error");
+        expect(range().disabled).toBe(true);
+    });
+    it("파일 오류 없이 재생 권한만 거절되면 유효한 길이와 탐색 위치는 보존한다", async () => {
+        await render(); await metadata(100); await seek("40");
+        vi.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException("test-only-blocked", "NotAllowedError"));
+        await click();
+        expect(host.querySelector('[role="alert"]')).not.toBeNull();
+        expect(range().disabled).toBe(false); expect(range().value).toBe("40");
+        await click();
+        expect(button().getAttribute("aria-label")).toBe("일시정지");
     });
     it("빠르게 두 번 눌러 취소하면 늦은 재생 성공이 다시 재생시키지 않는다", async () => {
         let finish!: () => void;

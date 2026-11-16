@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 /**
  * 메뉴, Preloader, 모달처럼 서로 독립적인 여러 UI가 각자 body 스크롤을
@@ -43,7 +43,8 @@ function releaseBodyScrollLock(token: symbol) {
 }
 
 export function useBodyScrollLock(active: boolean) {
-    useEffect(() => {
+    // Suspense가 소유 화면을 보존한 채 숨길 때도 해제하고, 다시 표시하면 재획득한다.
+    useLayoutEffect(() => {
         if (!active) return;
 
         const token = Symbol("body-scroll-lock");

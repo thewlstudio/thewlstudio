@@ -6,7 +6,7 @@ import { crewBySlugQuery, crewsQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CrewDetailClient from "./CrewDetailClient";
-import type { CrewMemberDetail, CrewMemberSummary } from "@/types/sanity";
+import { readPublicDetail } from "@/lib/public-detail-read";
 import { serializeJsonLd } from "@/lib/json-ld";
 import { decodePublicPageSlug, publicDetailPath, publicStaticParams } from "@/lib/public-routes";
 import { socialImageUrl } from "@/lib/sanity-image";
@@ -17,7 +17,7 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-    const crews = await client.fetch<CrewMemberSummary[]>(crewsQuery, PUBLIC_VISIBILITY_PARAMS);
+    const crews = await client.fetch<unknown>(crewsQuery, PUBLIC_VISIBILITY_PARAMS);
     return publicStaticParams(crews);
 }
 
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const path = publicDetailPath("crew", slug);
     if (!path) notFound();
-    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug }, tags: ['crew'] });
+    const member = readPublicDetail("crew", await sanityFetch<unknown>({ query: crewBySlugQuery, params: { slug }, tags: ['crew'] }));
 
     if (!member) {
         notFound();
@@ -46,7 +46,7 @@ export default async function CrewDetailPage({ params }: Props) {
     if (slug === null) notFound();
     const path = publicDetailPath("crew", slug);
     if (!path) notFound();
-    const member = await sanityFetch<CrewMemberDetail>({ query: crewBySlugQuery, params: { slug }, tags: ['crew'] });
+    const member = readPublicDetail("crew", await sanityFetch<unknown>({ query: crewBySlugQuery, params: { slug }, tags: ['crew'] }));
 
     if (!member) {
         notFound();

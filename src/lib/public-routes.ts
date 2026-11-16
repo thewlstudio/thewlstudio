@@ -27,8 +27,17 @@ export function decodePublicPageSlug(value: unknown): string | null {
     }
 }
 
-export function publicStaticParams(rows: { slug: unknown }[]): { slug: string }[] {
-    return [...new Set(rows.map((row) => row.slug).filter(isPublicSlug))]
-        .filter((slug) => publicDetailPath("works", slug) !== null)
-        .map((slug) => ({ slug }));
+export function publicStaticParams(rows: unknown): { slug: string }[] {
+    // 조회 실패/형식 오류를 정상적인 "항목 없음"으로 바꾸어 빌드하지 않는다.
+    if (!Array.isArray(rows)) throw new Error("Invalid static params response: expected an array");
+    const slugs = new Set<string>();
+    for (let index = 0; index < rows.length; index++) {
+        if (!Object.hasOwn(rows, index)) continue;
+        const row: unknown = rows[index];
+        if (!row || typeof row !== "object" || Array.isArray(row) || !Object.hasOwn(row, "slug")) continue;
+        const slug = (row as Record<string, unknown>).slug;
+        if (typeof slug === "string" && publicDetailPath("works", slug) !== null) slugs.add(slug);
+    }
+    // Next에 CMS 원문을 넘긴다. 여기서 URI를 해석하거나 미리 인코딩하지 않는다.
+    return [...slugs].map((slug) => ({ slug }));
 }

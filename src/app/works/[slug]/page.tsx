@@ -4,7 +4,7 @@ import { client, sanityFetch } from "@/sanity/lib/client";
 import { workBySlugQuery, worksQuery, PUBLIC_VISIBILITY_PARAMS } from "@/sanity/lib/queries";
 import WorkDetailClient from "./WorkDetailClient";
 import { notFound } from "next/navigation";
-import type { WorkDetail, WorkSummary } from "@/types/sanity";
+import { readPublicDetail } from "@/lib/public-detail-read";
 import { jsonLdDate, serializeJsonLd } from "@/lib/json-ld";
 import { decodePublicPageSlug, publicDetailPath, publicStaticParams } from "@/lib/public-routes";
 import { socialImageUrl } from "@/lib/sanity-image";
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const { slug } = await params;
     const path = publicDetailPath("works", slug);
     if (!path) notFound();
-    const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug }, tags: ['work'] });
+    const work = readPublicDetail("work", await sanityFetch<unknown>({ query: workBySlugQuery, params: { slug }, tags: ['work'] }));
 
     if (!work) {
         notFound();
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export async function generateStaticParams() {
     // Build-time only — use client directly (no draft mode needed)
-    const works = await client.fetch<WorkSummary[]>(worksQuery, PUBLIC_VISIBILITY_PARAMS);
+    const works = await client.fetch<unknown>(worksQuery, PUBLIC_VISIBILITY_PARAMS);
     return publicStaticParams(works);
 }
 
@@ -41,7 +41,7 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
     if (slug === null) notFound();
     const path = publicDetailPath("works", slug);
     if (!path) notFound();
-    const work = await sanityFetch<WorkDetail>({ query: workBySlugQuery, params: { slug }, tags: ['work'] });
+    const work = readPublicDetail("work", await sanityFetch<unknown>({ query: workBySlugQuery, params: { slug }, tags: ['work'] }));
 
     if (!work) {
         return notFound();
@@ -65,7 +65,7 @@ export default async function WorkPage({ params }: { params: Promise<{ slug: str
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
-            <WorkDetailClient initialWork={work} />
+            <WorkDetailClient initialWork={work} path={path} />
         </>
     );
 }

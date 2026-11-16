@@ -56,6 +56,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalActive, setIsModalActive] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
+    const modalPortalRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement | null>(null);
     const openTarget = useRef(false);
     const modalId = useId();
@@ -89,7 +90,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
     }, []);
 
     // 실제 표시 수명에는 퇴장 애니메이션도 포함한다.
-    usePublicDialog({ active: isModalActive, dialogRef: modalRef, triggerRef,
+    usePublicDialog({ active: isModalActive, dialogRef: modalRef, portalRef: modalPortalRef, triggerRef,
         initialFocus: 'button[aria-label="모달 닫기"]', onClose: closeModal });
 
     return (
@@ -266,7 +267,7 @@ export default function ClassClient({ initialInstructors }: { initialInstructors
         {mounted && createPortal(
             <AnimatePresence onExitComplete={handleModalExitComplete}>
                 {isModalOpen && selectedInstructor && (
-                    <motion.div data-public-motion
+                    <motion.div ref={modalPortalRef} data-public-motion
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

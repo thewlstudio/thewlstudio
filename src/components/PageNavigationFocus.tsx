@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { focusPageElement, isManagePath, isStudioPath, pageFocusTarget, PAGE_TITLE_ID } from '@/lib/page-focus';
+import { focusPageElement, isManagePath, isStudioPath, pageFocusTarget, pagePathMatches, PAGE_TITLE_ID } from '@/lib/page-focus';
 
 /** 최초 진입·탐색 기록 복원은 그대로 두고, 공개 SPA 이동의 본문 시작만 안내한다. */
 export default function PageNavigationFocus() {
@@ -26,7 +26,7 @@ export default function PageNavigationFocus() {
         const apply = () => {
             const title = document.getElementById(PAGE_TITLE_ID);
             // URL이 먼저 바뀌고 이전 본문이 남는 스트리밍 구간에는 포커스를 주지 않는다.
-            if (!title || (changed && (title.dataset.pagePath ? title.dataset.pagePath !== pathname : title === oldTitle))) return false;
+            if (!title || (changed && (title.dataset.pagePath ? !pagePathMatches(title.dataset.pagePath, pathname) : title === oldTitle))) return false;
             previousTitle.current = title;
             if (!changed || restoreHistory) return true;
             if (title.closest('[inert]')) return false;
@@ -36,7 +36,7 @@ export default function PageNavigationFocus() {
         };
         if (apply()) return;
         const observer = new MutationObserver(() => { if (apply()) observer.disconnect(); });
-        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['inert', 'data-page-path'] });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['inert', 'hidden', 'aria-hidden', 'data-page-path'] });
         return () => observer.disconnect();
     }, [pathname]);
     return null;

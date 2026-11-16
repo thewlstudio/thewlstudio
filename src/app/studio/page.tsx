@@ -2,9 +2,11 @@ import { sanityFetch } from "@/sanity/lib/client";
 import { PUBLIC_STUDIO_SPACE_FILTER } from "@/sanity/lib/queries";
 import { STUDIO_CONTENT_ORDER } from "@/lib/content-order";
 import { FALLBACK_LOBBY, FALLBACK_ROOMS, type StudioSpaceData } from "@/lib/studio-spaces";
-import { FALLBACK_INFO, mergeInfo, type StudioInfo } from "@/lib/studio-info";
+import { FALLBACK_INFO, type StudioInfo } from "@/lib/studio-info";
 import StudioClient from "./StudioClient";
 import { reportError } from "@/lib/error-reporting";
+import { readPublicList, readPublicStudioInfo } from "@/lib/public-list-read";
+import { unstable_rethrow } from "next/navigation";
 
 // 공개 공간(연습실·로비)만, 관리 화면에서 정한 순서대로. 휴지통·비공개는 제외한다(관리자 미리보기에서는 비공개 포함).
 const spacesQuery = `*[${PUBLIC_STUDIO_SPACE_FILTER}] | order(${STUDIO_CONTENT_ORDER}) {
@@ -26,16 +28,15 @@ const infoQuery = `*[_type == "studioInfo" && _id == "studioInfo"][0]{
     amenities, cctvTitle, cctvDetail, dutyText, dutyWarning
 }`;
 
-type SpaceRow = StudioSpaceData & { kind?: "room" | "lobby" };
-
 export default async function StudioPage() {
     let rooms: StudioSpaceData[];
     let lobby: StudioSpaceData | null;
     try {
-        const spaces = await sanityFetch<SpaceRow[]>({ query: spacesQuery, tags: ["studioSpace"] });
+        const spaces = readPublicList("studioSpace", await sanityFetch<unknown>({ query: spacesQuery, tags: ["studioSpace"] }));
         rooms = spaces.filter((s) => s.kind !== "lobby");
         lobby = spaces.find((s) => s.kind === "lobby") ?? null;
     } catch (err) {
+        unstable_rethrow(err);
         // 조회에 실패했을 때만 예전 고정값으로 대체한다. (정상 조회에서 비어 있으면 비어 있는 그대로 보여준다)
         reportError("studio studioSpace 조회 실패 — 기본값으로 대체", err);
         rooms = FALLBACK_ROOMS;
@@ -45,8 +46,9 @@ export default async function StudioPage() {
     // 서비스·장비·멤버십·이용 안내: 문서가 없거나 조회에 실패하면 기존 고정값으로 대체한다
     let info: StudioInfo;
     try {
-        info = mergeInfo(await sanityFetch<Record<string, unknown> | null>({ query: infoQuery, tags: ["studioInfo"] }));
+        info = readPublicStudioInfo(await sanityFetch<unknown>({ query: infoQuery, tags: ["studioInfo"] }));
     } catch (err) {
+        unstable_rethrow(err);
         reportError("studio studioInfo 조회 실패 — 기본값으로 대체", err);
         info = FALLBACK_INFO;
     }

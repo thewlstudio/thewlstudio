@@ -4,15 +4,15 @@ import ErrorFallback from "@/components/ErrorFallback";
 
 export default function CrewError({
     error,
-    reset,
+    retry,
 }: {
-    error: Error & { digest?: string };
-    reset: () => void;
+    error: unknown;
+    retry: () => void;
 }) {
     return (
         <ErrorFallback
             error={error}
-            reset={reset}
+            retry={retry}
             title="크루 정보를 불러올 수 없습니다"
             logLabel="CrewError"
         />

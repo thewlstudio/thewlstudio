@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { focusPageElement, isManagePath, isStudioPath, PAGE_TITLE_ID } from '@/lib/page-focus';
+import { focusPageElement, isManagePath, isStudioPath, pagePathMatches, PAGE_TITLE_ID } from '@/lib/page-focus';
 
 export default function SkipLink() {
     const pathname = usePathname();
@@ -11,12 +11,20 @@ export default function SkipLink() {
     useEffect(() => () => { pending.current?.disconnect(); pending.current = null; }, [pathname]);
     if (isStudioPath(pathname)) return null; // Studio는 별도 앱이며 이 사이트의 main 대상이 없다.
     const targetId = isManagePath(pathname) ? 'main-content' : PAGE_TITLE_ID;
+    const readyTarget = () => {
+        const target = document.getElementById(targetId);
+        if (target?.closest('[inert], [hidden], [aria-hidden="true"]')) return null;
+        if (!isManagePath(pathname) && target?.dataset.pagePath && !pagePathMatches(target.dataset.pagePath, location.pathname)) return null;
+        return target;
+    };
     return <Link id="skip-link" href={`#${targetId}`}
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded-lg focus:font-semibold focus:shadow-lg"
-        onNavigate={() => { focusPageElement(document.getElementById(targetId)); }}
+        onNavigate={() => { focusPageElement(readyTarget()); }}
         onClick={(event) => {
+            // 별도 탭/보조 클릭과 취소된 클릭은 현재 탭에서 이미 기다리는 요청도 건드리지 않는다.
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
             pending.current?.disconnect(); pending.current = null;
-            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || document.getElementById(targetId)) return;
+            if (readyTarget()) return;
             // 스트리밍 중 눌렀다면, 같은 화면의 실제 본문이 준비될 때 요청을 마친다.
             const originPath = location.pathname;
             const link = event.currentTarget;
@@ -24,13 +32,13 @@ export default function SkipLink() {
                 if (location.pathname !== originPath || location.hash !== `#${targetId}` || !link.isConnected || (document.activeElement !== link && document.activeElement !== document.body)) {
                     observer.disconnect(); return;
                 }
-                const target = document.getElementById(targetId);
+                const target = readyTarget();
                 if (focusPageElement(target)) {
                     target!.scrollIntoView({ block: 'start', behavior: 'auto' });
                     observer.disconnect();
                 }
             });
             pending.current = observer;
-            observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['inert'] });
+            observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['inert', 'hidden', 'aria-hidden', 'data-page-path'] });
         }}>본문 바로가기</Link>;
 }

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { isBodyScrollLocked, subscribeBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { isManagePath, isStudioPath } from '@/lib/page-focus';
 export { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 /** body 잠금과 Lenis의 가상 스크롤 처리를 함께 멈춘다. */
@@ -39,7 +40,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     // Sanity Studio(/admin), 관리 화면(/manage)에서는 Lenis 비활성화
     // — 폼 입력, 드롭다운 등 관리 화면 조작과 충돌 방지, 안정성 우선
-    if (pathname.startsWith('/admin') || pathname.startsWith('/manage')) {
+    if (isStudioPath(pathname) || isManagePath(pathname)) {
         return <>{children}</>;
     }
 

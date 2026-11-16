@@ -5,6 +5,15 @@ export const isStudioPath = (path: string) => path === '/admin' || path.startsWi
 
 const cleanups = new WeakMap<HTMLElement, () => void>();
 
+/** 같은 경로 조각의 인코딩 표기만 비교한다. 구분자나 리터럴 퍼센트를 재귀 해석하지 않는다. */
+export function pagePathMatches(left: string, right: string): boolean {
+    if (left === right) return true;
+    const a = left.split('/'), b = right.split('/');
+    if (a.length !== b.length) return false;
+    try { return a.every((segment, index) => decodeURIComponent(segment) === decodeURIComponent(b[index])); }
+    catch { return false; }
+}
+
 /** 주소를 CSS 선택자로 쓰거나 재차 디코딩하지 않고 실제 본문 목적지를 찾는다. */
 export function pageFocusTarget(hash = ''): HTMLElement | null {
     let target: HTMLElement | null = null;
