@@ -1,9 +1,10 @@
 import "server-only";
 import { randomUUID } from "crypto";
 
-/** 기존 식별 값은 자르거나 정규화하지 않고 유지한다. 임시·미지정 값만 서버가 발급한다. */
-export function managedArrayKey(value: unknown): string {
-    return typeof value === "string" && value && !value.startsWith("new-") ? value : randomUUID().slice(0, 12);
+/** 같은 서버 원본 배열에 있던 키는 접두사와 무관하게 유지한다. 새 임시·미지정 키만 발급한다. */
+export function managedArrayKey(value: unknown, existing: readonly unknown[] = []): string {
+    const stored = typeof value === "string" && value && existing.some((row) => row && typeof row === "object" && !Array.isArray(row) && Object.hasOwn(row, "_key") && (row as { _key?: unknown })._key === value);
+    return typeof value === "string" && value && (stored || !value.startsWith("new-")) ? value : randomUUID().slice(0, 12);
 }
 
 /** 키는 같은 배열 안에서만 유일해야 한다. 문자열 목록이나 미지정 키는 검사 대상이 아니다. */

@@ -7,13 +7,18 @@ import { uploadImageIfPresent, validateManageUploadForm } from "@/lib/manage-upl
 import { sanitizeBlocks } from "@/lib/work-blocks-server";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { labelsEulReul } from "@/lib/josa";
-import { managedSlug, managedWriteError, requireManagedDocument } from "@/lib/manage-target";
+import { managedSaveFailure, managedSlug, managedWriteError, requireManagedDocument, requireManagedTrashDocument } from "@/lib/manage-target";
 import { externalHttpUrl } from "@/lib/content-urls";
 import { publicDetailPath } from "@/lib/public-routes";
 import { reportError } from "@/lib/error-reporting";
+import { manageScalarIssue } from "@/lib/manage-scalar-input";
+import { managedImageSourceIssue } from "@/lib/manage-image-source";
+import { managedSlugAvailabilityIssue } from "@/lib/manage-create-preflight";
+import { createManagedDocument, CREATED_REFRESH_FAILED } from "@/lib/manage-create-result";
+import { commitManagedPatch } from "@/lib/manage-patch-result";
 
 export type FieldError = { id: string; label: string };
-export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
+export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[]; committed?: true };
 
 const SLUG_RE = /^[a-z0-9][a-z0-9_-]*$/;
 const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -74,6 +79,8 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
     try {
         await requireAuth();
         validateManageUploadForm(formData);
+        const inputIssue = manageScalarIssue(formData, "work");
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
         const documentId = String(formData.get("documentId") ?? "").trim();
         if (!documentId) return { ok: false, error: "수정할 작품을 찾지 못했어요. 목록에서 다시 골라 주세요." };
@@ -83,9 +90,11 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
         const current = await requireManagedDocument(client, documentId, "work");
 
         const patch: Record<string, unknown> = { ...parsed.fields };
+        if (!formData.has("isActive")) delete patch.isActive;
         const unset: string[] = [];
         // 선택 항목은 비우면 필드 자체를 지운다 (.set은 빈 문자열을 그대로 저장하므로)
         for (const [key, value] of Object.entries(parsed.optional)) {
+            if (!formData.has(key)) continue;
             if (value) patch[key] = value;
             else unset.push(key);
         }
@@ -101,6 +110,8 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
                 return { ok: false, error: "상세 내용 정보를 읽지 못해 저장하지 않았어요. 입력 내용을 따로 보관한 뒤 새로고침해 주세요.", fields: [{ id: "blocks", label: "상세 페이지 내용" }] };
             }
             const existing = Array.isArray(current.contentBlocks) ? current.contentBlocks : [];
+            const imageIssue = managedImageSourceIssue("work", formData, payload, existing);
+            if (imageIssue) return { ok: false, ...imageIssue };
             const cleaned = await sanitizeBlocks(payload, existing ?? [], (clientKey) =>
                 uploadImageIfPresent(client, formData.get(`blockImage_${clientKey}`)),
             );
@@ -115,21 +126,21 @@ export async function saveWork(_prev: SaveResult | null, formData: FormData): Pr
         // 이 화면이 다루지 않는 필드는 patch에 넣지 않아 그대로 보존된다
         let p = client.patch(documentId).ifRevisionId(current._rev).set(patch);
         if (unset.length > 0) p = p.unset(unset);
-        await p.commit();
-
-        refresh(managedSlug(current));
+        await commitManagedPatch(() => p.commit(), documentId, "work", () => refresh(managedSlug(current)));
         return { ok: true };
     } catch (err) {
         reportError("saveWork", err);
-        return { ok: false, error: managedWriteError(err) };
+        return managedSaveFailure(err);
     }
 }
 
 export async function createWork(_prev: SaveResult | null, formData: FormData): Promise<SaveResult> {
-    let documentId: string;
+    let documentId: string | undefined;
     try {
         await requireAuth();
         validateManageUploadForm(formData);
+        const inputIssue = manageScalarIssue(formData, "work");
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
 
         const parsed = parseBasic(formData);
@@ -152,24 +163,22 @@ export async function createWork(_prev: SaveResult | null, formData: FormData): 
             return { ok: false, error: `${labelsEulReul(missing)} 입력해 주세요.`, fields: missing };
         }
 
-        const dup = await client.fetch<number>(`count(*[_type == "work" && slug.current == $slug])`, { slug });
-        if (dup > 0) {
-            return { ok: false, error: "이미 쓰고 있는 주소예요. 다른 주소를 입력해 주세요.", fields: [{ id: "slug", label: "주소(영문)" }] };
-        }
+        const slugIssue = managedSlugAvailabilityIssue(await client.fetch<unknown>(`count(*[_type == "work" && slug.current == $slug])`, { slug }));
+        if (slugIssue) return { ok: false, ...slugIssue };
 
         const coverImage = await uploadImageIfPresent(client, imageFile);
-        const created = await client.create({
+        const created = await createManagedDocument(client, {
             _type: "work",
             ...parsed.fields,
             ...Object.fromEntries(Object.entries(parsed.optional).filter(([, v]) => v)),
             slug: { _type: "slug", current: slug },
             coverImage,
         });
-        documentId = created._id;
+        documentId = created;
         refresh(slug);
     } catch (err) {
         reportError("createWork", err);
-        return { ok: false, error: managedWriteError(err) };
+        return documentId ? { ok: false, error: CREATED_REFRESH_FAILED, committed: true } : managedSaveFailure(err);
     }
     redirect(`/manage/works/${documentId}?created=1`);
 }
@@ -179,9 +188,8 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         await requireAuth();
         if (!documentId) return { ok: false, error: "작품을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const client = getWriteClient();
-        const current = await requireManagedDocument(client, documentId, "work");
-        await client.patch(documentId).ifRevisionId(current._rev).set({ trashed }).commit();
-        refresh(managedSlug(current));
+        const current = await requireManagedTrashDocument(client, documentId, "work");
+        await commitManagedPatch(() => client.patch(documentId).ifRevisionId(current._rev).set({ trashed }).commit(), documentId, "work", () => refresh(managedSlug(current)), (document) => document.trashed === trashed);
         return { ok: true };
     } catch (err) {
         reportError("setTrashed:work", err);

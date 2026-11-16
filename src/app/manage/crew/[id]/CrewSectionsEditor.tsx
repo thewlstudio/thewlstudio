@@ -8,6 +8,8 @@ import {
     emptyRow,
     emptySection,
     migrateLegacy,
+    legacyMigrationIssue,
+    legacyPreviewRows,
     newKey,
     toPayload,
     type KnownType,
@@ -130,9 +132,10 @@ function SectionBody({ st, onChange, onMigrate }: { st: SectionState; onChange: 
                 </div>
             );
         case "legacy": {
-            const raw = st.raw as { items?: Array<{ date?: string; title?: string }> };
-            const items = Array.isArray(raw.items) ? raw.items : [];
-            const canMigrate = st.legacyType === "awardsSection" || st.legacyType === "activitiesSection";
+            const supportedLegacy = st.legacyType === "awardsSection" || st.legacyType === "activitiesSection";
+            const items = supportedLegacy ? legacyPreviewRows(st.raw) : null;
+            const migrationIssue = supportedLegacy ? legacyMigrationIssue(st.raw) : null;
+            const canMigrate = supportedLegacy && !migrationIssue;
             const name = st.legacyType === "awardsSection" ? "수상 내역" : st.legacyType === "activitiesSection" ? "대외활동" : st.legacyType;
             return (
                 <div className="space-y-3">
@@ -140,11 +143,12 @@ function SectionBody({ st, onChange, onMigrate }: { st: SectionState; onChange: 
                         예전 형식의 &quot;{name}&quot; 섹션이에요. 내용은 그대로 보존되지만 <b>지금은 홈페이지에 나오지 않아요.</b>
                         {canMigrate && " 아래 버튼으로 새 형식(수상·대외활동)으로 옮기면 홈페이지에 나타나요."}
                     </p>
-                    <ul className="text-sm text-neutral-600 space-y-1 max-h-40 overflow-y-auto">
+                    {items ? <ul className="text-sm text-neutral-600 space-y-1 max-h-40 overflow-y-auto">
                         {items.map((it, i) => (
-                            <li key={i}>{it.date ? `${it.date} · ` : ""}{it.title}</li>
+                            <li key={i}>{it.date ? `${it.date} · ` : ""}{it.title}{it.desc && <span className="block whitespace-pre-wrap">{it.desc}</span>}</li>
                         ))}
-                    </ul>
+                    </ul> : <p className="text-sm text-neutral-600">이 형식의 세부 내용은 /admin에서 확인해 주세요. 여기서는 원본 내용을 해석하거나 바꾸지 않아요.</p>}
+                    {migrationIssue && <p role="status" className="text-sm text-amber-800 leading-relaxed">{migrationIssue}</p>}
                     {canMigrate && (
                         <button type="button" onClick={() => { if (window.confirm("새 형식으로 옮길까요? 저장하면 홈페이지에 수상·활동이 나타나요. (저장 전에는 '변경 버리기'로 되돌릴 수 있어요)")) onMigrate(); }} className="h-10 px-4 rounded-lg border-2 border-black text-sm font-bold hover:bg-black hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
                             새 형식으로 옮기기

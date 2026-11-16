@@ -99,6 +99,7 @@ describe("이력 복원 서버 액션의 안전성", () => {
         const snapshot = { ...old, _id: id, _type: cfg.type };
         client.request.mockResolvedValue({ documents: [snapshot] });
         client.getDocument.mockResolvedValue({ ...snapshot, _rev: "current-rev" });
+        patch.commit.mockResolvedValue({ ...snapshot, _rev: "restored-rev" });
         expect(await restoreRevision(area, id, time, "current-rev")).toEqual({ ok: true });
         expect(client.patch).toHaveBeenCalledWith(id);
         expect(tag).toHaveBeenCalledWith(cfg.tag);
@@ -124,6 +125,30 @@ describe("이력 복원 서버 액션의 안전성", () => {
     });
 });
 
+describe.each(Object.entries(HISTORY_AREAS))("%s 이력 복원 응답", (area, cfg) => {
+    const id = cfg.fixedId ?? "doc-1";
+    const snapshot = { ...old, _id: id, _type: cfg.type };
+    beforeEach(() => {
+        client.request.mockResolvedValue({ documents: [snapshot] });
+        client.getDocument.mockResolvedValue({ ...snapshot, _rev: "current-rev" });
+        patch.commit.mockResolvedValue({ ...snapshot, _rev: "restored-rev" });
+    });
+    it.each(["null", "wrong-id", "empty-revision"])("잘못된 %s 응답은 복원 성공으로 처리하지 않는다", async (kind) => {
+        patch.commit.mockResolvedValue(kind === "null" ? null : { ...snapshot, _id: kind === "wrong-id" ? "other" : id, _rev: kind === "empty-revision" ? "" : "restored-rev" });
+        expect(await restoreRevision(area, id, time, "current-rev")).toMatchObject({ ok: false, error: expect.stringContaining("결과") });
+        expect(patch.commit).toHaveBeenCalledTimes(1); expect(tag).not.toHaveBeenCalled(); expect(invalidate).not.toHaveBeenCalled();
+    });
+    it("확인된 복원 뒤 캐시 실패는 변경 완료로 구분한다", async () => {
+        tag.mockImplementationOnce(() => { throw new Error("DO_NOT_ECHO"); });
+        const result = await restoreRevision(area, id, time, "current-rev");
+        expect(result).toMatchObject({ ok: false, error: expect.stringContaining("변경은 완료") }); expect(JSON.stringify(result)).not.toContain("DO_NOT_ECHO"); expect(patch.commit).toHaveBeenCalledTimes(1);
+    });
+    it("커밋 예외는 결과 불명으로 안내하고 자동 복원하지 않는다", async () => {
+        patch.commit.mockRejectedValue(new Error("DO_NOT_ECHO")); const result = await restoreRevision(area, id, time, "current-rev");
+        expect(result).toMatchObject({ ok: false, error: expect.stringContaining("결과") }); expect(JSON.stringify(result)).not.toContain("DO_NOT_ECHO"); expect(patch.commit).toHaveBeenCalledTimes(1); expect(tag).not.toHaveBeenCalled();
+    });
+});
+
 describe("이력 복원 후 공개·관리 캐시 연결", () => {
     const areas = [
         { area: "instructors", type: "instructor", tagName: "instructor", id: "doc-1", paths: [["/class"], ["/manage/instructors"], ["/manage/instructors/doc-1"], ["/manage/history/instructors/doc-1"]] },
@@ -137,6 +162,7 @@ describe("이력 복원 후 공개·관리 캐시 연결", () => {
         const snapshot = { _id: id, _type: type, _rev: "old-rev", name: "과거", slug: { current: "old%40name" } };
         client.request.mockResolvedValue({ documents: [snapshot] });
         client.getDocument.mockResolvedValue({ ...snapshot, _rev: "current-rev", slug: { current: "new@name" } });
+        patch.commit.mockResolvedValue({ ...snapshot, _rev: "restored-rev" });
         expect(await restoreRevision(area, id, time, "current-rev")).toEqual({ ok: true });
         expect(tag).toHaveBeenCalledExactlyOnceWith(tagName);
         expect(invalidate.mock.calls).toHaveLength(paths.length);
@@ -157,16 +183,53 @@ describe("이력 복원 후 공개·관리 캐시 연결", () => {
         client.request.mockResolvedValue({ documents: [snapshot] });
         client.getDocument.mockResolvedValue(snapshot);
         let started!: () => void;
-        let finish!: () => void;
+        let finish!: (value: unknown) => void;
         const committing = new Promise<void>((resolve) => { started = resolve; });
-        patch.commit.mockImplementation(() => { started(); return new Promise<void>((resolve) => { finish = resolve; }); });
+        patch.commit.mockImplementation(() => { started(); return new Promise((resolve) => { finish = resolve; }); });
         const pending = restoreRevision("contact", "siteSettings", time, "current-rev");
         await committing;
         expect(tag).not.toHaveBeenCalled();
         expect(invalidate).not.toHaveBeenCalled();
-        finish();
+        finish({ ...snapshot, _rev: "restored-rev" });
         expect(await pending).toEqual({ ok: true });
         expect(tag).toHaveBeenCalledExactlyOnceWith("siteSettings");
         expect(invalidate).toHaveBeenCalledWith("/", "layout");
+    });
+});
+
+describe("복원 시점의 명시적 날짜·시간 형식", () => {
+    it.each(["1", "2026-10-20", "2026-10-20T12:00:00", "2026-02-30T12:00:00Z", "2025-02-29T12:00:00Z", "2026-10-20T24:00:00Z", "Tue, 20 Oct 2026 12:00:00 GMT", " 2026-10-20T12:00:00Z "])("모호하거나 잘못된 시점 %s는 저장소 접근 전에 거부한다", async (invalidTime) => {
+        expect(await restoreRevision("crew", "crew-1", invalidTime, current._rev)).toMatchObject({ ok: false });
+        expect(getClient).not.toHaveBeenCalled(); expect(client.patch).not.toHaveBeenCalled(); expect(tag).not.toHaveBeenCalled();
+    });
+});
+
+describe.each(Object.entries(HISTORY_AREAS))("%s 복원 원본 식별·정밀도", (area, cfg) => {
+    const id = cfg.fixedId ?? "doc-1";
+    const snapshot = { ...old, _id: id, _type: cfg.type };
+    const latest = { ...snapshot, _rev: "current-rev", trashed: true, order: 9 };
+    beforeEach(() => {
+        client.request.mockResolvedValue({ documents: [snapshot] }); client.getDocument.mockResolvedValue(latest);
+        patch.commit.mockResolvedValue({ ...snapshot, _rev: "restored-rev" });
+    });
+    it("공백뿐인 확인 버전은 조회 전에 거부한다", async () => {
+        expect(await restoreRevision(area, id, time, " \t\n")).toMatchObject({ ok: false });
+        expect(getClient).not.toHaveBeenCalled(); expect(client.request).not.toHaveBeenCalled();
+    });
+    it.each(["old", "current"].flatMap((target) => ["_id", "_type", "_rev"].map((key) => ({ target, key }))))("$target 원본의 상속된 $key로 복원하지 않는다", async ({ target, key }) => {
+        const doc: Record<string, unknown> = target === "old" ? snapshot : latest;
+        const own = { ...doc }; delete own[key]; const malformed = Object.assign(Object.create({ [key]: doc[key] }), own);
+        if (target === "old") client.request.mockResolvedValue({ documents: [malformed] }); else client.getDocument.mockResolvedValue(malformed);
+        expect(await restoreRevision(area, id, time, latest._rev)).toMatchObject({ ok: false });
+        expect(client.patch).not.toHaveBeenCalled(); expect(tag).not.toHaveBeenCalled(); expect(invalidate).not.toHaveBeenCalled();
+    });
+    it("소수 초 원문과 미지원 본문·배열 키를 유지하면서 내용만 복원한다", async () => {
+        const preciseTime = "2026-10-20T12:00:00.123456Z";
+        const source = { ...snapshot, customBody: [{ _key: "new-original", _type: "futureBlock", nested: [{ _key: "child-original", preserve: true }] }] };
+        const before = structuredClone(source); client.request.mockResolvedValue({ documents: [source] });
+        expect(await restoreRevision(area, id, preciseTime, latest._rev)).toEqual({ ok: true });
+        expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ query: { time: preciseTime } }));
+        expect(patch.set).toHaveBeenCalledWith(expect.objectContaining({ customBody: source.customBody, trashed: true, order: 9 }));
+        expect(source).toEqual(before); expect(patch.ifRevisionId).toHaveBeenCalledExactlyOnceWith(latest._rev);
     });
 });

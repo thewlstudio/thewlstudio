@@ -16,13 +16,23 @@ function imageFile(value: unknown): File | null {
     return value;
 }
 
+/** 바이트를 읽지 않고 명시적인 새 파일 선택 여부만 확인한다. */
+export function hasManageImageFile(value: unknown): boolean {
+    return imageFile(value) !== null;
+}
+
 /** 인증 이후·업로드 이전에 전체 요청과 모든 이미지 입력을 검사한다. 바이트를 읽지는 않는다. */
 export function validateManageUploadForm(data: FormData): void {
     const error = formPayloadError(data);
     if (error) throw new Error(error);
+    const seen = new Set<string>();
     for (const [name, value] of data) {
         if (["imageFile", "bgImageFile", "modalImageFile"].includes(name) ||
-            ["linkIconFile_", "blockImage_", "spaceImage_"].some((prefix) => name.startsWith(prefix))) imageFile(value);
+            ["linkIconFile_", "blockImage_", "spaceImage_"].some((prefix) => name.startsWith(prefix))) {
+            if (seen.has(name)) throw new Error("사진 입력이 중복되어 저장하지 않았어요. 입력 내용을 따로 보관한 뒤 파일을 다시 선택해 주세요.");
+            seen.add(name);
+            imageFile(value);
+        }
     }
 }
 
@@ -36,6 +46,7 @@ export async function uploadImageIfPresent(
     let asset: { _id: string };
     try {
         asset = await client.assets.upload("image", Buffer.from(await file.arrayBuffer()), { filename: file.name });
+        if (!asset || typeof asset._id !== "string" || !/^image-[A-Za-z0-9][A-Za-z0-9-]*$/.test(asset._id)) throw new Error("Invalid image upload response");
     } catch (error) {
         // 파일·요청 헤더·API 오류 원문은 운영자 화면이나 로그에 그대로 남기지 않는다.
         const statusCode = error && typeof error === "object" && "statusCode" in error && typeof error.statusCode === "number" ? error.statusCode : undefined;

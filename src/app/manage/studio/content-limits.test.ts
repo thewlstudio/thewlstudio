@@ -30,8 +30,8 @@ beforeEach(() => {
     patch.ifRevisionId.mockReturnValue(patch);
     patch.set.mockImplementation((fields: Raw) => { db.fields = fields; return patch; });
     patch.unset.mockReturnValue(patch);
-    patch.commit.mockResolvedValue({ _id: "room" });
-    client.create.mockImplementation(async (fields: Raw) => { db.fields = fields; return { _id: "created" }; });
+    patch.commit.mockImplementation(async () => ({ ...db.doc, ...db.fields, _rev: "v2" }));
+    client.create.mockImplementation(async (fields: Raw) => { db.fields = fields; return { _id: fields._id ?? "created", _type: fields._type, _rev: "v1" }; });
     navigate.mockImplementation(() => { throw redirectSignal; });
 });
 afterEach(() => vi.restoreAllMocks());
@@ -119,6 +119,7 @@ describe("기존 정리·필수 값·키 정책 유지", () => {
     it("공간은 CRLF를 통일한 길이로 검사하고 앞뒤 공백·빈 줄 정리를 유지한다", async () => {
         const description = "가\r\n".repeat(2500);
         const form = spaceForm({ features: ["", "   ", " 유지\r\n문구 "], notes: [] }, true);
+        form.set("subtitle", "");
         form.set("description", description);
         expect(await saveSpace(null, form)).toEqual({ ok: true });
         expect(db.fields).toMatchObject({ description: description.replace(/\r\n/g, "\n").trim(), features: ["유지\n문구"] });

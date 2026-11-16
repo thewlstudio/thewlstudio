@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useManageMutation } from "../../_components/useManageMutation";
 import { isManageMutationPending } from "@/lib/manage-mutation-lock";
-import { useRouter } from "next/navigation";
+import { unstable_rethrow, useRouter } from "next/navigation";
 import { flashToast } from "../../_components/Toast";
 import { eulReul } from "@/lib/josa";
 import { callManageAction } from "../../_components/callManageAction";
@@ -103,8 +103,15 @@ export default function DeleteWorkButton({
                             const result = await callManageAction(() => deleteWork(documentId));
                             if (!isCurrent()) return;
                             if (result.ok) {
-                                flashToast({ message: `"${workTitle || "이 작품"}"${eulReul(workTitle || "이 작품")} 휴지통으로 옮겼어요.`, undo: { area: "works", id: documentId } });
-                                startTransition(() => router.push("/manage/works"));
+                                startTransition(() => {
+                                    try { router.push("/manage/works"); }
+                                    catch (error) {
+                                        unstable_rethrow(error);
+                                        if (isCurrent()) setError("휴지통으로 옮겼지만 목록 화면을 열지 못했어요. 같은 삭제를 반복하지 말고 새 탭에서 목록을 확인해 주세요.");
+                                        return;
+                                    }
+                                    flashToast({ message: `"${workTitle || "이 작품"}"${eulReul(workTitle || "이 작품")} 휴지통으로 옮겼어요.`, undo: { area: "works", id: documentId } });
+                                });
                             } else {
                                 setError(result.error);
                             }

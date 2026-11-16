@@ -40,6 +40,7 @@ beforeEach(() => {
                 }
                 writes.push(...planned);
                 for (const p of planned) db.rows.find((r) => r._id === p.id)!.order = p.value;
+                return { transactionId: "tx-ok", documentIds: planned.map((p) => p.id), results: planned.map((p) => ({ id: p.id, operation: "update" })) };
             },
         };
         return tx;

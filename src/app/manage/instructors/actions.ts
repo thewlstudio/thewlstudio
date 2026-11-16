@@ -8,15 +8,19 @@ import { getWriteClient } from "@/sanity/lib/writeClient";
 import { labelsEulReul } from "@/lib/josa";
 import { applyOrder, moveOrder, type OrderRow } from "@/lib/manage-reorder";
 import { CONTENT_ORDER } from "@/lib/content-order";
-import { managedWriteError, requireManagedDocument } from "@/lib/manage-target";
+import { managedSaveFailure, managedWriteError, requireManagedDocument, requireManagedTrashDocument } from "@/lib/manage-target";
 import { isManagedDocumentId } from "@/lib/manage-document-id";
 import { externalHttpUrl } from "@/lib/content-urls";
 import { uploadImageIfPresent, validateManageUploadForm } from "@/lib/manage-upload";
 import { reportError } from "@/lib/error-reporting";
+import { manageScalarIssue, instructorPositionIssue } from "@/lib/manage-scalar-input";
+import { nextManagedOrder } from "@/lib/manage-create-preflight";
+import { createManagedDocument, CREATED_REFRESH_FAILED, UNKNOWN_CREATE_RESULT } from "@/lib/manage-create-result";
+import { commitManagedPatch } from "@/lib/manage-patch-result";
 
 /** 오류가 난 필드의 DOM id와 사람이 읽을 이름 — 상단 오류 요약에서 해당 칸으로 이동할 때 쓴다 */
 export type FieldError = { id: string; label: string };
-export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
+export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[]; committed?: true };
 export type DuplicateResult = { ok: true; newId: string } | { ok: false; error: string };
 
 /** 여러 줄 텍스트 → 문자열 배열 (빈 줄 제거) */
@@ -49,8 +53,15 @@ function parseAndValidateFields(
     const category = String(formData.get("category") ?? "").trim();
     const subtitle = String(formData.get("subtitle") ?? "").trim();
     const lessonInfo = String(formData.get("lessonInfo") ?? "").trim();
-    const about = linesToArray(String(formData.get("about") ?? ""));
-    const process = linesToArray(String(formData.get("process") ?? ""));
+    for (const [id, label] of [["about", "레슨 소개"], ["process", "커리큘럼"]] as const) {
+        const values = formData.getAll(id);
+        if (values.length > 1 || values.some((value) => typeof value !== "string")) return {
+            error: `${label}: 입력 형식을 읽지 못해 저장하지 않았어요. 입력 내용을 따로 보관한 뒤 새로고침해 주세요.`,
+            missingFields: [{ id, label }],
+        };
+    }
+    const about = linesToArray((formData.get("about") as string | null) ?? "");
+    const process = linesToArray((formData.get("process") as string | null) ?? "");
 
     const missing: FieldError[] = [];
     if (!instructorName) missing.push({ id: "instructorName", label: "강사 이름" });
@@ -99,6 +110,8 @@ export async function saveInstructor(
     try {
         await requireAuth();
         validateManageUploadForm(formData);
+        const inputIssue = manageScalarIssue(formData, "instructor");
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
 
         const documentId = String(formData.get("documentId") ?? "").trim();
@@ -109,8 +122,21 @@ export async function saveInstructor(
         const parsed = parseAndValidateFields(formData);
         if ("error" in parsed) return { ok: false, error: parsed.error, fields: parsed.missingFields };
         const current = await requireManagedDocument(client, documentId, "instructor");
+        const positionIssue = instructorPositionIssue(formData, current.imagePosition);
+        if (positionIssue) return { ok: false, ...positionIssue };
+        for (const [id, label] of [["about", "레슨 소개"], ["process", "커리큘럼"]] as const) {
+            const source = current[id];
+            if (source != null && (!Array.isArray(source) || Array.from(source).some((value) => typeof value !== "string"))) return {
+                ok: false,
+                error: `${label}: 원본 형식을 읽지 못해 저장하지 않았어요. 입력을 따로 보관한 뒤 /admin에서 확인해 주세요.`,
+                fields: [{ id, label }],
+            };
+        }
 
         const patch: Record<string, unknown> = { ...parsed.fields };
+        for (const field of ["isActive", "imagePosition", "portfolioUrl", "portfolioText", "portfolioBtn"]) {
+            if (!formData.has(field)) delete patch[field];
+        }
 
         // 사진은 새로 올린 경우에만 교체한다 (비워두면 기존 사진 유지)
         const imageFields: Array<["image" | "modalImage" | "bgImage", string]> = [
@@ -131,19 +157,16 @@ export async function saveInstructor(
 
         let mutation = client.patch(documentId).ifRevisionId(current._rev).set(patch);
         if (unsetFields.length > 0) mutation = mutation.unset(unsetFields);
-        await mutation.commit();
-
-        // 공개 사이트에 즉시 반영.
-        // updateTag는 서버 액션 전용으로, 저장 직후 본인이 바뀐 내용을 바로 볼 수 있게 한다.
-        updateTag("instructor");
-        revalidatePath("/class");
-        revalidatePath("/manage/instructors");
+        await commitManagedPatch(() => mutation.commit(), documentId, "instructor", () => {
+            updateTag("instructor");
+            revalidatePath("/class");
+            revalidatePath("/manage/instructors");
+        });
 
         return { ok: true };
     } catch (err) {
-        const message = managedWriteError(err);
         reportError("saveInstructor", err);
-        return { ok: false, error: message };
+        return managedSaveFailure(err);
     }
 }
 
@@ -159,6 +182,8 @@ export async function createInstructor(
     try {
         await requireAuth();
         validateManageUploadForm(formData);
+        const inputIssue = manageScalarIssue(formData, "instructor") ?? instructorPositionIssue(formData);
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
 
         const parsed = parseAndValidateFields(formData);
@@ -180,16 +205,14 @@ export async function createInstructor(
             };
         }
 
-        const [image, bgImage, modalImage, existingOrders] = await Promise.all([
+        // 조회한 목록의 뒤에 추가한다. 순서 조정은 목록 화면에서만 하며 기존 문서는 건드리지 않는다.
+        const order = nextManagedOrder(await client.fetch<unknown>(`*[_type == "instructor"].order`));
+        const [image, bgImage, modalImage] = await Promise.all([
             uploadImageIfPresent(client, imageFile),
             uploadImageIfPresent(client, bgImageFile),
             uploadImageIfPresent(client, modalImageFile),
-            client.fetch<number[]>(`*[_type == "instructor" && defined(order)].order`),
         ]);
-        // 새 강사는 항상 맨 뒤에 추가한다 — 순서는 목록 페이지의 위/아래 버튼으로 조정
-        const order = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 0;
-
-        const created = await client.create({
+        const created = await createManagedDocument(client, {
             _type: "instructor",
             ...parsed.fields,
             order,
@@ -201,7 +224,7 @@ export async function createInstructor(
             bgImage,
             ...(modalImage ? { modalImage } : {}),
         });
-        documentId = created._id;
+        documentId = created;
     } catch (err) {
         const message = managedWriteError(err);
         reportError("createInstructor", err);
@@ -210,9 +233,13 @@ export async function createInstructor(
 
     // redirect()는 특수한 예외를 던지는 방식으로 동작하므로,
     // try/catch 블록에 걸리지 않도록 반드시 바깥에서 호출해야 한다.
-    updateTag("instructor");
-    revalidatePath("/class");
-    revalidatePath("/manage/instructors");
+    try {
+        updateTag("instructor");
+        revalidatePath("/class");
+        revalidatePath("/manage/instructors");
+    } catch {
+        return { ok: false, error: CREATED_REFRESH_FAILED, committed: true };
+    }
     // 방금 만든 강사의 수정 화면으로 이동 — 미리보기로 바로 확인할 수 있도록
     redirect(`/manage/instructors/${documentId}?created=1`);
 }
@@ -234,12 +261,12 @@ export async function moveInstructorOrder(
         const all = await client.fetch<OrderRow[]>(
             `*[_type == "instructor" && !(trashed == true)] | order(${CONTENT_ORDER}) { _id, _rev, order }`,
         );
-        const result = await moveOrder(client, all, documentId, direction);
+        const result = await moveOrder(client, all, documentId, direction, () => {
+            updateTag("instructor");
+            revalidatePath("/class");
+            revalidatePath("/manage/instructors");
+        });
         if (!result.ok) return result;
-
-        updateTag("instructor");
-        revalidatePath("/class");
-        revalidatePath("/manage/instructors");
 
         return { ok: true };
     } catch (err) {
@@ -256,16 +283,14 @@ export async function moveInstructorOrder(
  * 삭제와 마찬가지로 클라이언트 컴포넌트에서 직접 호출되므로 redirect를 쓰지 않는다.
  */
 export async function duplicateInstructor(documentId: string): Promise<DuplicateResult> {
+    let newId: string | undefined;
     try {
         await requireAuth();
         const client = getWriteClient();
 
         const original = await requireManagedDocument(client, documentId, "instructor");
 
-        const existingOrders = await client.fetch<number[]>(
-            `*[_type == "instructor" && defined(order)].order`,
-        );
-        const order = existingOrders.length > 0 ? Math.max(...existingOrders) + 1 : 0;
+        const order = nextManagedOrder(await client.fetch<unknown>(`*[_type == "instructor"].order`));
 
         // _id, _rev 등 시스템 필드는 제외하고 나머지만 그대로 복제한다.
         // 이미지 필드는 Sanity 이미지 참조라 여러 문서가 같이 가리켜도 안전하다.
@@ -279,7 +304,7 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
 
         const newName = `${String(instructorName ?? "")} (복사본)`.trim();
 
-        const created = await client.create({
+        const createdId = await createManagedDocument(client, {
             _type: (_type as string) ?? "instructor",
             ...rest,
             instructorName: newName,
@@ -290,16 +315,18 @@ export async function duplicateInstructor(documentId: string): Promise<Duplicate
             id: { _type: "slug", current: generateInstructorSlug(newName) },
             order,
         });
+        if (createdId === documentId) throw new Error(UNKNOWN_CREATE_RESULT);
+        newId = createdId;
 
         updateTag("instructor");
         revalidatePath("/class");
         revalidatePath("/manage/instructors");
 
-        return { ok: true, newId: created._id };
+        return { ok: true, newId };
     } catch (err) {
         const message = managedWriteError(err);
         reportError("duplicateInstructor", err);
-        return { ok: false, error: message };
+        return { ok: false, error: newId ? CREATED_REFRESH_FAILED : message };
     }
 }
 
@@ -317,12 +344,12 @@ export async function deleteInstructor(documentId: string): Promise<SaveResult> 
             return { ok: false, error: "삭제할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
         const client = getWriteClient();
-        const current = await requireManagedDocument(client, documentId, "instructor");
-        await client.patch(documentId).ifRevisionId(current._rev).set({ trashed: true }).commit();
-
-        updateTag("instructor");
-        revalidatePath("/class");
-        revalidatePath("/manage/instructors");
+        const current = await requireManagedTrashDocument(client, documentId, "instructor");
+        await commitManagedPatch(() => client.patch(documentId).ifRevisionId(current._rev).set({ trashed: true }).commit(), documentId, "instructor", () => {
+            updateTag("instructor");
+            revalidatePath("/class");
+            revalidatePath("/manage/instructors");
+        }, (document) => document.trashed === true);
 
         return { ok: true };
     } catch (err) {
@@ -340,12 +367,12 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
             return { ok: false, error: "복원할 강사를 찾지 못했어요. 목록에서 다시 골라 주세요." };
         }
         const client = getWriteClient();
-        const current = await requireManagedDocument(client, documentId, "instructor");
-        await client.patch(documentId).ifRevisionId(current._rev).set({ trashed: false }).commit();
-
-        updateTag("instructor");
-        revalidatePath("/class");
-        revalidatePath("/manage/instructors");
+        const current = await requireManagedTrashDocument(client, documentId, "instructor");
+        await commitManagedPatch(() => client.patch(documentId).ifRevisionId(current._rev).set({ trashed: false }).commit(), documentId, "instructor", () => {
+            updateTag("instructor");
+            revalidatePath("/class");
+            revalidatePath("/manage/instructors");
+        }, (document) => document.trashed === false);
 
         return { ok: true };
     } catch (err) {
@@ -359,12 +386,11 @@ export async function restoreInstructor(documentId: string): Promise<SaveResult>
 export async function reorderInstructors(ids: string[]): Promise<SaveResult> {
     try {
         await requireAuth();
-        const result = await applyOrder(getWriteClient(), `*[_type == "instructor" && !(trashed == true)]{ _id, _rev, order }`, {}, ids);
-        if (result.ok) {
+        const result = await applyOrder(getWriteClient(), `*[_type == "instructor" && !(trashed == true)]{ _id, _rev, order }`, {}, ids, false, () => {
             updateTag("instructor");
             revalidatePath("/class");
             revalidatePath("/manage/instructors");
-        }
+        });
         return result;
     } catch (err) {
         reportError("reorderInstructors", err);

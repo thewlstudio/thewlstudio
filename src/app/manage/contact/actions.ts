@@ -4,13 +4,14 @@ import { revalidatePath, updateTag } from "next/cache";
 import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { labelsEulReul } from "@/lib/josa";
-import { managedWriteError, saveManagedSingleton } from "@/lib/manage-target";
+import { managedSaveFailure, saveManagedSingleton } from "@/lib/manage-target";
 import { externalHttpUrl } from "@/lib/content-urls";
 import { SITE_SETTINGS_LINK_HOSTS, siteSettingsLinkUrl, siteSettingsPhone, type SiteSettingsLinkKey } from "@/lib/site-settings";
 import { reportError } from "@/lib/error-reporting";
+import { manageScalarIssue } from "@/lib/manage-scalar-input";
 
 export type FieldError = { id: string; label: string };
-export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
+export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[]; committed?: true };
 
 type Rule = { id: string; label: string; kind: "text" | "phone"; max: number } | { id: SiteSettingsLinkKey; label: string; kind: "url"; max: number };
 
@@ -31,6 +32,8 @@ const RULES: Rule[] = [
 export async function saveSettings(_prev: SaveResult | null, formData: FormData): Promise<SaveResult> {
     try {
         await requireAuth();
+        const inputIssue = manageScalarIssue(formData, "settings");
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
 
         const values: Record<string, string> = {};
@@ -61,14 +64,13 @@ export async function saveSettings(_prev: SaveResult | null, formData: FormData)
             }
         }
 
-        await saveManagedSingleton(client, "siteSettings", values);
-
-        updateTag("siteSettings");
-        // 헤더(인스타그램)·스튜디오·클래스 링크는 루트 레이아웃에서 읽으므로 전체 경로를 새로 만든다
-        revalidatePath("/", "layout");
+        await saveManagedSingleton(client, "siteSettings", values, undefined, () => {
+            updateTag("siteSettings");
+            revalidatePath("/", "layout");
+        });
         return { ok: true };
     } catch (err) {
         reportError("saveSettings", err);
-        return { ok: false, error: managedWriteError(err) };
+        return managedSaveFailure(err);
     }
 }

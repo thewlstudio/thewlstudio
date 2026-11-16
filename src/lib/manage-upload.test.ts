@@ -64,9 +64,19 @@ describe("공통 서버 이미지 업로드", () => {
         expect(console.error).toHaveBeenCalledExactlyOnceWith("[manage-upload] image upload failed", { statusCode: 422 });
         expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("private upstream details");
     });
+    it.each([null, undefined, {}, { _id: "" }, { _id: 1 }, { _id: "file-other" }, { _id: "image-bad value" }])("잘못된 업로드 응답 #%#를 이미지 참조로 저장하지 않는다", async (value) => {
+        upload.mockResolvedValue(value);
+        await expect(uploadImageIfPresent(client, photo())).rejects.toThrow("사진을 올리지 못했어요");
+        expect(upload).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("업로드 전 전체 폼 검사", () => {
+    it.each(["imageFile", "bgImageFile", "modalImageFile", "linkIconFile_0", "blockImage_new-1", "spaceImage_new-1"])("중복 %s는 첫 값만 선택하지 않는다", (field) => {
+        const data = new FormData(); const file = photo(); const read = vi.spyOn(file, "arrayBuffer");
+        data.append(field, photo(0, "")); data.append(field, file);
+        expect(() => validateManageUploadForm(data)).toThrow("중복"); expect(read).not.toHaveBeenCalled(); expect(upload).not.toHaveBeenCalled();
+    });
     it("실제 multipart 직렬화·역직렬화 뒤의 File도 동일하게 검증한다", async () => {
         const data = new FormData(); data.set("imageFile", photo(5, "multipart.png"));
         const parsed = await new Request("http://upload.test", { method: "POST", body: data }).formData();

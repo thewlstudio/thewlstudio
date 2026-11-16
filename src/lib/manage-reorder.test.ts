@@ -8,14 +8,17 @@ function mock(docs: Array<{ _id: string; _rev?: string; order?: number | null; g
     const client = {
         fetch: async () => docs.map((doc) => ({ _rev: `rev-${doc._id}`, ...doc })),
         transaction: () => {
+            const ids: string[] = [];
             const t = {
                 patch: (id: string, op: { ifRevisionID?: string; set: { order: number } }) => {
                     patches.push([id, op.set.order]);
                     revisions.push([id, op.ifRevisionID]);
+                    ids.push(id);
                     return t;
                 },
                 commit: async () => {
                     committed++;
+                    return { transactionId: "tx-ok", documentIds: ids, results: ids.map((id) => ({ id, operation: "update" })) };
                 },
             };
             return t;

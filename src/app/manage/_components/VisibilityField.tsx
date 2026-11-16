@@ -19,7 +19,7 @@ export function VisibilityBanner({ isActive, where }: { isActive: boolean; where
 /** 강사·Crew·Works·Studio 공통 "공개 상태" 선택. 문구와 모양을 한 곳에서 맞춘다. */
 export function VisibilityField({ isActive, onChange, where }: { isActive: boolean; onChange: (next: boolean) => void; where: string }) {
     return (
-        <fieldset data-tour="form-visibility">
+        <fieldset id="visibility" tabIndex={-1} data-tour="form-visibility">
             <legend className="text-sm font-bold mb-1.5">공개 상태</legend>
             <p className="text-sm text-neutral-600 mb-2 leading-relaxed">
                 <strong>비공개</strong>로 저장하면 {where}에는 나오지 않고, 저장한 뒤 &lsquo;홈페이지에서 미리보기&rsquo;로만 볼 수 있어요. 먼저 확인하고 공개하고 싶을 때, 또는 잠시 빼고 싶을 때(삭제 대신) 써 주세요.

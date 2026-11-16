@@ -152,7 +152,7 @@ function CrewFormInner({ data, mode, onDiscard, session }: { data: CrewFormData;
             <InlineError id="imageFile" />
             </Section>
 
-            <Section step={3} title="소셜 링크" help="프로필에 아이콘으로 나와요. 주소창의 주소를 **통째로 복사해서 붙여넣으면** 돼요. 필요 없는 줄은 이 링크 지우기를 누르세요." hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워 둬도 돼요.">
+            <Section id="links" step={3} title="소셜 링크" help="프로필에 아이콘으로 나와요. 주소창의 주소를 **통째로 복사해서 붙여넣으면** 돼요. 필요 없는 줄은 이 링크 지우기를 누르세요." hint="Instagram, YouTube 등 프로필에 보이는 아이콘 링크예요. 없으면 비워 둬도 돼요.">
                 {rows.map((row, i) => {
                     const known = CREW_ICON_PRESETS.some((p) => p.ref === row.iconRef);
                     // 새 행의 화면 키와 원본 키를 구분한다. sourceKey 없는 이전 props는 기존 규칙을 따른다.

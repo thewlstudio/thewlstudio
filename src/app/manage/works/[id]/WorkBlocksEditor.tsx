@@ -245,7 +245,7 @@ function summaryOf(b: BlockState): string {
     }
 }
 
-const titleOf = (b: BlockState) => (b.type === "preserved" ? `${PRESERVED_LABELS[b.rawType] ?? b.rawType} (편집 불가)` : BLOCK_META[b.type].label);
+const titleOf = (b: BlockState) => (b.type === "preserved" ? `${Object.hasOwn(PRESERVED_LABELS, b.rawType) ? PRESERVED_LABELS[b.rawType] : b.rawType} (편집 불가)` : BLOCK_META[b.type].label);
 
 export default function WorkBlocksEditor({ initial, onDirty, failedState }: { initial: BlockState[]; onDirty: () => void; failedState?: unknown }) {
     const [blocks, setBlocks] = useState<BlockState[]>(initial);

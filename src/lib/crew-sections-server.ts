@@ -3,6 +3,7 @@ import { LIMITS, isKnownType } from "./crew-sections";
 import { contentListLimit, contentTextLimit } from "./content-limits";
 import { arrayKeyError, managedArrayKey as key } from "./manage-array-keys";
 import { crewSectionsShapeError } from "./body-content-shape";
+import { bodyExtraFieldsError } from "./body-extra-fields";
 
 type Raw = Record<string, unknown>;
 const isObj = (v: unknown): v is Raw => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -10,13 +11,13 @@ const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const line = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 const text = (v: unknown) => (typeof v === "string" ? v.replace(/\r\n/g, "\n").trim() : "");
 
-function rows(v: unknown, opts: { date?: boolean; desc?: boolean }) {
+function rows(v: unknown, opts: { date?: boolean; desc?: boolean }, existing: unknown = undefined) {
     return list(v)
         .filter(isObj)
         .map((r) => ({ r, title: line(r.title) }))
         .filter((x) => x.title)
         .map(({ r, title }) => ({
-            _key: key(r._key),
+            _key: key(r._key, list(existing)),
             ...(opts.date && line(r.date) ? { date: line(r.date) } : {}),
             title,
             ...(opts.desc && line(r.desc) ? { desc: line(r.desc) } : {}),
@@ -71,17 +72,19 @@ export function sanitizeSections(payload: unknown, existing: Raw[]): { sections:
     if (shapeError) return { error: shapeError };
     const limitError = sectionLimitError(payload);
     if (limitError) return { error: limitError };
+    const extraError = bodyExtraFieldsError("crew", payload, existing);
+    if (extraError) return { error: extraError };
 
     const out: unknown[] = [];
     for (const p of payload) {
         if (!isObj(p)) continue;
         const type = p._type;
+        const prev = existing.find((e) => e._key === p._key && e._type === type);
         if (!isKnownType(type)) {
-            const prev = existing.find((e) => e._key === p._key && e._type === type);
             if (prev) out.push(prev);
             continue;
         }
-        const _key = key(p._key);
+        const _key = key(p._key, prev ? [prev] : []);
         switch (type) {
             case "aboutSection": {
                 const t = text(p.text);
@@ -91,19 +94,22 @@ export function sanitizeSections(payload: unknown, existing: Raw[]): { sections:
             case "discographySection": {
                 const years = list(p.years)
                     .filter(isObj)
-                    .map((y) => ({ _key: key(y._key), year: line(y.year), tracks: rows(y.tracks, { desc: true }) }))
+                    .map((y) => {
+                        const previousYear = list(prev?.years).filter(isObj).find((row) => row._key === y._key);
+                        return { _key: key(y._key, previousYear ? [previousYear] : []), year: line(y.year), tracks: rows(y.tracks, { desc: true }, previousYear?.tracks) };
+                    })
                     .filter((y) => y.year || y.tracks.length > 0);
                 if (years.length > 0) out.push({ _key, _type: type, years });
                 break;
             }
             case "careerSection": {
-                const items = rows(p.items, { date: true, desc: true });
+                const items = rows(p.items, { date: true, desc: true }, prev?.items);
                 if (items.length > 0) out.push({ _key, _type: type, items });
                 break;
             }
             case "awardsAndActivitiesSection": {
-                const awards = rows(p.awards, { date: true });
-                const activities = rows(p.activities, { date: true });
+                const awards = rows(p.awards, { date: true }, prev?.awards);
+                const activities = rows(p.activities, { date: true }, prev?.activities);
                 if (awards.length + activities.length > 0) out.push({ _key, _type: type, awards, activities });
                 break;
             }

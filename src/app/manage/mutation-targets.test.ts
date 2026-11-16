@@ -90,13 +90,13 @@ describe("저장·삭제·복원·복제 후 캐시 갱신", () => {
     it("저장 완료를 기다린 뒤에만 태그·경로를 갱신한다", async () => {
         db.doc = { _id: "target", _type: "work", _rev: "rev-1", slug: { current: "100%-live" } };
         let started!: () => void;
-        let finish!: (value: { _id: string }) => void;
+        let finish!: (value: { _id: string; _type: string; _rev: string }) => void;
         const committing = new Promise<void>((resolve) => { started = resolve; });
         patch.commit.mockImplementation(() => { started(); return new Promise((resolve) => { finish = resolve; }); });
         const result = saveWork(null, form("work"));
         await committing;
         expectNoRefresh();
-        finish({ _id: "target" });
+        finish({ _id: "target", _type: "work", _rev: "new-rev" });
         expect(await result).toEqual({ ok: true });
         expectRefresh("work");
     });
@@ -189,7 +189,7 @@ beforeEach(() => {
     client.getDocument.mockImplementation(async () => db.doc ? { ...db.doc } : undefined);
     client.fetch.mockImplementation(async (query: string) => {
         if (query.startsWith("count(")) return 0;
-        if (query.includes("defined(order)")) return [0];
+        if (query.endsWith(".order")) return [0];
         if (query.endsWith(".contentBlocks")) return db.doc?.contentBlocks ?? [];
         if (query.endsWith(".sections")) return db.doc?.sections ?? [];
         if (query.endsWith(".slug.current")) return "slug";
@@ -197,10 +197,19 @@ beforeEach(() => {
         return db.doc ?? null;
     });
     client.patch.mockReturnValue(patch);
-    client.transaction.mockReturnValue(patch);
+    client.transaction.mockImplementation(() => {
+        const ids: string[] = [];
+        const tx = {
+            patch: (id: string, changes: unknown) => { patch.patch(id, changes); ids.push(id); return tx; },
+            commit: async () => {
+                await patch.commit();
+                return { transactionId: "tx-ok", documentIds: ids, results: ids.map((id) => ({ id, operation: "update" })) };
+            },
+        }; return tx;
+    });
     for (const method of [patch.set, patch.unset, patch.ifRevisionId, patch.patch, patch.createIfNotExists]) method.mockReturnValue(patch);
-    patch.commit.mockResolvedValue({ _id: "target" });
-    client.create.mockResolvedValue({ _id: "new-document" });
+    patch.commit.mockImplementation(async () => ({ ...db.doc, ...patch.set.mock.lastCall?.[0], _rev: "new-rev" }));
+    client.create.mockImplementation(async (fields: Record<string, unknown>) => ({ _id: fields._id ?? "new-document", _type: fields._type, _rev: "v1" }));
     client.assets.upload.mockResolvedValue({ _id: "image-uploaded" });
 });
 afterEach(() => vi.restoreAllMocks());
@@ -292,6 +301,14 @@ describe("연락처 저장과 공개 조회의 정책 일치", () => {
 });
 
 describe.each(mutations)("$name의 대상 검증", ({ type, run }) => {
+    it("공백뿐인 원본 버전으로 업로드·저장하지 않는다", async () => {
+        db.doc = { _id: "target", _type: type, _rev: " \t\n" };
+        expect((await run("target")).ok).toBe(false);
+        expect(patch.commit).not.toHaveBeenCalled();
+        expect(client.create).not.toHaveBeenCalled();
+        expect(client.assets.upload).not.toHaveBeenCalled();
+        expectNoRefresh();
+    });
     it("다른 종류의 문서에는 쓰지 않는다", async () => {
         expect((await run("target")).ok).toBe(false);
         expect(patch.commit).not.toHaveBeenCalled();

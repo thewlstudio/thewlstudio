@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { previewTarget } from "@/lib/preview-path";
-import { act, Component, type ReactNode } from "react";
+import { act, cloneElement, Component, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import WorkForm, { type WorkFormData } from "../works/[id]/WorkForm";
@@ -18,6 +18,8 @@ import { arrayKeyError } from "@/lib/manage-array-keys";
 import { studioInfoLimitError, studioSpaceLimitError } from "@/lib/studio-content-limits";
 import { studioInfoShapeError, studioSpaceShapeError } from "@/lib/studio-content-shape";
 import * as imageUpload from "./imageUpload";
+import { isFormPending } from "@/lib/formDirtyGuard";
+import { isManageMutationPending } from "@/lib/manage-mutation-lock";
 
 const { save, refresh, router } = vi.hoisted(() => {
     const refresh = vi.fn();
@@ -99,6 +101,11 @@ describe.each(["works", "crew"] as const)("%s 저장된 공개 화면 링크", (
 });
 
 describe("관리자 오디오 미리 듣기의 URL", () => {
+    it.each([null, { ok: "true" }, { ok: false, error: {} }])("비정상 저장 응답 #%#에도 화면·입력·dirty를 유지한다", async (response) => {
+        save.mockResolvedValue(response); await render(<WorkForm data={work} />); await input("title", "저장되지 않은 수정"); await submit();
+        expect(host.querySelector('[data-error-boundary]')).toBeNull(); expect(field("title").value).toBe("저장되지 않은 수정");
+        expect(host.textContent).toContain("처리 결과를 확인하지 못했어요"); expect(host.textContent).toContain("변경 버리기"); expect(save).toHaveBeenCalledTimes(1); expect(refresh).not.toHaveBeenCalled();
+    });
     it.each(["javascript:alert(1)", "data:audio/mpeg;base64,AAA", "file:///audio.mp3", "//other.example/audio.mp3", "https://user:pass@example.com/audio.mp3"])("%s는 재생 src에 넣지 않고 원본 편집 정보는 유지한다", async (audioUrl) => {
         const initial = [{ key: "audio", type: "audioBlock" as const, title: "기존 제목", artist: "기존 아티스트", audioUrl }];
         const before = JSON.stringify(initial);
@@ -314,6 +321,59 @@ describe("6개 관리 폼의 실패 복구", () => {
         { name: "연락처", id: "phone", node: <ContactForm data={FALLBACK_SETTINGS} revision="v1" /> },
         { name: "스튜디오 안내", id: "membershipNote", node: <StudioInfoForm data={FALLBACK_INFO} revision="v1" /> },
     ];
+    it.each(cases)("$name — 서버의 committed 응답은 입력을 지키고 재저장·버리기를 막는다", async ({ id, node }) => {
+        save.mockResolvedValue({ ok: false, error: "문구가 달라도 저장은 확인된 상태", committed: true });
+        await render(node); await input(id, "저장한 내용"); await submit();
+        expect(host.textContent).toContain("문구가 달라도 저장은 확인된 상태"); expect(field(id).value).toBe("저장한 내용");
+        expect(refresh).not.toHaveBeenCalled(); await input(id, "보관할 추가 수정"); await submit();
+        expect(save).toHaveBeenCalledTimes(1); await click("변경 버리기"); expect(field(id).value).toBe("보관할 추가 수정");
+        expect(host.textContent).toContain("변경을 버리지 않았어요"); expect(isManageMutationPending()).toBe(false); expect(isFormPending()).toBe(false);
+    });
+    it.each(cases)("$name — committed 실패 이후 새 revision에서 최근 저장 기준으로 회복한다", async ({ id, node }) => {
+        save.mockResolvedValue({ ok: true }).mockResolvedValueOnce({ ok: false, error: "저장 후 갱신 안내", committed: true });
+        await render(node); await input(id, "저장한 내용"); await submit();
+        const fresh = cloneElement(node, { data: { ...node.props.data, [id]: "최근 저장값", _rev: "v2" }, revision: "v2" });
+        await render(fresh); expect(host.textContent).not.toContain("저장 후 갱신 안내");
+        await input(id, "버릴 수정"); await click("변경 버리기"); expect(field(id).value).toBe("최근 저장값");
+        await input(id, "다음 저장"); await submit(); expect(save).toHaveBeenCalledTimes(2);
+    });
+    it.each(cases)("$name — 저장 뒤 refresh 호출 오류에도 폼·입력·변경 보호를 유지한다", async ({ id, node }) => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        save.mockResolvedValue({ ok: true }); refresh.mockImplementationOnce(() => { throw new Error("DO_NOT_ECHO"); });
+        await render(<SaveBoundary>{node}</SaveBoundary>); await input(id, "저장한 내용");
+        const original = field(id); await submit();
+        expect(host.querySelector("[data-error-boundary]")).toBeNull(); expect(field(id)).toBe(original); expect(field(id).value).toBe("저장한 내용");
+        expect(host.textContent).toContain("저장은 완료됐지만"); expect(host.textContent).not.toContain("DO_NOT_ECHO");
+        expect(host.textContent).toContain("저장하지 않은 변경사항"); expect(save).toHaveBeenCalledTimes(1);
+        expect(isManageMutationPending()).toBe(false); expect(isFormPending()).toBe(false);
+    });
+    it.each(cases)("$name — 기준값을 못 읽은 뒤 버리기는 오래된 값으로 되돌리지 않는다", async ({ id, node }) => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        save.mockResolvedValue({ ok: true }); refresh.mockImplementationOnce(() => { throw new Error("refresh failed"); });
+        await render(<SaveBoundary>{node}</SaveBoundary>); await input(id, "저장한 내용"); await submit();
+        await input(id, "보관할 추가 수정"); const original = field(id); await click("변경 버리기");
+        expect(field(id)).toBe(original); expect(field(id).value).toBe("보관할 추가 수정");
+        expect(host.textContent).toContain("변경을 버리지 않았어요"); expect(save).toHaveBeenCalledTimes(1);
+    });
+    it.each(cases)("$name — 기준값을 못 읽으면 같은 화면에서 저장을 반복 전송하지 않는다", async ({ id, node }) => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        save.mockResolvedValue({ ok: true }); refresh.mockImplementationOnce(() => { throw new Error("refresh failed"); });
+        await render(<SaveBoundary>{node}</SaveBoundary>); await input(id, "저장한 내용"); await submit();
+        await input(id, "보관할 추가 수정"); await submit();
+        expect(save).toHaveBeenCalledTimes(1); expect(refresh).toHaveBeenCalledTimes(1); expect(field(id).value).toBe("보관할 추가 수정");
+        expect(host.textContent).toContain("저장은 완료됐지만"); expect(isManageMutationPending()).toBe(false); expect(isFormPending()).toBe(false);
+    });
+    it.each(cases)("$name — 최신 revision을 받으면 보호를 풀고 최근 저장값으로 버린다", async ({ id, node }) => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        save.mockResolvedValue({ ok: true }); refresh.mockImplementationOnce(() => { throw new Error("refresh failed"); });
+        await render(<SaveBoundary>{node}</SaveBoundary>); await input(id, "저장한 내용"); await submit();
+        const fresh = cloneElement(node, { data: { ...node.props.data, [id]: "최근 저장값", _rev: "v2" }, revision: "v2" });
+        await render(<SaveBoundary>{fresh}</SaveBoundary>);
+        expect(field(id).value).toBe("최근 저장값"); expect(host.textContent).not.toContain("저장은 완료됐지만");
+        expect(host.textContent).not.toContain("저장하지 않은 변경사항");
+        await input(id, "버릴 추가 수정"); await click("변경 버리기"); expect(field(id).value).toBe("최근 저장값");
+        await input(id, "다음 저장"); await submit(); expect(save).toHaveBeenCalledTimes(2);
+    });
     it("강사 사진별 자르기 버튼은 해당 사진 입력 옆에 하나씩만 있다", async () => {
         await render(cases[0].node);
         for (const id of ["imageFile", "modalImageFile", "bgImageFile"]) {
@@ -450,6 +510,49 @@ describe("6개 관리 폼의 실패 복구", () => {
 });
 
 describe("저장 성공 후 기준값 동기화", () => {
+    it("갱신 실패 문구가 같아도 표시가 없으면 저장 확인 상태로 추측하지 않는다", async () => {
+        save.mockResolvedValue({ ok: true }).mockResolvedValueOnce({ ok: false, error: "변경은 완료됐지만 화면을 갱신하지 못했어요." });
+        await render(<WorkForm data={work} />); await input("title", "확인할 입력"); await submit(); await submit();
+        expect(save).toHaveBeenCalledTimes(2); expect(refresh).toHaveBeenCalledTimes(1);
+    });
+    it("생성 폼도 committed 실패 뒤 선택 파일·입력을 유지하고 재생성을 보내지 않는다", async () => {
+        save.mockResolvedValue({ ok: false, error: "생성 후 갱신 안내", committed: true });
+        await render(<WorkForm data={{ ...work, title: "", artist: "", releaseDate: "" }} mode="create" />);
+        await input("title", "새 작품"); await input("artist", "아티스트"); await input("releaseDate", "2026-11-04"); await input("slug", "new-work");
+        const fileInput = field("imageFile") as HTMLInputElement;
+        const selected = new File(["photo"], "cover.png", { type: "image/png" });
+        Object.defineProperty(fileInput, "files", { configurable: true, value: [selected] });
+        await act(async () => fileInput.dispatchEvent(new Event("change", { bubbles: true })));
+        await submit(); expect(host.textContent).toContain("생성 후 갱신 안내");
+        await submit(); await click("변경 버리기");
+        expect(save).toHaveBeenCalledTimes(1); expect(refresh).not.toHaveBeenCalled(); expect(field("title").value).toBe("새 작품");
+        expect(field("imageFile")).toBe(fileInput); expect(fileInput.files?.[0]).toBe(selected);
+    });
+    it("보조 체크 기록이 손상돼도 저장 결과와 기준값 새로고침을 깨뜨리지 않는다", async () => {
+        const originalUrl = location.href; const original = localStorage.getItem("wls_checklist_v1");
+        history.replaceState(null, "", "/manage/works/work-1"); localStorage.setItem("wls_checklist_v1", "{}");
+        save.mockResolvedValue({ ok: true }); vi.spyOn(console, "error").mockImplementation(() => {});
+        try {
+            await render(<SaveBoundary><WorkForm data={work} /></SaveBoundary>); await input("title", "저장한 제목"); await submit();
+            expect(host.querySelector("[data-error-boundary]")).toBeNull(); expect(field("title").value).toBe("저장한 제목");
+            expect(refresh).toHaveBeenCalledTimes(1); expect(save).toHaveBeenCalledTimes(1); expect(isManageMutationPending()).toBe(false);
+        } finally {
+            history.replaceState(null, "", originalUrl);
+            if (original === null) localStorage.removeItem("wls_checklist_v1"); else localStorage.setItem("wls_checklist_v1", original);
+        }
+    });
+    it.each([{ ok: true }, { ok: false, error: "이전 화면의 오류" }])("주소 변경 뒤 늦은 저장 응답 #%#로 dirty나 결과 표시를 바꾸지 않는다", async (result) => {
+        const originalUrl = location.href; let finish!: (value: typeof result) => void;
+        save.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+        await render(<WorkForm data={work} />); await input("title", "보관할 입력");
+        await submit(); history.replaceState(null, "", "/manage/other");
+        try {
+            await act(async () => finish(result));
+            expect(field("title").value).toBe("보관할 입력"); expect(host.textContent).toContain("저장하지 않은 변경사항");
+            expect(host.textContent).not.toContain("저장했어요."); expect(host.textContent).not.toContain("이전 화면의 오류");
+            expect(refresh).not.toHaveBeenCalled(); expect(isManageMutationPending()).toBe(false); expect(isFormPending()).toBe(false);
+        } finally { history.replaceState(null, "", originalUrl); }
+    });
     it("정규화된 서버 값으로 초기화하고, 다음 변경 버리기는 최근 저장값으로 돌아간다", async () => {
         save.mockResolvedValue({ ok: true });
         await render(<WorkForm data={work} />);

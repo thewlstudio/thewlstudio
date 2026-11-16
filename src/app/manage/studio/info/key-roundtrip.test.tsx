@@ -77,6 +77,19 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); });
 
 describe("Studio 안내의 실제 폼→액션→재조회 키 왕복", () => {
+    it.each(groups)("$id 추가 필드 오류는 입력·dirty·원본을 유지한다", async ({ id }) => {
+        rows(id)[0].custom = { private: "DO_NOT_ECHO" };
+        const before = structuredClone(db.doc);
+        await act(async () => draw());
+        await change("#membershipNote", "저장되지 않은 수정"); await submit();
+        expect(host.textContent).toContain("이 편집기에서 다루지 않는 원본 정보");
+        expect(host.textContent).toContain("저장하지 않은 변경사항");
+        expect(host.textContent).not.toContain("DO_NOT_ECHO");
+        expect(host.querySelector<HTMLTextAreaElement>("#membershipNote")?.value).toBe("저장되지 않은 수정");
+        expect(host.querySelector(`#${id}`)).toBeTruthy();
+        expect(client.patch).not.toHaveBeenCalled(); expect(client.create).not.toHaveBeenCalled();
+        expect(refresh).not.toHaveBeenCalled(); expect(db.saves).toBe(0); expect(db.doc).toEqual(before);
+    });
     it.each(groups)("$id — 재정렬·반복 저장·삭제·추가 후에도 원본과 새 키를 구분한다", async ({ id, label, add, title }) => {
         const original = structuredClone(db.doc);
         await act(async () => draw());

@@ -4,6 +4,7 @@ import { externalHttpUrl, youTubeVideoId } from "./content-urls";
 import { contentListLimit, contentTextLimit } from "./content-limits";
 import { arrayKeyError, managedArrayKey as key } from "./manage-array-keys";
 import { workBlocksShapeError } from "./body-content-shape";
+import { bodyExtraFieldsError } from "./body-extra-fields";
 
 type Raw = Record<string, unknown>;
 const isObj = (v: unknown): v is Raw => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -16,6 +17,21 @@ function paragraphs(v: unknown): string[] {
     return list(v)
         .map((p) => body(p))
         .filter(filled);
+}
+
+/** 뒤쪽 입력 오류 때문에 앞쪽 사진만 업로드되는 일을 막는다. */
+function blockValueError(payload: Raw[]): string | null {
+    for (const p of payload) {
+        if (p._type === "videoEmbedBlock" && body(p.url).trim() && !youTubeVideoId(body(p.url).trim())) return "유튜브 주소가 올바르지 않아요. 유튜브 영상 화면의 주소창에서 주소를 복사해 붙여넣어 주세요.";
+        if (p._type === "audioBlock" && (!body(p.title).trim() || !body(p.artist).trim())) return "오디오 블록은 제목과 아티스트가 모두 필요해요.";
+        if (p._type === "creditGridBlock") {
+            for (const section of list(p.sections).filter(isObj)) for (const item of list(section.items).filter(isObj)) {
+                const url = body(item.linkUrl).trim();
+                if (url && !externalHttpUrl(url)) return "크레딧 링크 주소가 올바르지 않아요. 브라우저 주소창의 주소를 복사해 붙여넣어 주세요.";
+            }
+        }
+    }
+    return null;
 }
 
 /** 모든 블록의 한도 검사를 업로드 전에 끝낸다. 보존 블록 원본에는 편집 한도를 적용하지 않는다. */
@@ -79,19 +95,23 @@ export async function sanitizeBlocks(
     if (shapeError) return { error: shapeError };
     const limitError = blockLimitError(payload);
     if (limitError) return { error: limitError };
+    const extraError = bodyExtraFieldsError("work", payload, existing);
+    if (extraError) return { error: extraError };
+    const valueError = blockValueError(payload);
+    if (valueError) return { error: valueError };
 
     const out: unknown[] = [];
     for (const p of payload) {
         if (!isObj(p)) continue;
         const type = p._type;
+        const prev = existing.find((e) => e._key === p._key && e._type === type);
         if (!isEditableType(type)) {
-            const prev = existing.find((e) => e._key === p._key && e._type === type);
             if (prev) {
                 out.push(prev);
             }
             continue;
         }
-        const _key = key(p._key);
+        const _key = key(p._key, prev ? [prev] : []);
         switch (type) {
             case "descriptionBlock": {
                 const paras = paragraphs(p.paragraphs);
@@ -109,13 +129,12 @@ export async function sanitizeBlocks(
                     .filter(isObj)
                     .map((t) => ({ t, title: body(t.title).trim(), description: body(t.description) }))
                     .filter((x) => x.title || filled(x.description))
-                    .map((x) => ({ _key: key(x.t._key), title: x.title, ...(filled(x.description) ? { description: x.description } : {}) }));
+                    .map((x) => ({ _key: key(x.t._key, list(prev?.tracks)), title: x.title, ...(filled(x.description) ? { description: x.description } : {}) }));
                 if (tracks.length > 0) out.push({ _key, _type: type, tracks });
                 break;
             }
             case "imageBlock": {
                 const clientKey = typeof p._key === "string" ? p._key : "";
-                const prev = existing.find((e) => e._key === clientKey && e._type === "imageBlock");
                 const uploaded = clientKey ? await uploadFor(clientKey) : null;
                 const image = uploaded ?? (prev && isObj(prev.image) ? prev.image : null);
                 if (!image) break; // 사진이 없는 이미지 블록은 의미가 없어 버린다
@@ -126,37 +145,30 @@ export async function sanitizeBlocks(
             case "videoEmbedBlock": {
                 const url = body(p.url).trim();
                 if (!url) break;
-                if (!youTubeVideoId(url)) {
-                    return { error: `유튜브 주소가 올바르지 않아요: ${url.slice(0, 60)} — 유튜브 영상 화면의 주소창에서 주소를 복사해 붙여넣어 주세요.` };
-                }
                 out.push({ _key, _type: type, url });
                 break;
             }
             case "audioBlock": {
                 // 파일 업로드는 /admin 전용 — 기존 문서의 같은 _key 블록이 있어야 하고, 파일은 그대로 유지한다
-                const prev = existing.find((e) => e._key === p._key && e._type === "audioBlock");
                 if (!prev) break;
                 const title = body(p.title).trim();
                 const artist = body(p.artist).trim();
-                if (!title || !artist) return { error: "오디오 블록은 제목과 아티스트가 모두 필요해요." };
                 out.push({ ...prev, title, artist });
                 break;
             }
             case "creditGridBlock": {
                 const sections: unknown[] = [];
                 for (const sec of list(p.sections).filter(isObj)) {
+                    const previousSection = list(prev?.sections).filter(isObj).find((row) => row._key === sec._key);
                     const items: unknown[] = [];
                     for (const it of list(sec.items).filter(isObj)) {
                         const role = body(it.role).trim();
                         const value = body(it.value);
                         const linkText = body(it.linkText).trim();
                         const linkUrl = body(it.linkUrl).trim();
-                        if (linkUrl && !externalHttpUrl(linkUrl)) {
-                            return { error: `크레딧 링크 주소가 올바르지 않아요: ${linkUrl.slice(0, 60)} — 브라우저 주소창의 주소를 복사해 붙여넣어 주세요.` };
-                        }
                         if (!role && !filled(value) && !linkText) continue;
                         items.push({
-                            _key: key(it._key),
+                            _key: key(it._key, list(previousSection?.items)),
                             ...(role ? { role } : {}),
                             ...(filled(value) ? { value } : {}),
                             ...(linkText ? { linkText } : {}),
@@ -164,7 +176,7 @@ export async function sanitizeBlocks(
                         });
                     }
                     const title = body(sec.title).trim();
-                    if (title || items.length > 0) sections.push({ _key: key(sec._key), ...(title ? { title } : {}), items });
+                    if (title || items.length > 0) sections.push({ _key: key(sec._key, previousSection ? [previousSection] : []), ...(title ? { title } : {}), items });
                 }
                 if (sections.length > 0) out.push({ _key, _type: type, sections });
                 break;

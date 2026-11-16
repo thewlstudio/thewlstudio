@@ -12,6 +12,7 @@ import SaveStatus from "../../_components/SaveStatus";
 import { useImageInput } from "../../_components/useImageInput";
 import { Eye, MapPin, Image as ImageIcon } from "lucide-react";
 import CropButton from "../../_components/ImageCropper";
+import { PHOTO_PRESETS } from "@/lib/instructor-photo-presets";
 
 export type InstructorFormData = {
     _id: string;
@@ -31,20 +32,6 @@ export type InstructorFormData = {
     modalImageUrl: string | null;
     bgImageUrl: string | null;
 };
-
-/**
- * 사진 위치 선택지.
- * 값은 Tailwind 클래스 문자열이지만 관리자에게는 보여주지 않는다.
- * ⚠️ 새 항목을 추가하려면 tailwind.config.ts의 safelist에도 반드시 등록해야 한다.
- */
-const PHOTO_PRESETS = [
-    { value: "object-top", label: "얼굴 위쪽" },
-    { value: "object-center", label: "가운데" },
-    { value: "object-[center_30%]", label: "조금 아래" },
-    { value: "object-bottom", label: "아래쪽" },
-    { value: "object-top scale-[1.5] origin-[center_30%]", label: "1.5배 확대" },
-    { value: "object-top scale-[1.8] origin-[center_20%]", label: "1.8배 확대" },
-] as const;
 
 // ── 실시간 미리보기에 쓰는 값들 (실제 저장에는 영향 없음) ──────────────────────────
 
@@ -499,7 +486,7 @@ function InstructorFormInner({
                 </div>
 
                 {/* 사진 위치 — 눈으로 보고 고른다 */}
-                <fieldset>
+                <fieldset id="photo-position" tabIndex={-1}>
                     <legend className="text-sm font-bold mb-1.5">사진에서 보여줄 부분</legend>
                     <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
                         얼굴이 잘리거나 너무 작으면 아래에서 골라 보세요. 위 미리보기가 바로 바뀌어요.

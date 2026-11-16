@@ -32,7 +32,7 @@ beforeEach(() => {
     patch.set.mockImplementation((fields: Raw) => { db.fields = fields; return patch; });
     patch.unset.mockImplementation((fields: string[]) => { db.unset = fields; return patch; });
     patch.commit.mockImplementation(async () => { Object.assign(db.doc, db.fields, { _rev: "v2" }); for (const field of db.unset) delete db.doc[field]; return db.doc; });
-    client.create.mockImplementation(async (fields: Raw) => { db.fields = fields; return { _id: "created" }; });
+    client.create.mockImplementation(async (fields: Raw) => { db.fields = fields; return { _id: fields._id ?? "created", _type: fields._type, _rev: "v1" }; });
     navigate.mockImplementation(() => { throw redirectSignal; });
 });
 afterEach(() => vi.restoreAllMocks());
@@ -51,6 +51,83 @@ function noWrites() {
     expect(revalidatePath).not.toHaveBeenCalled();
 }
 const missing = Symbol("missing");
+const sourceGroups = [
+    { field: "prices", json: "listsJson", action: saveSpace, payload: () => studioSpacePayload({ prices: [{ _key: "saved", label: "기본", value: "1000", unit: "원" }] }) },
+    ...["services", "equipment", "memberships"].map((field) => ({ field, json: "dataJson", action: saveStudioInfo, payload: () => studioInfoPayload({ [field]: field === "services" ? [{ _key: "saved", title: "서비스", price: "1000", priceUnit: "원", points: [] }] : field === "equipment" ? [{ _key: "saved", title: "장비", items: [] }] : [{ _key: "saved", num: "1", label: "회원", sub: "Pass", price: "1000" }] }) })),
+];
+describe.each(sourceGroups)("$field 원본 확장 정보", ({ field, json, action, payload }) => {
+    function setup() {
+        const input = payload();
+        db.doc = { _id: field === "prices" ? "room" : "studioInfo", _type: field === "prices" ? "studioSpace" : "studioInfo", _rev: "v1", ...structuredClone(input) };
+        return input;
+    }
+    it.each([null, false, "", { private: "DO_NOT_ECHO" }])("편집기가 모르는 원본 값 #%#는 저장 전에 차단한다", async (extra) => {
+        const input = setup(); (db.doc[field] as Raw[])[0].custom = extra;
+        const before = JSON.stringify(db.doc);
+        const data = form(json, JSON.stringify(input));
+        if (field === "prices") {
+            (input.images as Raw[]).push({ _key: "new-photo" }); data.set(json, JSON.stringify(input));
+        }
+        expect(await action(null, data)).toMatchObject({ ok: false, error: expect.stringContaining("/admin"), fields: [{ id: field }] });
+        noWrites(); expect(JSON.stringify(db.doc)).toBe(before);
+    });
+    it("원본의 _type도 실제 저장하지 않는다면 조용히 지우지 않는다", async () => {
+        const input = setup(); (db.doc[field] as Raw[])[0]._type = "customRow";
+        const result = await action(null, form(json, JSON.stringify(input)));
+        expect(result).toMatchObject({ ok: false, fields: [{ id: field }] }); noWrites();
+    });
+    it("키 없는 원본의 확장 정보는 행 위치로 추측하지 않는다", async () => {
+        const input = setup(); const row = (db.doc[field] as Raw[])[0]; delete row._key; row.custom = "원본";
+        expect(await action(null, form(json, JSON.stringify(input)))).toMatchObject({ ok: false, fields: [{ id: field }] }); noWrites();
+    });
+    it("키 없는 원본은 빈 제출 목록도 삭제로 추측하지 않는다", async () => {
+        const input = setup(); const row = (db.doc[field] as Raw[])[0]; delete row._key; row.custom = "원본"; input[field] = [];
+        expect(await action(null, form(json, JSON.stringify(input)))).toMatchObject({ ok: false, fields: [{ id: field }] }); noWrites();
+    });
+    it.each(["__proto__", "constructor", "toString"])("특수 필드 %s도 원문 노출 없이 차단한다", async (name) => {
+        const input = setup(); Object.defineProperty((db.doc[field] as Raw[])[0], name, { value: "DO_NOT_ECHO", enumerable: true });
+        const result = await action(null, form(json, JSON.stringify(input)));
+        expect(result).toMatchObject({ ok: false, fields: [{ id: field }] });
+        expect(JSON.stringify(result)).not.toContain(name); expect(JSON.stringify(result)).not.toContain("DO_NOT_ECHO"); noWrites();
+    });
+    it("유효한 원본 키가 제출 목록에서 빠진 명시적 삭제는 허용한다", async () => {
+        const input = setup(); (db.doc[field] as Raw[])[0].custom = "원본"; input[field] = [];
+        expect(await action(null, form(json, JSON.stringify(input)))).toEqual({ ok: true });
+        expect(db.doc[field]).toEqual([]);
+    });
+    it("클라이언트가 보낸 확장 필드를 원본으로 간주하거나 저장하지 않는다", async () => {
+        const input = setup(); (input[field] as Raw[])[0].custom = { fake: true };
+        db.doc.topLevelCustom = { keep: true };
+        expect(await action(null, form(json, JSON.stringify(input)))).toEqual({ ok: true });
+        expect((db.doc[field] as Raw[])[0]).not.toHaveProperty("custom");
+        expect(db.doc.topLevelCustom).toEqual({ keep: true });
+    });
+    it("new-로 시작하는 원본 키도 유지한다", async () => {
+        const input = setup(); (input[field] as Raw[])[0]._key = "new-original"; (db.doc[field] as Raw[])[0]._key = "new-original";
+        expect(await action(null, form(json, JSON.stringify(input)))).toEqual({ ok: true });
+        expect((db.doc[field] as Raw[])[0]._key).toBe("new-original");
+    });
+});
+it("가격 칸 비우기를 원본 확장 필드 삭제로 해석하지 않는다", async () => {
+    db.doc.prices = [{ _key: "p", label: "기본", value: "1000", unit: "원", custom: "원본" }];
+    const input = studioSpacePayload({ prices: [{ _key: "p", label: "", value: "", unit: "" }] });
+    expect(await saveSpace(null, form("listsJson", JSON.stringify(input)))).toMatchObject({ ok: false, fields: [{ id: "prices" }] }); noWrites();
+});
+it("안내 원본을 한 번만 읽고 검사한 revision으로 패치한다", async () => {
+    db.doc = { _id: "studioInfo", _type: "studioInfo", _rev: "v1", ...studioInfoPayload() };
+    expect(await saveStudioInfo(null, form("dataJson", JSON.stringify(studioInfoPayload())))).toEqual({ ok: true });
+    expect(client.getDocument).toHaveBeenCalledExactlyOnceWith("studioInfo");
+    expect(patch.ifRevisionId).toHaveBeenCalledExactlyOnceWith("v1");
+});
+it("안내 검증 뒤 동시 변경이 발생하면 덮어쓰지 않는다", async () => {
+    db.doc = { _id: "studioInfo", _type: "studioInfo", _rev: "v1", ...studioInfoPayload() };
+    client.getDocument.mockImplementation(async () => structuredClone(db.doc));
+    patch.ifRevisionId.mockImplementation((revision: string) => { expect(revision).toBe("v1"); db.doc._rev = "v-later"; db.doc.concurrent = true; return patch; });
+    patch.commit.mockRejectedValue({ statusCode: 409 });
+    expect(await saveStudioInfo(null, form("dataJson", JSON.stringify(studioInfoPayload())))).toMatchObject({ ok: false, error: expect.stringContaining("내용이 바뀌었어요") });
+    expect(db.doc._rev).toBe("v-later"); expect(db.doc.concurrent).toBe(true);
+    expect(client.getDocument).toHaveBeenCalledTimes(1); expect(updateTag).not.toHaveBeenCalled();
+});
 const spaceRows = [
     ...["prices", "images", "features", "notes"].flatMap((field) => [missing, null, "not-array", 1, {}].map((value) => ({ label: `${field} ${String(value)}`, field, make: () => {
         const payload = studioSpacePayload();

@@ -54,6 +54,20 @@ describe.each(areas)("$label 실제 저장의 본문 입력 경계", (area) => {
         expect(await area.save(null, form())).toEqual({ ok: true }); expect(db.doc[area.source]).toEqual(before);
         expect(db.fields).not.toHaveProperty(area.source);
     });
+    it("서버 원본의 추가 정보가 빠지는 본문 재작성은 업로드·패치 전에 차단한다", async () => {
+        db.doc[area.source] = [{ ...area.valid, custom: "PRIVATE_EXTRA_VALUE" }];
+        const original = JSON.stringify(db.doc); const data = form(); data.set(area.json, JSON.stringify([area.valid]));
+        data.set("imageFile", new File(["mock"], "photo.png", { type: "image/png" }));
+        data.set("linkCount", "1"); data.set("linkUrl_0", "https://example.com");
+        data.set("linkIconFile_0", new File(["mock"], "icon.png", { type: "image/png" }));
+        const result = await area.save(null, data);
+        expect(result).toMatchObject({ ok: false, fields: [{ id: area.field }] }); expect(JSON.stringify(result)).not.toContain("PRIVATE_EXTRA_VALUE");
+        noWrites(); expect(JSON.stringify(db.doc)).toBe(original);
+    });
+    it("본문 JSON을 생략한 기본 정보 저장은 추가 필드가 있는 원본도 그대로 둔다", async () => {
+        const source = [{ ...area.valid, custom: "추가 원본" }]; db.doc[area.source] = structuredClone(source);
+        expect(await area.save(null, form())).toEqual({ ok: true }); expect(db.doc[area.source]).toEqual(source); expect(db.fields).not.toHaveProperty(area.source);
+    });
     it("명시적으로 보낸 빈 배열은 편집 가능한 본문의 삭제로 처리한다", async () => {
         const data = form(); data.set(area.json, "[]");
         expect(await area.save(null, data)).toEqual({ ok: true }); expect(db.doc[area.source]).toEqual([]);

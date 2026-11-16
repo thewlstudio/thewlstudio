@@ -9,7 +9,7 @@ const { refresh, show, router } = vi.hoisted(() => {
     const refresh = vi.fn();
     return { refresh, show: vi.fn(), router: { refresh } };
 });
-vi.mock("next/navigation", () => ({ useRouter: () => router }));
+vi.mock("next/navigation", async (original) => ({ ...await original<typeof import("next/navigation")>(), useRouter: () => router }));
 vi.mock("./Toast", () => ({ useToast: () => ({ show }) }));
 type Result = { ok: true } | { ok: false; error: string };
 let root: Root;
@@ -81,6 +81,24 @@ describe("목록 필터와 항목 수 변경", () => {
 });
 
 describe("순서 저장 잠금·실패 복구", () => {
+    it.each([null, undefined, { ok: "true" }, { ok: false }, { ok: false, error: {} }])("드래그의 잘못된 응답 #%#를 성공 토스트로 바꾸지 않는다", async (value) => {
+        reorder.mockResolvedValueOnce(value as Result); await render(rows()); await drag("a", "c");
+        expect(visible()).toEqual(["a", "b", "c", "d", "e"]); expect(reorder).toHaveBeenCalledTimes(1); expect(refresh).not.toHaveBeenCalled();
+        expect(show).toHaveBeenCalledWith(expect.objectContaining({ tone: "info", message: expect.stringContaining("저장 결과를 확인하지 못했어요") }));
+    });
+    it.each([null, { ok: "true" }, { ok: false, error: {} }])("화살표의 잘못된 응답 #%#도 확인 안내를 유지한다", async (value) => {
+        move.mockResolvedValueOnce(value as Result); await render(rows()); await clickLabel("아래로 이동");
+        expect(move).toHaveBeenCalledTimes(1); expect(refresh).not.toHaveBeenCalled(); expect(show).toHaveBeenCalledWith(expect.objectContaining({ tone: "info" }));
+    });
+    it("확인된 서버 저장 뒤 클라이언트 refresh 호출 오류도 완료와 구분한다", async () => {
+        refresh.mockImplementationOnce(() => { throw new Error("DO_NOT_ECHO"); }); await render(rows()); await drag("a", "c");
+        expect(reorder).toHaveBeenCalledTimes(1); expect(show).toHaveBeenCalledTimes(1); expect(show).toHaveBeenCalledWith(expect.objectContaining({ tone: "info", message: expect.stringContaining("순서 변경은 완료") }));
+        expect(host.querySelector("ul")!.getAttribute("aria-busy")).toBe("false");
+    });
+    it("서버 캐시 갱신 실패 안내를 성공 표시나 자동 이동 요청으로 바꾸지 않는다", async () => {
+        reorder.mockResolvedValueOnce({ ok: false, error: "순서 변경은 완료됐지만 화면을 갱신하지 못했어요." }); await render(rows()); await drag("a", "c");
+        expect(reorder).toHaveBeenCalledTimes(1); expect(refresh).not.toHaveBeenCalled(); expect(show).toHaveBeenCalledWith(expect.objectContaining({ tone: "info", message: expect.stringContaining("순서 변경은 완료") }));
+    });
     it("끌어서 저장하는 동안 모든 행의 화살표와 새 드래그를 잠근다", async () => {
         let finish!: (result: Result) => void;
         reorder.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));

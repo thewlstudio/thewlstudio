@@ -3,14 +3,16 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { requireAuth } from "@/lib/manage-auth";
 import { getWriteClient } from "@/sanity/lib/writeClient";
-import { managedWriteError, saveManagedSingleton } from "@/lib/manage-target";
+import { managedSaveFailure, saveManagedSingleton } from "@/lib/manage-target";
 import { studioInfoLimitError } from "@/lib/studio-content-limits";
 import { arrayKeyError, managedArrayKey } from "@/lib/manage-array-keys";
 import { studioInfoShapeError } from "@/lib/studio-content-shape";
 import { reportError } from "@/lib/error-reporting";
+import { assertStudioArrayFields, StudioArrayFieldsError } from "@/lib/studio-array-fields";
+import { manageScalarIssue } from "@/lib/manage-scalar-input";
 
 export type FieldError = { id: string; label: string };
-export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
+export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[]; committed?: true };
 
 type Raw = Record<string, unknown>;
 const isObj = (v: unknown): v is Raw => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -24,6 +26,8 @@ const key = (value: unknown) => typeof value === "string" && value ? value : man
 export async function saveStudioInfo(_prev: SaveResult | null, formData: FormData): Promise<SaveResult> {
     try {
         await requireAuth();
+        const inputIssue = manageScalarIssue(formData, "studioInfo");
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
 
         let p: Raw;
@@ -89,13 +93,14 @@ export async function saveStudioInfo(_prev: SaveResult | null, formData: FormDat
             dutyWarning: text(p.dutyWarning),
         };
 
-        await saveManagedSingleton(client, "studioInfo", doc);
-
-        updateTag("studioInfo");
-        revalidatePath("/studio");
+        await saveManagedSingleton(client, "studioInfo", doc, (existing) => assertStudioArrayFields("info", p, existing), () => {
+            updateTag("studioInfo");
+            revalidatePath("/studio");
+        });
         return { ok: true };
     } catch (err) {
+        if (err instanceof StudioArrayFieldsError) return { ok: false, error: err.message, fields: err.fields };
         reportError("saveStudioInfo", err);
-        return { ok: false, error: managedWriteError(err) };
+        return managedSaveFailure(err);
     }
 }

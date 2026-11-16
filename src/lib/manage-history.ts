@@ -104,7 +104,21 @@ type Doc = Record<string, unknown>;
 const isObj = (v: unknown): v is Doc => !!v && typeof v === "object" && !Array.isArray(v);
 
 export function isHistoryDocument(doc: unknown, id: string, type: string): doc is Doc & { _id: string; _type: string; _rev: string } {
-    return isObj(doc) && doc._id === id && doc._type === type && typeof doc._rev === "string" && doc._rev.trim().length > 0;
+    return isObj(doc) && ["_id", "_type", "_rev"].every((key) => Object.hasOwn(doc, key)) && doc._id === id && doc._type === type && typeof doc._rev === "string" && doc._rev.trim().length > 0;
+}
+
+/** 명시적 날짜·시간·시간대만 허용한다. 소수 초를 Date/ISO 문자열로 다시 만들지 않는다. */
+export function isHistoryTime(value: unknown): value is string {
+    if (typeof value !== "string") return false;
+    const parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-](\d{2}):(\d{2}))$/i.exec(value);
+    if (!parts) return false;
+    const [, yearText, monthText, dayText, hourText, minuteText, secondText, offsetHour = "00", offsetMinute = "00"] = parts;
+    const year = Number(yearText); const month = Number(monthText); const day = Number(dayText);
+    const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return month >= 1 && month <= 12 && day >= 1 && day <= days[month - 1] &&
+        Number(hourText) < 24 && Number(minuteText) < 60 && Number(secondText) < 60 &&
+        Number(offsetHour) < 24 && Number(offsetMinute) < 60 && Number.isFinite(Date.parse(value));
 }
 
 /** 이 문서의 저장 기록(최신순). History API는 줄마다 JSON인 텍스트로 돌려준다. */
@@ -122,7 +136,7 @@ export async function listRevisions(client: Client, documentId: string, limit = 
         .filter(Boolean)
         .map((l) => {
             const r: unknown = JSON.parse(l);
-            if (!isObj(r) || typeof r.id !== "string" || !r.id.trim() || ids.has(r.id) || typeof r.timestamp !== "string" || !Number.isFinite(Date.parse(r.timestamp)) || times.has(r.timestamp)) {
+            if (!isObj(r) || typeof r.id !== "string" || !r.id.trim() || ids.has(r.id) || !isHistoryTime(r.timestamp) || times.has(r.timestamp)) {
                 throw new Error("저장 기록의 응답 형식을 확인하지 못했어요.");
             }
             ids.add(r.id); times.add(r.timestamp);
@@ -134,11 +148,13 @@ export async function listRevisions(client: Client, documentId: string, limit = 
 
 /** 특정 저장 시점의 문서 내용. 그 시점에 문서가 없으면 null */
 export async function docAt(client: Client, documentId: string, time: string): Promise<Doc | null> {
+    if (!isHistoryTime(time)) throw new Error("저장 시점을 확인하지 못했어요.");
     const res = await client.request<unknown>({
         uri: `/data/history/${dataset}/documents/${encodeURIComponent(documentId)}`,
         query: { time },
     });
-    if (!isObj(res) || !Array.isArray(res.documents) || res.documents.length > 1 || res.documents.some((doc) => doc !== null && !isObj(doc))) throw new Error("저장 내용의 응답 형식을 확인하지 못했어요.");
+    if (!isObj(res) || !Object.hasOwn(res, "documents") || !Array.isArray(res.documents) || res.documents.length > 1 ||
+        res.documents.length === 1 && !Object.hasOwn(res.documents, 0) || Array.from(res.documents).some((doc) => doc !== null && !isObj(doc))) throw new Error("저장 내용의 응답 형식을 확인하지 못했어요.");
     return res.documents[0] ?? null;
 }
 

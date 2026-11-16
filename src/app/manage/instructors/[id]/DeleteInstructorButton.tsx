@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useManageMutation } from "../../_components/useManageMutation";
 import { isManageMutationPending } from "@/lib/manage-mutation-lock";
-import { useRouter } from "next/navigation";
+import { unstable_rethrow, useRouter } from "next/navigation";
 import { flashToast } from "../../_components/Toast";
 import { eulReul } from "@/lib/josa";
 import { callManageAction } from "../../_components/callManageAction";
@@ -103,8 +103,15 @@ export default function DeleteInstructorButton({
                             const result = await callManageAction(() => deleteInstructor(documentId));
                             if (!isCurrent()) return;
                             if (result.ok) {
-                                flashToast({ message: `"${instructorName || "이 강사"}"${eulReul(instructorName || "이 강사")} 휴지통으로 옮겼어요.`, undo: { area: "instructors", id: documentId } });
-                                startTransition(() => router.push("/manage/instructors"));
+                                startTransition(() => {
+                                    try { router.push("/manage/instructors"); }
+                                    catch (error) {
+                                        unstable_rethrow(error);
+                                        if (isCurrent()) setError("휴지통으로 옮겼지만 목록 화면을 열지 못했어요. 같은 삭제를 반복하지 말고 새 탭에서 목록을 확인해 주세요.");
+                                        return;
+                                    }
+                                    flashToast({ message: `"${instructorName || "이 강사"}"${eulReul(instructorName || "이 강사")} 휴지통으로 옮겼어요.`, undo: { area: "instructors", id: documentId } });
+                                });
                             } else {
                                 setError(result.error);
                             }

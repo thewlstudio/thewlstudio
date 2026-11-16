@@ -7,15 +7,21 @@ import { uploadImageIfPresent, validateManageUploadForm } from "@/lib/manage-upl
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { applyOrder, moveOrder, type OrderRow } from "@/lib/manage-reorder";
 import { CONTENT_ORDER, STUDIO_CONTENT_ORDER } from "@/lib/content-order";
-import { managedWriteError, requireManagedDocument } from "@/lib/manage-target";
+import { managedSaveFailure, managedWriteError, requireManagedDocument, requireManagedTrashDocument } from "@/lib/manage-target";
 import { isManagedDocumentId } from "@/lib/manage-document-id";
 import { arrayKeyError, managedArrayKey as key } from "@/lib/manage-array-keys";
 import { studioSpaceLimitError } from "@/lib/studio-content-limits";
 import { studioSpaceShapeError } from "@/lib/studio-content-shape";
 import { reportError } from "@/lib/error-reporting";
+import { assertStudioArrayFields, StudioArrayFieldsError } from "@/lib/studio-array-fields";
+import { manageScalarIssue } from "@/lib/manage-scalar-input";
+import { managedImageSourceIssue } from "@/lib/manage-image-source";
+import { nextManagedOrder } from "@/lib/manage-create-preflight";
+import { createManagedDocument, CREATED_REFRESH_FAILED } from "@/lib/manage-create-result";
+import { commitManagedPatch } from "@/lib/manage-patch-result";
 
 export type FieldError = { id: string; label: string };
-export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[] };
+export type SaveResult = { ok: true } | { ok: false; error: string; fields?: FieldError[]; committed?: true };
 
 function refresh() {
     updateTag("studioSpace");
@@ -31,7 +37,7 @@ const lines = (v: unknown) =>
 
 /** 공통 필드 검증 — 저장·생성에서 함께 쓴다 */
 function parseCommon(formData: FormData):
-    | { ok: true; name: string; subtitle: string; description: string; isActive: boolean; prices: unknown[]; features: string[]; notes: string[]; imagesIn: Raw[] }
+    | { ok: true; name: string; subtitle: string; description: string; isActive: boolean; prices: Raw[]; features: string[]; notes: string[]; imagesIn: Raw[] }
     | { ok: false; error: string; fields: FieldError[] } {
     const name = str(formData.get("name")).trim();
     if (!name) return { ok: false, error: "이름을 입력해 주세요.", fields: [{ id: "name", label: "이름" }] };
@@ -58,10 +64,8 @@ function parseCommon(formData: FormData):
         }
     }
 
-    const prices = (Array.isArray(payload.prices) ? payload.prices : [])
-        .filter(isObj)
-        .map((p) => ({ _key: key(p._key), label: str(p.label).trim(), value: str(p.value).trim(), unit: str(p.unit).trim() }))
-        .filter((p) => p.label || p.value);
+    // 빈 행 자동 제외·키 발급보다 먼저 제출 행을 서버 원본과 대조한다.
+    const prices = (Array.isArray(payload.prices) ? payload.prices : []).filter(isObj);
 
     return {
         ok: true,
@@ -76,10 +80,17 @@ function parseCommon(formData: FormData):
     };
 }
 
+function serializePrices(rows: Raw[], existing: unknown[] = []) {
+    return rows.map((p) => ({ _key: key(p._key, existing), label: str(p.label).trim(), value: str(p.value).trim(), unit: str(p.unit).trim() }))
+        .filter((p) => p.label || p.value);
+}
+
 export async function saveSpace(_prev: SaveResult | null, formData: FormData): Promise<SaveResult> {
     try {
         await requireAuth();
         validateManageUploadForm(formData);
+        const inputIssue = manageScalarIssue(formData, "space");
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
         const documentId = String(formData.get("documentId") ?? "").trim();
         if (!documentId) return { ok: false, error: "수정할 공간을 찾지 못했어요. 목록에서 다시 골라 주세요." };
@@ -88,7 +99,10 @@ export async function saveSpace(_prev: SaveResult | null, formData: FormData): P
         if (!c.ok) return c;
 
         const existing = await requireManagedDocument(client, documentId, "studioSpace");
+        assertStudioArrayFields("space", { prices: c.prices }, existing);
         const prevImages = Array.isArray(existing.images) ? existing.images : [];
+        const imageIssue = managedImageSourceIssue("space", formData, c.imagesIn, prevImages);
+        if (imageIssue) return { ok: false, ...imageIssue };
 
         // 사진: 기존 _key는 기존 이미지를 그대로 유지(핫스팟 등 포함), 새 사진은 업로드된 파일이 있어야 한다
         const images: unknown[] = [];
@@ -104,12 +118,14 @@ export async function saveSpace(_prev: SaveResult | null, formData: FormData): P
         const patch: Record<string, unknown> = {
             name: c.name,
             isActive: c.isActive,
-            prices: c.prices,
+            prices: serializePrices(c.prices, Array.isArray(existing.prices) ? existing.prices : []),
             features: c.features,
             images,
         };
         const unset: string[] = [];
+        if (!formData.has("isActive")) delete patch.isActive;
         for (const [k, v] of [["subtitle", c.subtitle], ["description", c.description]] as const) {
+            if (!formData.has(k)) continue;
             if (v) patch[k] = v;
             else unset.push(k);
         }
@@ -118,25 +134,28 @@ export async function saveSpace(_prev: SaveResult | null, formData: FormData): P
 
         let p = client.patch(documentId).ifRevisionId(existing._rev).set(patch);
         if (unset.length > 0) p = p.unset(unset);
-        await p.commit();
-        refresh();
+        await commitManagedPatch(() => p.commit(), documentId, "studioSpace", refresh);
         return { ok: true };
     } catch (err) {
+        if (err instanceof StudioArrayFieldsError) return { ok: false, error: err.message, fields: err.fields };
         reportError("saveSpace", err);
-        return { ok: false, error: managedWriteError(err) };
+        return managedSaveFailure(err);
     }
 }
 
 export async function createSpace(_prev: SaveResult | null, formData: FormData): Promise<SaveResult> {
-    let documentId: string;
+    let documentId: string | undefined;
     try {
         await requireAuth();
         validateManageUploadForm(formData);
+        const inputIssue = manageScalarIssue(formData, "space");
+        if (inputIssue) return { ok: false, ...inputIssue };
         const client = getWriteClient();
         const kind = String(formData.get("kind") ?? "room") === "lobby" ? "lobby" : "room";
         const c = parseCommon(formData);
         if (!c.ok) return c;
 
+        const order = nextManagedOrder(await client.fetch<unknown>(`*[_type == "studioSpace"].order`));
         const images: unknown[] = [];
         for (const item of c.imagesIn) {
             const clientKey = typeof item._key === "string" ? item._key : "";
@@ -144,16 +163,13 @@ export async function createSpace(_prev: SaveResult | null, formData: FormData):
             if (uploaded) images.push({ ...uploaded, _key: key(clientKey) });
         }
 
-        const orders = await client.fetch<number[]>(`*[_type == "studioSpace" && defined(order)].order`);
-        const order = orders.length > 0 ? Math.max(...orders) + 1 : 0;
-
-        const created = await client.create({
+        const created = await createManagedDocument(client, {
             _type: "studioSpace",
             kind,
             name: c.name,
             ...(c.subtitle ? { subtitle: c.subtitle } : {}),
             ...(c.description ? { description: c.description } : {}),
-            prices: c.prices,
+            prices: serializePrices(c.prices),
             features: c.features,
             ...(c.notes.length > 0 ? { notes: c.notes } : {}),
             images,
@@ -161,11 +177,11 @@ export async function createSpace(_prev: SaveResult | null, formData: FormData):
             isActive: c.isActive,
             trashed: false,
         });
-        documentId = created._id;
+        documentId = created;
         refresh();
     } catch (err) {
         reportError("createSpace", err);
-        return { ok: false, error: managedWriteError(err) };
+        return documentId ? { ok: false, error: CREATED_REFRESH_FAILED, committed: true } : managedSaveFailure(err);
     }
     redirect(`/manage/studio/${documentId}?created=1`);
 }
@@ -182,9 +198,8 @@ export async function moveSpaceOrder(documentId: string, direction: "up" | "down
             `*[_type == "studioSpace" && !(trashed == true) && select(kind == "lobby" => "lobby", "room") == $kind] | order(${CONTENT_ORDER}) { _id, _rev, order }`,
             { kind },
         );
-        const result = await moveOrder(client, all, documentId, direction);
+        const result = await moveOrder(client, all, documentId, direction, refresh);
         if (!result.ok) return result;
-        refresh();
         return { ok: true };
     } catch (err) {
         reportError("moveSpaceOrder", err);
@@ -197,9 +212,8 @@ async function setTrashed(documentId: string, trashed: boolean): Promise<SaveRes
         await requireAuth();
         if (!documentId) return { ok: false, error: "공간을 찾지 못했어요. 목록에서 다시 골라 주세요." };
         const client = getWriteClient();
-        const current = await requireManagedDocument(client, documentId, "studioSpace");
-        await client.patch(documentId).ifRevisionId(current._rev).set({ trashed }).commit();
-        refresh();
+        const current = await requireManagedTrashDocument(client, documentId, "studioSpace");
+        await commitManagedPatch(() => client.patch(documentId).ifRevisionId(current._rev).set({ trashed }).commit(), documentId, "studioSpace", refresh, (document) => document.trashed === trashed);
         return { ok: true };
     } catch (err) {
         reportError("setTrashed:space", err);
@@ -220,8 +234,7 @@ export async function restoreSpace(documentId: string): Promise<SaveResult> {
 export async function reorderSpaces(ids: string[]): Promise<SaveResult> {
     try {
         await requireAuth();
-        const result = await applyOrder(getWriteClient(), `*[_type == "studioSpace" && !(trashed == true)] | order(${STUDIO_CONTENT_ORDER}) { _id, _rev, order, "group": select(kind == "lobby" => "lobby", "room") }`, {}, ids, true);
-        if (result.ok) refresh();
+        const result = await applyOrder(getWriteClient(), `*[_type == "studioSpace" && !(trashed == true)] | order(${STUDIO_CONTENT_ORDER}) { _id, _rev, order, "group": select(kind == "lobby" => "lobby", "room") }`, {}, ids, true, refresh);
         return result;
     } catch (err) {
         reportError("reorderSpaces", err);

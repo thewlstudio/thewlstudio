@@ -2,9 +2,10 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { requireAuth } from "@/lib/manage-auth";
-import { buildRestorePatch, docAt, HISTORY_AREAS, isHistoryArea, isHistoryDocument, isHistoryDocumentId } from "@/lib/manage-history";
+import { buildRestorePatch, docAt, HISTORY_AREAS, isHistoryArea, isHistoryDocument, isHistoryDocumentId, isHistoryTime } from "@/lib/manage-history";
 import { getWriteClient } from "@/sanity/lib/writeClient";
 import { reportError } from "@/lib/error-reporting";
+import { commitManagedPatch, ManagedPatchResultError } from "@/lib/manage-patch-result";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -18,8 +19,8 @@ export async function restoreRevision(area: string, documentId: string, time: st
         if (!isHistoryArea(area)) return { ok: false, error: "되돌릴 수 없는 항목이에요." };
         const cfg = HISTORY_AREAS[area];
         if (cfg.fixedId && cfg.fixedId !== documentId) return { ok: false, error: "항목을 찾지 못했어요. 목록에서 다시 골라 주세요." };
-        if (!isHistoryDocumentId(documentId) || typeof time !== "string" || !time || !Number.isFinite(Date.parse(time))) return { ok: false, error: "되돌릴 시점을 확인하지 못했어요. 이력 화면에서 다시 골라 주세요." };
-        if (typeof expectedRevision !== "string" || !expectedRevision) return { ok: false, error: "지금 내용을 확인하지 못했어요. 이력 화면을 새로고침한 뒤 다시 골라 주세요." };
+        if (!isHistoryDocumentId(documentId) || !isHistoryTime(time)) return { ok: false, error: "되돌릴 시점을 확인하지 못했어요. 이력 화면에서 다시 골라 주세요." };
+        if (typeof expectedRevision !== "string" || !expectedRevision.trim()) return { ok: false, error: "지금 내용을 확인하지 못했어요. 이력 화면을 새로고침한 뒤 다시 골라 주세요." };
 
         const client = getWriteClient();
         const [old, current] = await Promise.all([docAt(client, documentId, time), client.getDocument(documentId)]);
@@ -30,18 +31,19 @@ export async function restoreRevision(area: string, documentId: string, time: st
         const changes = buildRestorePatch(old, current);
         let patch = client.patch(documentId).ifRevisionId(expectedRevision).set(changes.set);
         if (changes.unset.length) patch = patch.unset(changes.unset);
-        await patch.commit();
-
-        updateTag(cfg.tag);
-        const paths = new Set([...cfg.paths, cfg.back(documentId), `/manage/history/${area}/${documentId}`]);
-        for (const doc of [old, current]) {
-            const slug = (doc.slug as { current?: string } | undefined)?.current;
-            if (typeof slug === "string" && slug && cfg.slugPath) paths.add(cfg.slugPath(slug));
-        }
-        paths.forEach((path) => path === "/" ? revalidatePath(path, "layout") : revalidatePath(path));
+        await commitManagedPatch(() => patch.commit(), documentId, cfg.type, () => {
+            updateTag(cfg.tag);
+            const paths = new Set([...cfg.paths, cfg.back(documentId), `/manage/history/${area}/${documentId}`]);
+            for (const doc of [old, current]) {
+                const slug = (doc.slug as { current?: string } | undefined)?.current;
+                if (typeof slug === "string" && slug && cfg.slugPath) paths.add(cfg.slugPath(slug));
+            }
+            paths.forEach((path) => path === "/" ? revalidatePath(path, "layout") : revalidatePath(path));
+        });
         return { ok: true };
     } catch (err) {
         reportError("restoreRevision", err);
+        if (err instanceof ManagedPatchResultError) return { ok: false, error: err.message };
         if (err && typeof err === "object" && "statusCode" in err && err.statusCode === 409) {
             return { ok: false, error: "확인하는 사이에 내용이 바뀌었어요. 이력 화면을 새로고침한 뒤 다시 확인해 주세요." };
         }

@@ -5,11 +5,11 @@ import { createSession, destroySession, generateSecret, getSessionExpiry, isAuth
 import LoginPage from "@/app/manage/login/page";
 import { logout } from "@/app/manage/actions";
 
-const { jar, cookieStore, state, navigate } = vi.hoisted(() => ({
+const { jar, cookieStore, state, navigate, disable } = vi.hoisted(() => ({
     jar: { get: vi.fn(), set: vi.fn(), delete: vi.fn() }, cookieStore: vi.fn(),
-    state: { value: undefined as string | undefined }, navigate: vi.fn(),
+    state: { value: undefined as string | undefined }, navigate: vi.fn(), disable: vi.fn(),
 }));
-vi.mock("next/headers", () => ({ cookies: cookieStore }));
+vi.mock("next/headers", () => ({ cookies: cookieStore, draftMode: async () => ({ disable }) }));
 vi.mock("next/navigation", () => ({ redirect: navigate }));
 
 const testSecret = "test-only-session-secret-not-a-production-value";
@@ -172,8 +172,10 @@ describe("실제 로그인 페이지와 로그아웃 액션", () => {
         state.value = token(clock + duration);
         await expect(logout()).rejects.toMatchObject({ digest: "TEST_REDIRECT" });
         expect(jar.delete).toHaveBeenCalledExactlyOnceWith(cookieName);
+        expect(disable).toHaveBeenCalledTimes(1);
         expect(navigate).toHaveBeenCalledExactlyOnceWith("/manage/login");
         expect(jar.delete.mock.invocationCallOrder[0]).toBeLessThan(navigate.mock.invocationCallOrder[0]);
+        expect(disable.mock.invocationCallOrder[0]).toBeLessThan(navigate.mock.invocationCallOrder[0]);
         expect(await isAuthenticated()).toBe(false);
     });
     it("만료된 세션도 로그아웃으로 쿠키를 지울 수 있다", async () => {
@@ -185,5 +187,6 @@ describe("실제 로그인 페이지와 로그아웃 액션", () => {
         jar.delete.mockImplementation(() => { throw new Error("cookie delete failed"); });
         await expect(logout()).rejects.toThrow("cookie delete failed");
         expect(navigate).not.toHaveBeenCalled();
+        expect(disable).not.toHaveBeenCalled();
     });
 });

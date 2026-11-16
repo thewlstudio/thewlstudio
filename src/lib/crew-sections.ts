@@ -62,6 +62,31 @@ export function emptySection(type: KnownType): SectionState {
 type Raw = Record<string, unknown>;
 const s = (v: unknown) => (typeof v === "string" ? v : "");
 const arr = (v: unknown): Raw[] => (Array.isArray(v) ? (v as Raw[]) : []);
+const object = (v: unknown): v is Raw => !!v && typeof v === "object" && !Array.isArray(v);
+
+/** 변환을 지원하는 옛 수상·활동의 읽기 전용 표시. 미지원 본문에는 사용하지 않는다. */
+export function legacyPreviewRows(raw: Raw): Pick<Row, "date" | "title" | "desc">[] | null {
+    if (raw.items === undefined || raw.items === null) return [];
+    if (!Array.isArray(raw.items)) return null;
+    const rows: Pick<Row, "date" | "title" | "desc">[] = [];
+    for (const item of raw.items) {
+        if (typeof item === "string") { rows.push({ date: "", title: item, desc: "" }); continue; }
+        if (!object(item) || ["date", "title", "desc"].some((field) => item[field] !== undefined && item[field] !== null && typeof item[field] !== "string")) return null;
+        rows.push({ date: s(item.date), title: s(item.title), desc: s(item.desc) });
+    }
+    return rows;
+}
+
+/** 새 수상·활동은 날짜·제목만 저장한다. 옮기며 잃을 정보가 있으면 원본을 유지한다. */
+export function legacyMigrationIssue(raw: Raw): string | null {
+    const issue = "현재 형식으로 모든 내용을 옮길 수 있는지 확인하지 못해 자동으로 옮기지 않았어요. 원본은 그대로 보존돼요. /admin에서 확인해 주세요.";
+    if (raw._type !== "awardsSection" && raw._type !== "activitiesSection") return issue;
+    const preview = legacyPreviewRows(raw);
+    if (!preview || Object.keys(raw).some((field) => !["_key", "_type", "items"].includes(field))) return issue;
+    if (preview.some((row) => row.desc.trim() || !row.title.trim() && row.date.trim())) return issue;
+    if (arr(raw.items).some((item) => object(item) && Object.keys(item).some((field) => !["_key", "_type", "date", "title", "desc"].includes(field)))) return issue;
+    return null;
+}
 
 function toRow(r: Raw | string, i: number): Row {
     if (typeof r === "string") return { key: `str-${i}-${r.length}`, date: "", title: r, desc: "" };
@@ -148,6 +173,7 @@ export function migrateLegacy(states: SectionState[], legacyKey: string): Sectio
     if (idx === -1) return states;
     const legacy = states[idx] as Extract<SectionState, { type: "legacy" }>;
     if (legacy.legacyType !== "awardsSection" && legacy.legacyType !== "activitiesSection") return states;
+    if (legacyMigrationIssue(legacy.raw)) return states;
     const rows = arr(legacy.raw.items).map(toRow).map((r) => ({ ...r, key: newKey() }));
     const target = legacy.legacyType === "awardsSection" ? "awards" : "activities";
 

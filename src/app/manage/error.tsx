@@ -3,7 +3,7 @@
 import Link from "./_components/GuardedLink";
 
 /** 관리 화면 안에서 예기치 못한 오류가 났을 때의 안내 (사이트 전체 오류 화면 대신) */
-export default function ManageError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function ManageError({ retry }: { error: unknown; retry: () => void }) {
     return (
         <main id="main-content" className="max-w-md mx-auto px-5 py-20 text-center">
             <h1 className="text-2xl font-black tracking-tight mb-3">화면을 불러오지 못했어요</h1>
@@ -13,7 +13,7 @@ export default function ManageError({ reset }: { error: Error & { digest?: strin
             <div className="flex items-center justify-center gap-3">
                 <button
                     type="button"
-                    onClick={reset}
+                    onClick={retry}
                     className="h-11 px-5 rounded-xl bg-black text-white text-sm font-bold hover:bg-neutral-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                 >
                     다시 시도

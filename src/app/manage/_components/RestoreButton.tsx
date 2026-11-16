@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useManageMutation } from "./useManageMutation";
 import { confirmLeaveIfDirty } from "@/lib/formDirtyGuard";
-import { useRouter } from "next/navigation";
+import { unstable_rethrow, useRouter } from "next/navigation";
 import { useToast } from "./Toast";
 import { callManageAction } from "./callManageAction";
 type Result = { ok: true } | { ok: false; error: string };
@@ -41,8 +41,15 @@ export default function RestoreButton({
                         if (!isCurrent()) return;
                         if (result.ok) {
                             setError(null);
-                            toast.show({ message: "복원했어요. 목록에서 다시 볼 수 있어요." });
-                            startTransition(() => router.refresh());
+                            startTransition(() => {
+                                try { router.refresh(); }
+                                catch (error) {
+                                    unstable_rethrow(error);
+                                    if (isCurrent()) setError("복원은 완료됐지만 화면을 갱신하지 못했어요. 같은 복원을 반복하지 말고 새 탭에서 목록을 확인해 주세요.");
+                                    return;
+                                }
+                                toast.show({ message: "복원했어요. 목록에서 다시 볼 수 있어요." });
+                            });
                         } else {
                             setError(result.error);
                         }

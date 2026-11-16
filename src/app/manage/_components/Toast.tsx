@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { unstable_rethrow, usePathname, useRouter } from "next/navigation";
 import { restoreCrew } from "../crew/actions";
 import { restoreInstructor } from "../instructors/actions";
 import { restoreWork } from "../works/actions";
@@ -55,7 +55,7 @@ export function flashToast(t: ToastInput) {
     }
 }
 
-type Item = ToastInput & { id: number };
+type Item = ToastInput & { id: number; expiresAt: number };
 const Ctx = createContext<{ show: (t: ToastInput) => void }>({ show: () => {} });
 export const useToast = () => useContext(Ctx);
 
@@ -78,11 +78,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const show = useCallback(
         (t: ToastInput) => {
             const id = ++seq.current;
-            setItems((list) => [...list.slice(-2), { ...t, id }]);
             // 되돌리기 버튼이 있는 알림은 놓치지 않게 더 오래 둔다
-            timers.current.set(id, setTimeout(() => dismiss(id), t.undo ? 10000 : 5000));
+            const item = { ...t, id, expiresAt: Date.now() + (t.undo ? 10000 : 5000) };
+            setItems((list) => [...list.slice(-2), item]);
         },
-        [dismiss],
+        [],
     );
 
     // 화면이 바뀔 때마다: 예약된 알림 표시 + 생성 직후(?created=1) 알림
@@ -101,14 +101,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         if (url.searchParams.get("created") === "1") {
             show({ message: "새로 만들었어요. 이어서 내용을 채워 보세요." });
             url.searchParams.delete("created");
-            window.history.replaceState(null, "", url.pathname + url.search);
+            window.history.replaceState(null, "", url.pathname + url.search + url.hash);
         }
     }, [pathname, show]);
 
     useEffect(() => {
         const map = timers.current;
-        return () => map.forEach((t) => clearTimeout(t));
-    }, []);
+        // 실제 표시 목록에서만 예약한다. 재실행돼도 원래 만료 시점은 연장하지 않는다.
+        for (const item of items) {
+            map.set(item.id, setTimeout(() => dismiss(item.id), Math.max(0, item.expiresAt - Date.now())));
+        }
+        return () => {
+            map.forEach((t) => clearTimeout(t));
+            map.clear();
+        };
+    }, [items, dismiss]);
 
     const undo = (item: Item) => {
         const target = item.undo;
@@ -121,8 +128,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 const result = await callManageAction(() => RESTORERS[target.area](target.id));
                 if (!isCurrent()) return;
                 if (result.ok) {
-                    show({ message: "복원했어요." });
-                    mutation.startTransition(() => router.refresh());
+                    mutation.startTransition(() => {
+                        try { router.refresh(); }
+                        catch (error) {
+                            unstable_rethrow(error);
+                            if (isCurrent()) show({ message: "복원은 완료됐지만 화면을 갱신하지 못했어요. 같은 복원을 반복하지 말고 새 탭에서 목록을 확인해 주세요.", tone: "info" });
+                            return;
+                        }
+                        show({ message: "복원했어요." });
+                    });
                 } else {
                     show({ message: result.error, tone: "info" });
                 }
