@@ -68,7 +68,8 @@ const nextConfig = {
                             "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
                             "style-src 'self' 'unsafe-inline'",
                             "img-src 'self' data: blob: https://cdn.sanity.io",
-                            "font-src 'self' data:",
+                            // sanity 6 Studio는 Inter 글꼴을 Sanity 정적 CDN에서 받는다. (core.sanity-cdn.com/bridge.js는 대시보드 셸용이라 계속 차단)
+                            "font-src 'self' data: https://design-system-static.sanity.io",
                             "connect-src 'self' https://*.sanity.io https://*.apicdn.sanity.io wss://*.sanity.io",
                             "media-src 'self' https://cdn.sanity.io blob:",
                             "frame-src 'self'",
