@@ -34,13 +34,19 @@ function ScrollLockBridge() {
     return null;
 }
 
+const subscribeNever = () => () => {};
+/** Lenis 1.3.27+는 생성 시 window.matchMedia를 바로 호출한다. 서버에서는 지원한다고 보고(출력 동일), 브라우저에서만 실제 값을 쓴다. */
+const useSupportsMatchMedia = () => useSyncExternalStore(subscribeNever, () => typeof window.matchMedia === "function", () => true);
+
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const prefersReducedMotion = usePrefersReducedMotion();
+    const supportsMatchMedia = useSupportsMatchMedia();
 
     // Sanity Studio(/admin), 관리 화면(/manage)에서는 Lenis 비활성화
     // — 폼 입력, 드롭다운 등 관리 화면 조작과 충돌 방지, 안정성 우선
-    if (isStudioPath(pathname) || isManagePath(pathname)) {
+    // matchMedia가 없는 환경에서는 스크롤 엔진을 만들지 않고 브라우저 기본 스크롤을 쓴다(페이지는 그대로 렌더링).
+    if (isStudioPath(pathname) || isManagePath(pathname) || !supportsMatchMedia) {
         return <>{children}</>;
     }
 
