@@ -7,7 +7,7 @@
 
 ## 0. 준비물
 - GitHub 계정(고객 저장소를 만들 곳), Sanity 계정, Vercel 계정. 고객이 직접 소유하는 계정을 쓰는 것을 권장한다(데이터 소유 = 고객).
-- 이 컴퓨터에 Node.js(`.nvmrc`의 22 버전, 최소 22.12)와 이 저장소. Sanity 6은 Node 20을 지원하지 않는다.
+- 이 컴퓨터에 Node.js 26(`.nvmrc` 참조)과 이 저장소. 프로젝트는 `engines.node: 26.x`로 개발·검사·배포 버전을 맞추며, Sanity 6의 최소 요구사항(22.12)과 구분한다.
 - 고객에게 받을 것: 상호(한·영), 사이트 소개 한 줄, 전화·주소·지도 링크·SNS 링크, 로고와 사진, (있다면) 도메인.
 
 ## 1. 코드 사본 만들기
@@ -58,7 +58,7 @@ npx tsx scripts/migrate-site-settings.ts --apply   # …나머지도 같은 방�
 - 강사·Crew·Works는 시드가 없다. 고객이 `/manage`에서 직접 만들거나 설치자가 대신 입력한다.
 
 ## 6. Vercel 배포
-1. Vercel → Add New → Project → 고객 저장소 import (Framework: Next.js).
+1. Vercel → Add New → Project → 고객 저장소 import (Framework: Next.js). `package.json`의 `engines.node: 26.x`가 Node 선택 기준이며, 빌드 로그에서 Node 26을 쓰는지 확인한다.
 2. Settings → Environment Variables에 §4가 출력한 목록을 **Production**(필요하면 Preview도)에 입력. `SANITY_API_WRITE_TOKEN`은 §2-4의 Editor 토큰.
 3. Deploy. 빌드가 끝나면 Vercel 기본 주소(`*.vercel.app`)가 생긴다.
 4. 도메인을 연결했다면 `NEXT_PUBLIC_SITE_URL`을 그 도메인으로 바꾸고 **다시 배포**(값은 빌드 시점에 들어간다). 사이트맵·canonical·공유 미리보기가 새 주소로 나오는지 확인.

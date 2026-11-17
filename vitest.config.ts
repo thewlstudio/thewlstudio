@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 import path from "path";
 
 export default defineConfig({
-    esbuild: { jsx: "automatic" },
+    oxc: { jsx: { runtime: "automatic" } },
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "src"),
@@ -13,5 +13,6 @@ export default defineConfig({
     test: {
         environment: "node",
         include: ["src/**/*.test.{ts,tsx}"],
+        setupFiles: [path.resolve(__dirname, "src/test/setup-browser-storage.ts")],
     },
 });

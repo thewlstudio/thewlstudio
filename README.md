@@ -120,7 +120,7 @@ Works·Crew 상세 본문/공유 정보의 공통 입력 검사와 미지원 원
 
 커밋된 잠금 파일과 같은 버전으로 설치하려면 `npm ci`를 사용합니다.
 
-Sanity 6의 최소 Node는 **22.12**이며 개발·CI는 `.nvmrc`의 22를 사용합니다. 잠금 파일 복구와 CSP 경계 검증은 [Sanity 6 설치 점검](docs/SANITY6_INSTALL_QA.md), 남은 취약점은 [보안 추적 기록](docs/DEPENDENCY_SECURITY.md)을 참고하세요.
+프로젝트는 **Node 26**을 사용합니다. 개발·CI·백업은 `.nvmrc`의 26, Vercel은 `engines.node`의 `26.x`를 따라 같은 메이저 버전을 선택합니다. Sanity 6 자체의 최소 요구사항(22.12)과는 별개인 프로젝트 정책이며, 다음 메이저로 자동 전환하지 않습니다. 잠금 파일 복구와 CSP 경계 검증은 [Sanity 6 설치 점검](docs/SANITY6_INSTALL_QA.md), 남은 취약점은 [보안 추적 기록](docs/DEPENDENCY_SECURITY.md)을 참고하세요.
 
 ## 배포
 
