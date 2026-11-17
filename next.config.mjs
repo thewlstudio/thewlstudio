@@ -80,7 +80,7 @@ const nextConfig = {
             },
             // 일반 페이지 — 엄격한 CSP
             {
-                source: "/((?!admin).*)",
+                source: "/((?!admin(?:/|$)).*)",
                 headers: [
                     ...securityHeaders,
                     {

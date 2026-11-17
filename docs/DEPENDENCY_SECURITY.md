@@ -2,6 +2,8 @@
 
 2026-10-26 기준. 시작 커밋: `79eec70`.
 
+> 위 날짜의 본문은 이전 업데이트 기록이다. Sanity 6.23.0의 최신 설치·취약점 확인은 아래 **2026-11-17 후속 확인**과 [설치 복구 점검](SANITY6_INSTALL_QA.md)을 참고한다.
+
 ## 적용 버전
 
 | 패키지 | 이전 설치 | 업데이트 후 |
@@ -79,3 +81,19 @@ Sanity 5.31.2는 `@sanity/cli ^6.7.2`, 해당 CLI는 `@sanity/runtime-cli ^15.1.
 - 업데이트 후 전체·운영 의존성 audit를 따로 확인하고, 남은 항목은 상위 패키지 경로와 함께 기록한다.
 - `npm audit fix --force` 결과를 검토 없이 적용하지 않는다. 구버전으로 내려가거나 메이저가 바뀔 수 있다.
 - 날짜가 지나면 조회 결과가 달라질 수 있으므로 이 문서는 당시의 기록으로 사용한다.
+
+## 2026-11-17 후속 확인: Sanity 6.23.0
+
+- 설치 버전은 Sanity 6.23.0, next-sanity 13.5.0, Next.js 16.4.6이다. 프로젝트 최소 Node는 Sanity 요구사항과 같은 `>=22.12`, 개발/CI의 `.nvmrc`는 22로 맞췄다.
+- 이전 CI의 `npm ci` 실패는 잠금 파일의 `@emnapi/runtime@1.11.3`·`@emnapi/core@2.0.0-beta.2` 누락이었다. CI와 동일한 Node 22.23.4·npm 10.9.9의 빈 사본에서 잠금 파일을 재생성하고 실제 새 설치를 확인했다. 기존 패키지 버전 변경·삭제 없이 누락 두 항목과 npm의 설치 메타데이터만 보완했다.
+- 전체 및 `--omit=dev` 조회 모두 **17건: High 2, Moderate 15, Critical 0**이다. 아래 세 하위 패키지 경고가 상위 Sanity/CLI 패키지에도 전파된 집계이며, 독립된 공격 17건이나 운영 침해 확인을 의미하지 않는다.
+
+| 하위 경로 | 현재 버전 | 패키지 집계 심각도 | 추적 |
+|---|---|---|---|
+| `sanity -> @sanity/cli -> @vercel/frameworks -> js-yaml` | 3.13.1 | High | [공식 보안 공지](https://github.com/advisories/GHSA-2883-xcg3-v3hh) |
+| `sanity -> @sanity/cli -> @oclif/core -> minimatch` | 10.2.6 | Moderate | [공식 보안 공지](https://github.com/advisories/GHSA-g3hv-75wg-m249) |
+| `sanity -> @sanity/cli -> @vercel/frameworks -> smol-toml` | 1.5.2 | High | [공식 보안 공지](https://github.com/advisories/GHSA-r4xh-jqrq-34v2) |
+
+`@vercel/frameworks@3.29.0`은 js-yaml 3.13.1·smol-toml 1.5.2를 고정하고, `@oclif/core@4.14.0`은 minimatch `^10.2.5`를 요구한다. 상위 패키지의 호환 업데이트를 추적한다. 강제 `overrides`는 별도 검증 없이 추가하지 않으며, Sanity 5.14.1 등으로 내려가라는 audit 제안을 자동 적용하지 않는다. CLI 하위라는 이유로 무조건 무해하다고 단정하지도 않는다.
+
+운영 데이터 변경·커밋·푸시·배포는 하지 않았다. GitHub CI 및 Vercel 배포 성공 여부는 수정 커밋을 푸시한 뒤 별도로 확인해야 한다.

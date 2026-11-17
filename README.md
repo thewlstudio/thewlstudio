@@ -120,6 +120,8 @@ Works·Crew 상세 본문/공유 정보의 공통 입력 검사와 미지원 원
 
 커밋된 잠금 파일과 같은 버전으로 설치하려면 `npm ci`를 사용합니다.
 
+Sanity 6의 최소 Node는 **22.12**이며 개발·CI는 `.nvmrc`의 22를 사용합니다. 잠금 파일 복구와 CSP 경계 검증은 [Sanity 6 설치 점검](docs/SANITY6_INSTALL_QA.md), 남은 취약점은 [보안 추적 기록](docs/DEPENDENCY_SECURITY.md)을 참고하세요.
+
 ## 배포
 
 Vercel에 배포합니다. `main` 브랜치에 푸시하면 자동 배포됩니다.
