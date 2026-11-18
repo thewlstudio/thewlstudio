@@ -124,6 +124,8 @@ Works·Crew 상세 본문/공유 정보의 공통 입력 검사와 미지원 원
 
 GitHub 검사·백업 도구의 버전 고정과 프로젝트 Node 버전의 구분은 [자동 검사 도구 점검](docs/CI_ACTION_RUNTIME_QA.md)에 기록했습니다.
 
+테스트 설정의 기본·native 로딩 호환성과 경로 유지 검증은 [Sanity 6 설치 점검의 후속 기록](docs/SANITY6_INSTALL_QA.md#테스트-설정의-native-로딩-호환성-2026-11-18)을 참고하세요.
+
 ## 배포
 
 Vercel에 배포합니다. `main` 브랜치에 푸시하면 자동 배포됩니다.

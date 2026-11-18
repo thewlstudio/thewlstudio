@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import testConfig from "../../vitest.config";
+import testConfig from "../../vitest.config.mjs";
 
 const project = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
 const lock = JSON.parse(readFileSync(new URL("../../package-lock.json", import.meta.url), "utf8"));
