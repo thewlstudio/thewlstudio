@@ -19,6 +19,10 @@ const submit = '<button type="submit">들어가기</button>';
 const loginForm = `<form method="POST">${password}${submit}</form>`;
 const calls: string[] = [];
 const manageReplies = new Map<string, { status: number; location?: string; body?: string }>();
+const publicCsp = "default-src 'self'; script-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'self'";
+const studioCsp = publicCsp.replace("script-src 'self' 'unsafe-inline'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'")
+    .replace("font-src 'self' data:", "font-src 'self' data: https://design-system-static.sanity.io");
+const securityReplies = new Map<string, { status?: number; headers?: Record<string, string> }>();
 
 beforeEach(() => {
     vi.resetModules();
@@ -32,6 +36,8 @@ beforeEach(() => {
     previewCache = 'private, no-store'; exitLocation = '/manage'; exitCookie = '__prerender_bypass=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
     previewLocation = '/manage/login'; manageReplies.clear();
     loginBody = noindex + loginForm;
+    securityReplies.clear();
+    vi.stubEnv('SMOKE_DEV_CSP', undefined);
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('smoke-failed'); });
@@ -56,10 +62,68 @@ beforeEach(() => {
                 ...(manageCache === null ? {} : { 'cache-control': manageCache }),
             } });
         }
-        return new Response('<h1>홈페이지</h1>', { headers: { 'X-Frame-Options': 'SAMEORIGIN', 'Content-Security-Policy': "default-src 'self'" } });
+        const studio = url.pathname === '/admin' || url.pathname === '/admin/desk';
+        const security = securityReplies.get(url.pathname);
+        return new Response('<h1>페이지</h1>', {
+            status: security?.status ?? (url.pathname === '/admin-help' ? 404 : 200),
+            headers: security?.headers ?? securityHeaders(studio ? studioCsp : publicCsp),
+        });
     }));
 });
-afterEach(() => { process.argv = previousArgv; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { process.argv = previousArgv; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+
+function securityHeaders(csp: string) {
+    return { 'X-Frame-Options': 'SAMEORIGIN', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': csp };
+}
+
+describe('실제 HTTP 응답의 공개·Studio 헤더 구분', () => {
+    it.each([
+        ['/', 'CSP 값만 존재', securityHeaders("default-src 'self'")],
+        ['/', '프레임 정책 오설정', { ...securityHeaders(publicCsp), 'X-Frame-Options': 'ALLOWALL' }],
+        ['/', '공개 스크립트에 eval 허용', securityHeaders(publicCsp.replace("'unsafe-inline'", "'unsafe-inline' 'unsafe-eval'"))],
+        ['/admin-help', '비슷한 이름의 404에 CSP 누락', { 'X-Frame-Options': 'SAMEORIGIN', 'X-Content-Type-Options': 'nosniff' }],
+        ['/admin-help', 'Studio 정책 적용', securityHeaders(studioCsp)],
+        ['/admin', 'Studio 글꼴 누락', securityHeaders(studioCsp.replace(' https://design-system-static.sanity.io', ''))],
+        ['/admin/desk', 'Studio에 일반 정책 적용', securityHeaders(publicCsp)],
+        ['/admin/desk', 'nosniff 누락', { 'X-Frame-Options': 'SAMEORIGIN', 'Content-Security-Policy': studioCsp }],
+        ['/admin/desk', '중복 글꼴 지시자', securityHeaders("font-src 'none'; " + studioCsp)],
+        ['/admin/desk', '중복 CSP', securityHeaders(studioCsp + ', ' + studioCsp)],
+    ] as const)('%s: %s이면 실패한다', async (path, _, headers) => {
+        securityReplies.set(path, { headers });
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('smoke-failed');
+        expect(console.error).toHaveBeenCalledWith(expect.stringContaining(`보안 헤더 ${path} —`));
+    });
+
+    it('Studio의 오류 응답은 정상 헤더가 있어도 실패한다', async () => {
+        securityReplies.set('/admin/desk', { status: 500 });
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('smoke-failed');
+        expect(console.error).toHaveBeenCalledWith(expect.stringContaining('보안 헤더 /admin/desk — status 500'));
+    });
+
+    it('일반 페이지·유사 경로와 Studio 모두 확인한다', async () => {
+        await import('../../scripts/smoke.mjs');
+        expect(process.exit).not.toHaveBeenCalled();
+        expect(calls).toEqual(expect.arrayContaining(['/admin-help', '/admin', '/admin/desk'].map(path => base + path)));
+    });
+
+    it('명시한 개발 모드에서는 public eval만 추가로 허용한다', async () => {
+        vi.stubEnv('SMOKE_DEV_CSP', '1');
+        const devCsp = publicCsp.replace("'unsafe-inline'", "'unsafe-inline' 'unsafe-eval'");
+        for (const path of ['/', '/admin-help']) securityReplies.set(path, { headers: securityHeaders(devCsp) });
+        await import('../../scripts/smoke.mjs');
+        expect(process.exit).not.toHaveBeenCalled();
+        vi.resetModules();
+        securityReplies.set('/', { headers: securityHeaders(studioCsp) });
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('smoke-failed');
+    });
+
+    it('개발 모드 설정은 원격 주소의 공개 정책 기준을 완화하지 않는다', async () => {
+        vi.stubEnv('SMOKE_DEV_CSP', '1');
+        process.argv[2] = 'https://remote.example';
+        await import('../../scripts/smoke.mjs');
+        expect(process.exit).not.toHaveBeenCalled();
+    });
+});
 
 describe('관리자 로그인 화면의 준비 상태', () => {
     it.each([

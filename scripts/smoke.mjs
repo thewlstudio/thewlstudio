@@ -114,6 +114,35 @@ function check(name, ok, detail = "") {
     console.log(`${ok ? "✓" : "✗"} ${name}${!ok && detail ? ` — ${detail}` : ""}`);
 }
 
+function securityHeaderIssue(response, expectedStatus, studio, development) {
+    if (response.status !== expectedStatus) return `status ${response.status}`;
+    if (response.headers.get("x-frame-options")?.toUpperCase() !== "SAMEORIGIN") return "X-Frame-Options";
+    if (response.headers.get("x-content-type-options")?.toLowerCase() !== "nosniff") return "X-Content-Type-Options";
+
+    const policy = response.headers.get("content-security-policy");
+    if (!policy || policy.includes(",")) return "CSP 누락 또는 복수 정책";
+    const directives = new Map();
+    for (const part of policy.split(";")) {
+        if (!part.trim()) continue;
+        const [name, ...sources] = part.trim().split(/\s+/);
+        const key = name.toLowerCase();
+        if (directives.has(key)) return `CSP 중복: ${key}`;
+        directives.set(key, new Set(sources));
+    }
+
+    const expected = [
+        ["default-src", "'self'"],
+        ["frame-ancestors", "'self'"],
+        ["script-src", "'self'", "'unsafe-inline'", ...(studio || development ? ["'unsafe-eval'"] : [])],
+        ["font-src", "'self'", "data:", ...(studio ? ["https://design-system-static.sanity.io"] : [])],
+    ];
+    for (const [name, ...sources] of expected) {
+        const actual = directives.get(name);
+        if (actual?.size !== sources.length || !sources.every((source) => actual.has(source))) return `CSP ${name}`;
+    }
+    return "";
+}
+
 // 1. 공개 페이지
 for (const p of ["/", "/works", "/crew", "/studio", "/class", "/contact", "/robots.txt"]) {
     const r = await get(p);
@@ -175,10 +204,13 @@ const unsafeManageCache = manageCacheControls.filter(({ value }) => {
 });
 check("관리 HTML·로그인 이동 응답은 private + no-store", manageCacheControls.length > 0 && unsafeManageCache.length === 0, unsafeManageCache.map(({ path }) => path).join(", "));
 
-// 4. 보안 헤더
-const { response: home } = await request("/");
-check("보안 헤더(X-Frame-Options)", !!home.headers.get("x-frame-options"));
-check("보안 헤더(Content-Security-Policy)", !!home.headers.get("content-security-policy"));
+// 4. 보안 헤더: Studio의 예외는 정확히 /admin 및 그 하위에만 적용된다.
+const development = process.env.SMOKE_DEV_CSP === "1" && ["localhost", "127.0.0.1", "[::1]"].includes(new URL(base).hostname);
+for (const [path, status, studio] of [["/", 200, false], ["/admin-help", 404, false], ["/admin", 200, true], ["/admin/desk", 200, true]]) {
+    const { response } = await request(path);
+    const issue = securityHeaderIssue(response, status, studio, development);
+    check(`보안 헤더 ${path}`, !issue, issue);
+}
 
 console.log(`\n${checks - failures.length}/${checks} 통과`);
 if (failures.length) {

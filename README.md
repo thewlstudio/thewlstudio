@@ -38,9 +38,11 @@ npm run build    # 프로덕션 빌드
 npm run lint     # ESLint 검사
 npm test         # 자동 테스트
 npm run typecheck # 타입 검사
-npm run smoke    # 떠 있는 서버 핵심 경로 점검
+npm run smoke    # 떠 있는 프로덕션 서버 핵심 경로 점검
 npm run analyze  # 번들 크기 분석
 ```
+
+로컬 개발 서버에서도 점검하려면 `SMOKE_DEV_CSP=1 npm run smoke`를 사용하세요. 이 옵션은 로컬 주소에서만 공개 페이지의 개발용 스크립트 설정을 허용합니다.
 
 보안 업데이트 내역과 남은 의존성 경고의 대응은 [의존성 보안 기록](docs/DEPENDENCY_SECURITY.md)을 참고하세요.
 공개 화면의 동작 줄이기 구현과 수동 검증 범위는 [접근성 회귀 점검](docs/REDUCED_MOTION_QA.md)에 정리했습니다.
