@@ -9,6 +9,8 @@ let manageCache: string | null;
 let previewCache: string | null;
 let exitLocation: string | null;
 let exitCookie: string | null;
+let externalExitCookies: string[] | undefined;
+let extraExitCookies: string[];
 let previewLocation: string | null;
 let missingStatus: number;
 let missingBody: string;
@@ -23,6 +25,8 @@ const publicCsp = "default-src 'self'; script-src 'self' 'unsafe-inline'; font-s
 const studioCsp = publicCsp.replace("script-src 'self' 'unsafe-inline'", "script-src 'self' 'unsafe-inline' 'unsafe-eval'")
     .replace("font-src 'self' data:", "font-src 'self' data: https://design-system-static.sanity.io");
 const securityReplies = new Map<string, { status?: number; headers?: Record<string, string> }>();
+const expiredAt = 'Thu, 01 Jan 1970 00:00:00 GMT';
+const validExitCookie = `__prerender_bypass=; Path=/; Expires=${expiredAt}`;
 
 beforeEach(() => {
     vi.resetModules();
@@ -33,7 +37,8 @@ beforeEach(() => {
     missingStatus = 404;
     missingBody = '<meta name="robots" content="noindex"><main><h1 id="page-title" tabindex="-1">Page Not Found</h1><a href="/">홈으로</a></main>';
     manageCache = 'private, no-cache, no-store, max-age=0, must-revalidate';
-    previewCache = 'private, no-store'; exitLocation = '/manage'; exitCookie = '__prerender_bypass=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    previewCache = 'private, no-store'; exitLocation = '/manage'; exitCookie = validExitCookie;
+    externalExitCookies = undefined; extraExitCookies = [];
     previewLocation = '/manage/login'; manageReplies.clear();
     loginBody = noindex + loginForm;
     securityReplies.clear();
@@ -50,10 +55,14 @@ beforeEach(() => {
         const previewHeaders: Record<string, string> = previewCache === null ? {} : { 'cache-control': previewCache };
         if (url.pathname === '/api/draft') return new Response('Forbidden', { status: 403, headers: previewHeaders });
         if (url.pathname === '/manage/preview') return new Response(null, { status: 307, headers: { ...(previewLocation === null ? {} : { location: previewLocation }), ...previewHeaders } });
-        if (url.pathname === '/api/disable-draft') return new Response(null, { status: 307, headers: {
-            ...(exitLocation === null ? {} : { location: url.searchParams.get('slug') === '/manage' ? exitLocation : '/' }),
-            ...(exitCookie === null ? {} : { 'set-cookie': exitCookie }), ...previewHeaders,
-        } });
+        if (url.pathname === '/api/disable-draft') {
+            const external = url.searchParams.get('slug') !== '/manage';
+            const headers = new Headers(previewHeaders);
+            if (exitLocation !== null) headers.set('location', external ? '/' : exitLocation);
+            const fallbackCookies = [...(exitCookie === null ? [] : [exitCookie]), ...extraExitCookies];
+            for (const cookie of (external ? externalExitCookies ?? fallbackCookies : fallbackCookies)) headers.append('set-cookie', cookie);
+            return new Response(null, { status: 307, headers });
+        }
         if (url.pathname === '/manage/login') return new Response(loginBody, { headers: manageCache === null ? {} : { 'cache-control': manageCache } });
         if (url.pathname.startsWith('/manage')) {
             const reply = manageReplies.get(url.pathname) ?? { status: 307, location: '/manage/login' };
@@ -154,6 +163,44 @@ describe('관리자 로그인 화면의 준비 상태', () => {
             [base + '/manage/login', expect.objectContaining({ redirect: 'manual' })],
         ]);
         expect(vi.mocked(fetch).mock.calls.every(([, options]) => !options?.method || options.method === 'GET')).toBe(true);
+    });
+});
+
+describe('미리보기 종료의 실제 쿠키 만료', () => {
+    it.each([
+        ['빈 값만 있음', '__prerender_bypass=; Path=/'],
+        ['미래 만료일', '__prerender_bypass=; Path=/; Expires=Fri, 01 Jan 2100 00:00:00 GMT'],
+        ['잘못된 날짜', '__prerender_bypass=; Path=/; Expires=0'],
+        ['쿠키 경로 누락', `__prerender_bypass=; Expires=${expiredAt}`],
+        ['다른 경로', validExitCookie.replace('Path=/', 'Path=/manage')],
+        ['다른 도메인', validExitCookie + '; Domain=elsewhere.example'],
+        ['별도 저장 영역의 쿠키', validExitCookie + '; Secure; Partitioned'],
+        ['유사 쿠키 이름', 'other_' + validExitCookie],
+        ['양수 Max-Age가 과거 Expires보다 우선', validExitCookie + '; Max-Age=60'],
+        ['형식이 잘못된 Max-Age만 있음', '__prerender_bypass=; Path=/; Max-Age=0seconds'],
+        ['서로 충돌하는 경로', validExitCookie + '; path=/manage'],
+    ])('%s이면 종료 점검이 실패한다', async (_, cookie) => {
+        exitCookie = cookie;
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('smoke-failed');
+        expect(console.error).toHaveBeenCalledWith(expect.stringContaining('쿠키 만료 확인 실패'));
+    });
+
+    it('홈으로 돌아가는 종료 응답도 쿠키 만료를 확인한다', async () => {
+        externalExitCookies = [];
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('smoke-failed');
+        expect(console.error).toHaveBeenCalledWith(expect.stringContaining('홈으로 제한 + 쿠키 만료'));
+    });
+
+    it('만료 쿠키와 다시 발급하는 쿠키가 함께 오면 실패한다', async () => {
+        extraExitCookies = ['__prerender_bypass=synthetic; Path=/'];
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('smoke-failed');
+    });
+
+    it.each([validExitCookie, '__prerender_bypass=; path=/; max-age=0', '__prerender_bypass=; Path=/; Max-Age=-1; Expires=Fri, 01 Jan 2100 00:00:00 GMT'])('정상 만료와 별개 쿠키가 함께 와도 통과한다: %s', async (cookie) => {
+        exitCookie = cookie;
+        extraExitCookies = [`other=example; Path=/; Expires=${expiredAt}`];
+        await import('../../scripts/smoke.mjs');
+        expect(process.exit).not.toHaveBeenCalled();
     });
 });
 

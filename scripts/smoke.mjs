@@ -114,6 +114,36 @@ function check(name, ok, detail = "") {
     console.log(`${ok ? "✓" : "✗"} ${name}${!ok && detail ? ` — ${detail}` : ""}`);
 }
 
+function expiresPreviewCookie(headers) {
+    // Expires 날짜에도 쉼표가 있으므로 Set-Cookie 헤더를 개별적으로 읽는다.
+    const cookies = headers.getSetCookie().map(header => header.split(";"))
+        .filter(([pair]) => /^\s*__prerender_bypass\s*=/.test(pair));
+    if (cookies.length !== 1) return false;
+    const [pair, ...fields] = cookies[0];
+    if (!/^\s*__prerender_bypass\s*=\s*$/.test(pair)) return false;
+
+    const attributes = new Map();
+    for (const field of fields) {
+        if (!field.trim()) continue;
+        const separator = field.indexOf("=");
+        const name = (separator < 0 ? field : field.slice(0, separator)).trim().toLowerCase();
+        if (attributes.has(name)) return false;
+        attributes.set(name, separator < 0 ? "" : field.slice(separator + 1).trim());
+    }
+    // Next는 현재 호스트의 루트 경로에 미리보기 쿠키를 설정한다.
+    if (attributes.get("path") !== "/" || attributes.has("domain") || attributes.has("partitioned")) return false;
+    const maxAge = attributes.get("max-age");
+    if (maxAge !== undefined) return /^-?\d+$/.test(maxAge) && Number(maxAge) <= 0;
+    const expires = attributes.get("expires") ?? "";
+    const expiry = Date.parse(expires);
+    return expiry <= Date.now() && new Date(expiry).toUTCString().toLowerCase() === expires.toLowerCase();
+}
+
+function previewExitIssue(response, target) {
+    if (response.status !== 307 || response.headers.get("location") !== target) return `이동 응답 불일치 (status ${response.status})`;
+    return expiresPreviewCookie(response.headers) ? "" : "쿠키 만료 확인 실패";
+}
+
 function securityHeaderIssue(response, expectedStatus, studio, development) {
     if (response.status !== expectedStatus) return `status ${response.status}`;
     if (response.headers.get("x-frame-options")?.toUpperCase() !== "SAMEORIGIN") return "X-Frame-Options";
@@ -185,9 +215,11 @@ check("미리보기 /manage/preview → 로그인 없이는 로그인으로 이�
 const { response: legacyDraft } = await request("/api/draft?slug=/");
 check("예전 /api/draft → 403 (미리보기 모드를 켜지 않음)", legacyDraft.status === 403 && !/__prerender_bypass/.test(legacyDraft.headers.get("set-cookie") ?? ""), `status ${legacyDraft.status}`);
 const { response: exitPreview } = await request("/api/disable-draft?slug=%2Fmanage");
-check("미리보기 종료 → 관리 허브 이동 + 쿠키 만료", exitPreview.status === 307 && exitPreview.headers.get("location") === "/manage" && /__prerender_bypass=;/.test(exitPreview.headers.get("set-cookie") ?? ""), `status ${exitPreview.status}`);
+const exitIssue = previewExitIssue(exitPreview, "/manage");
+check("미리보기 종료 → 관리 허브 이동 + 쿠키 만료", !exitIssue, exitIssue);
 const { response: exitExternal } = await request("/api/disable-draft?slug=%2F%2Foutside.example");
-check("미리보기 종료의 외부 이동 요청 → 홈으로 제한", exitExternal.status === 307 && exitExternal.headers.get("location") === "/", `status ${exitExternal.status}`);
+const externalExitIssue = previewExitIssue(exitExternal, "/");
+check("미리보기 종료의 외부 이동 요청 → 홈으로 제한 + 쿠키 만료", !externalExitIssue, externalExitIssue);
 check("미리보기 진입·종료·차단 응답은 private + no-store", [preview, legacyDraft, exitPreview, exitExternal].every((response) => {
     const directives = (response.headers.get("cache-control") ?? "").toLowerCase().split(",").map((part) => part.trim());
     return directives.includes("private") && directives.includes("no-store") && !directives.includes("public");
