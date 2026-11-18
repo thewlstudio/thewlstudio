@@ -12,6 +12,11 @@ let exitCookie: string | null;
 let previewLocation: string | null;
 let missingStatus: number;
 let missingBody: string;
+let loginBody: string;
+const noindex = '<meta name="robots" content="noindex">';
+const password = '<input id="password" name="password" type="password">';
+const submit = '<button type="submit">들어가기</button>';
+const loginForm = `<form method="POST">${password}${submit}</form>`;
 const calls: string[] = [];
 const manageReplies = new Map<string, { status: number; location?: string; body?: string }>();
 
@@ -26,6 +31,7 @@ beforeEach(() => {
     manageCache = 'private, no-cache, no-store, max-age=0, must-revalidate';
     previewCache = 'private, no-store'; exitLocation = '/manage'; exitCookie = '__prerender_bypass=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
     previewLocation = '/manage/login'; manageReplies.clear();
+    loginBody = noindex + loginForm;
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('smoke-failed'); });
@@ -42,7 +48,7 @@ beforeEach(() => {
             ...(exitLocation === null ? {} : { location: url.searchParams.get('slug') === '/manage' ? exitLocation : '/' }),
             ...(exitCookie === null ? {} : { 'set-cookie': exitCookie }), ...previewHeaders,
         } });
-        if (url.pathname === '/manage/login') return new Response('<meta name="robots" content="noindex">', { headers: manageCache === null ? {} : { 'cache-control': manageCache } });
+        if (url.pathname === '/manage/login') return new Response(loginBody, { headers: manageCache === null ? {} : { 'cache-control': manageCache } });
         if (url.pathname.startsWith('/manage')) {
             const reply = manageReplies.get(url.pathname) ?? { status: 307, location: '/manage/login' };
             return new Response(reply.body ?? '', { status: reply.status, headers: {
@@ -54,6 +60,38 @@ beforeEach(() => {
     }));
 });
 afterEach(() => { process.argv = previousArgv; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+describe('관리자 로그인 화면의 준비 상태', () => {
+    it.each([
+        ['설정 안내', '<main><h1>설정이 필요해요</h1></main>'],
+        ['빈 본문', ''],
+        ['비밀번호 입력 없음', `<form method="post">${submit}</form>`],
+        ['다른 필드 이름', loginForm.replace('name="password"', 'name="other"')],
+        ['비밀번호 입력 비활성화', loginForm.replace('<input ', '<input disabled ')],
+        ['제출 버튼 없음', `<form method="post">${password}</form>`],
+        ['제출 버튼 비활성화', loginForm.replace('<button ', '<button disabled ')],
+        ['POST 아님', loginForm.replace('method="POST"', 'method="get"')],
+        ['폼 밖 입력', `${password}<form method="post">${submit}</form>`],
+        ['서로 다른 폼', `<form method="post">${password}</form><form method="post">${submit}</form>`],
+        ['주석 안의 폼', `<!-- ${loginForm} -->`],
+        ['비활성 템플릿', `<template>${loginForm}</template>`],
+        ['스크립트 안의 폼', `<script>const markup = '${loginForm}';</script>`],
+    ])('200과 noindex가 있어도 다음 응답은 실패한다: %s', async (_, body) => {
+        loginBody = noindex + body;
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('smoke-failed');
+        expect(console.error).toHaveBeenCalledWith(expect.stringContaining('비밀번호 입력·제출 폼 없음'));
+    });
+
+    it('실제 POST 폼은 속성 순서·따옴표와 관계없이 통과하며 제출하지 않는다', async () => {
+        loginBody = noindex + "<FORM class='login' METHOD='post'><input TYPE='password' NAME='password'><button TYPE='submit'>로그인</button></FORM>";
+        await import('../../scripts/smoke.mjs');
+        expect(process.exit).not.toHaveBeenCalled();
+        expect(vi.mocked(fetch).mock.calls.filter(([url]) => url === base + '/manage/login')).toEqual([
+            [base + '/manage/login', expect.objectContaining({ redirect: 'manual' })],
+        ]);
+        expect(vi.mocked(fetch).mock.calls.every(([, options]) => !options?.method || options.method === 'GET')).toBe(true);
+    });
+});
 
 describe('스모크 요청의 전송 실패와 수신 기한', () => {
     it.each(['headers', 'body'])('%s 수신이 멈춰도 요청 시작 후 15초에 중단하고 타이머를 정리한다', async (phase) => {

@@ -37,27 +37,65 @@ function isLoginTarget(value) {
     }
 }
 
-// Next의 스트리밍 이동은 HTTP 200 + 실제 refresh meta일 수 있다.
-// 이름이 없다는 이유나 script/주석/비활성 template 안의 문자열로 통과시키지 않는다.
-function hasStreamingLoginRedirect(html) {
+// 알려진 서버 렌더링 형식에서 주석·원시 텍스트·비활성 template 바깥의 태그만 읽는다.
+function* activeHtmlTags(html) {
     let templateDepth = 0;
-    const refreshes = [];
-    const tags = html.matchAll(/<!--[\s\S]*?(?:-->|$)|<(script|style|textarea|title|noscript)\b(?:[^>"']|"[^"]*"|'[^']*')*>[\s\S]*?(?:<\/\1\s*>|$)|<\/?[a-z][\w:-]*(?:[^>"']|"[^"]*"|'[^']*')*>/gi);
-    for (const [tag] of tags) {
-        if (/^<template\b/i.test(tag)) { templateDepth++; continue; }
-        if (/^<\/template\b/i.test(tag)) { templateDepth = Math.max(0, templateDepth - 1); continue; }
-        if (templateDepth || !/^<meta\b/i.test(tag)) continue;
-        const attributes = new Map();
-        for (const match of tag.matchAll(/\s+([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
-            const name = match[1].toLowerCase();
-            if (attributes.has(name)) return false;
-            attributes.set(name, match[2] ?? match[3]);
+    const tags = html.matchAll(/<!--[\s\S]*?(?:-->|$)|<(script|style|textarea|title|noscript)(?=[\s/>])(?:[^>"']|"[^"]*"|'[^']*')*>[\s\S]*?(?:<\/\1\s*>|$)|<(\/?)([a-z][\w:-]*)(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*)>/gi);
+    for (const [, , closing, rawName, attrs] of tags) {
+        if (!rawName) continue;
+        const name = rawName.toLowerCase();
+        if (name === "template") {
+            templateDepth = closing ? Math.max(0, templateDepth - 1) : templateDepth + 1;
+        } else if (!templateDepth) {
+            yield { name, closing: !!closing, attrs };
         }
+    }
+}
+
+function htmlAttributes(attrs) {
+    const values = new Map();
+    for (const [, rawName, doubleQuoted, singleQuoted, unquoted] of attrs.matchAll(/\s+([^\s=/><"']+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+)))?/g)) {
+        const name = rawName.toLowerCase();
+        if (values.has(name)) return null;
+        values.set(name, doubleQuoted ?? singleQuoted ?? unquoted ?? "");
+    }
+    return values;
+}
+
+// Next의 스트리밍 이동은 HTTP 200 + 실제 refresh meta일 수 있다.
+function hasStreamingLoginRedirect(html) {
+    const refreshes = [];
+    for (const tag of activeHtmlTags(html)) {
+        if (tag.closing || tag.name !== "meta") continue;
+        const attributes = htmlAttributes(tag.attrs);
+        if (!attributes) return false;
         if (attributes.get("http-equiv")?.toLowerCase() === "refresh") refreshes.push(attributes);
     }
     if (refreshes.length !== 1 || refreshes[0].get("id") !== "__next-page-redirect") return false;
     const target = /^[01];url=(.+)$/i.exec(refreshes[0].get("content") ?? "");
     return !!target && isLoginTarget(target[1]);
+}
+
+function hasLoginForm(html) {
+    let form = null;
+    for (const tag of activeHtmlTags(html)) {
+        if (tag.name === "form") {
+            if (tag.closing) {
+                if (form?.password && form.submit) return true;
+                form = null;
+            } else {
+                const method = htmlAttributes(tag.attrs)?.get("method");
+                form = method?.toLowerCase() === "post" ? { password: false, submit: false } : null;
+            }
+        } else if (form && !tag.closing && (tag.name === "input" || tag.name === "button")) {
+            const attributes = htmlAttributes(tag.attrs);
+            if (!attributes || attributes.has("disabled") || attributes.has("form")) continue;
+            const type = attributes.get("type")?.toLowerCase();
+            if (tag.name === "input" && type === "password" && attributes.get("name") === "password") form.password = true;
+            if (tag.name === "button" && type === "submit") form.submit = true;
+        }
+    }
+    return false;
 }
 
 function redirectsToLogin(response) {
@@ -128,7 +166,8 @@ check("미리보기 진입·종료·차단 응답은 private + no-store", [previ
 
 // 3. 로그인 화면과 검색엔진 노출 차단
 const login = await get("/manage/login");
-check("관리 로그인 → 200", login.status === 200, `status ${login.status}`);
+check("관리 로그인 → 200 + 비밀번호 입력·제출 폼", login.status === 200 && hasLoginForm(login.text),
+    login.status === 200 ? "비밀번호 입력·제출 폼 없음" : `status ${login.status}`);
 check("관리 화면은 검색엔진 노출 차단(noindex)", /<meta name="robots" content="[^"]*noindex/.test(login.text));
 const unsafeManageCache = manageCacheControls.filter(({ value }) => {
     const directives = value.toLowerCase().split(",").map((part) => part.trim());
