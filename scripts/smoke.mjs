@@ -8,6 +8,44 @@ const failures = [];
 let checks = 0;
 const manageCacheControls = [];
 
+function isLoginTarget(value) {
+    if (!value) return false;
+    try {
+        const target = new URL(value, base + "/");
+        return target.origin === new URL(base).origin && target.pathname === "/manage/login" && !target.username && !target.password;
+    } catch {
+        return false;
+    }
+}
+
+// Next의 스트리밍 이동은 HTTP 200 + 실제 refresh meta일 수 있다.
+// 이름이 없다는 이유나 script/주석/비활성 template 안의 문자열로 통과시키지 않는다.
+function hasStreamingLoginRedirect(html) {
+    let templateDepth = 0;
+    const refreshes = [];
+    const tags = html.matchAll(/<!--[\s\S]*?(?:-->|$)|<(script|style|textarea|title|noscript)\b(?:[^>"']|"[^"]*"|'[^']*')*>[\s\S]*?(?:<\/\1\s*>|$)|<\/?[a-z][\w:-]*(?:[^>"']|"[^"]*"|'[^']*')*>/gi);
+    for (const [tag] of tags) {
+        if (/^<template\b/i.test(tag)) { templateDepth++; continue; }
+        if (/^<\/template\b/i.test(tag)) { templateDepth = Math.max(0, templateDepth - 1); continue; }
+        if (templateDepth || !/^<meta\b/i.test(tag)) continue;
+        const attributes = new Map();
+        for (const match of tag.matchAll(/\s+([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
+            const name = match[1].toLowerCase();
+            if (attributes.has(name)) return false;
+            attributes.set(name, match[2] ?? match[3]);
+        }
+        if (attributes.get("http-equiv")?.toLowerCase() === "refresh") refreshes.push(attributes);
+    }
+    if (refreshes.length !== 1 || refreshes[0].get("id") !== "__next-page-redirect") return false;
+    const target = /^[01];url=(.+)$/i.exec(refreshes[0].get("content") ?? "");
+    return !!target && isLoginTarget(target[1]);
+}
+
+function redirectsToLogin(response) {
+    if (response.status === 307 || response.status === 308) return isLoginTarget(response.location);
+    return response.status === 200 && hasStreamingLoginRedirect(response.text);
+}
+
 async function get(path) {
     const res = await fetch(base + path, { redirect: "manual" });
     if (path.startsWith("/manage")) manageCacheControls.push({ path, value: res.headers.get("cache-control") ?? "" });
@@ -49,22 +87,15 @@ for (const path of detailPaths) {
     check(`상세 ${path} → 200 + 본문 제목`, r.status === 200 && /<h1(?:\s[^>]*)?>[\s\S]*?<\/h1>/i.test(r.text), `status ${r.status}`);
 }
 
-// 2. 관리 화면은 로그인 없이 열리지 않는다 (307 이동, 또는 스트리밍 화면이면 본문에 데이터가 없어야 함)
-for (const p of ["/manage", "/manage/crew", "/manage/crew/new", "/manage/works", "/manage/works/new", "/manage/studio", "/manage/studio/info", "/manage/contact", "/manage/help", "/manage/map", "/manage/history/crew/x"]) {
+// 2. 관리 화면은 같은 출처의 정확한 로그인 경로로 실제 이동해야 한다.
+for (const p of ["/manage", "/manage/instructors", "/manage/crew", "/manage/crew/new", "/manage/works", "/manage/works/new", "/manage/studio", "/manage/studio/info", "/manage/contact", "/manage/help", "/manage/map", "/manage/history/crew/x"]) {
     const r = await get(p);
-    const redirected = (r.status === 307 || r.status === 308) && r.location.includes("/manage/login");
-    check(`관리 ${p} → 로그인으로 이동`, redirected, `status ${r.status} → ${r.location}`);
+    check(`관리 ${p} → 로그인으로 이동`, redirectsToLogin(r), `status ${r.status} → ${r.location}`);
 }
-const inst = await get("/manage/instructors"); // 스트리밍 화면이라 200으로 시작할 수 있다
-check(
-    "관리 /manage/instructors → 로그인 없이 데이터가 나오지 않음",
-    inst.status === 307 || (inst.status === 200 && !/김수안|이윤진|오승환/.test(inst.text)),
-    `status ${inst.status}`,
-);
 
 // 2-1. 미리보기: 로그인 없이는 켜지지 않고, 예전 무인증 켜기 경로는 막혀 있다
 const preview = await fetch(base + "/manage/preview?to=/", { redirect: "manual" });
-check("미리보기 /manage/preview → 로그인 없이는 로그인으로 이동", (preview.status === 307 || preview.status === 308) && (preview.headers.get("location") ?? "").includes("/manage/login") && !/__prerender_bypass/.test(preview.headers.get("set-cookie") ?? ""), `status ${preview.status}`);
+check("미리보기 /manage/preview → 로그인 없이는 로그인으로 이동", (preview.status === 307 || preview.status === 308) && isLoginTarget(preview.headers.get("location")) && !/__prerender_bypass/.test(preview.headers.get("set-cookie") ?? ""), `status ${preview.status}`);
 const legacyDraft = await fetch(base + "/api/draft?slug=/", { redirect: "manual" });
 check("예전 /api/draft → 403 (미리보기 모드를 켜지 않음)", legacyDraft.status === 403 && !/__prerender_bypass/.test(legacyDraft.headers.get("set-cookie") ?? ""), `status ${legacyDraft.status}`);
 const exitPreview = await fetch(base + "/api/disable-draft?slug=%2Fmanage", { redirect: "manual" });
