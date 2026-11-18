@@ -7,6 +7,25 @@ const base = (process.argv[2] ?? process.env.SMOKE_URL ?? "http://localhost:3000
 const failures = [];
 let checks = 0;
 const manageCacheControls = [];
+const REQUEST_TIMEOUT_MS = 15_000;
+
+// 연결뿐 아니라 본문 수신 완료까지 같은 제한 시간을 적용한다.
+async function request(path) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let phase = "요청";
+    try {
+        const response = await fetch(base + path, { redirect: "manual", signal: controller.signal });
+        phase = "응답 본문 읽기";
+        const text = await response.text();
+        return { response, text };
+    } catch {
+        if (controller.signal.aborted) throw new Error(`요청 제한 시간 ${REQUEST_TIMEOUT_MS / 1000}초 초과: ${path}`);
+        throw new Error(`${phase} 실패: ${path}`);
+    } finally {
+        clearTimeout(timer);
+    }
+}
 
 function isLoginTarget(value) {
     if (!value) return false;
@@ -47,9 +66,9 @@ function redirectsToLogin(response) {
 }
 
 async function get(path) {
-    const res = await fetch(base + path, { redirect: "manual" });
+    const { response: res, text } = await request(path);
     if (path.startsWith("/manage")) manageCacheControls.push({ path, value: res.headers.get("cache-control") ?? "" });
-    return { status: res.status, location: res.headers.get("location") ?? "", text: await res.text().catch(() => "") };
+    return { status: res.status, location: res.headers.get("location") ?? "", text };
 }
 function check(name, ok, detail = "") {
     checks++;
@@ -94,13 +113,13 @@ for (const p of ["/manage", "/manage/instructors", "/manage/crew", "/manage/crew
 }
 
 // 2-1. 미리보기: 로그인 없이는 켜지지 않고, 예전 무인증 켜기 경로는 막혀 있다
-const preview = await fetch(base + "/manage/preview?to=/", { redirect: "manual" });
+const { response: preview } = await request("/manage/preview?to=/");
 check("미리보기 /manage/preview → 로그인 없이는 로그인으로 이동", (preview.status === 307 || preview.status === 308) && isLoginTarget(preview.headers.get("location")) && !/__prerender_bypass/.test(preview.headers.get("set-cookie") ?? ""), `status ${preview.status}`);
-const legacyDraft = await fetch(base + "/api/draft?slug=/", { redirect: "manual" });
+const { response: legacyDraft } = await request("/api/draft?slug=/");
 check("예전 /api/draft → 403 (미리보기 모드를 켜지 않음)", legacyDraft.status === 403 && !/__prerender_bypass/.test(legacyDraft.headers.get("set-cookie") ?? ""), `status ${legacyDraft.status}`);
-const exitPreview = await fetch(base + "/api/disable-draft?slug=%2Fmanage", { redirect: "manual" });
+const { response: exitPreview } = await request("/api/disable-draft?slug=%2Fmanage");
 check("미리보기 종료 → 관리 허브 이동 + 쿠키 만료", exitPreview.status === 307 && exitPreview.headers.get("location") === "/manage" && /__prerender_bypass=;/.test(exitPreview.headers.get("set-cookie") ?? ""), `status ${exitPreview.status}`);
-const exitExternal = await fetch(base + "/api/disable-draft?slug=%2F%2Foutside.example", { redirect: "manual" });
+const { response: exitExternal } = await request("/api/disable-draft?slug=%2F%2Foutside.example");
 check("미리보기 종료의 외부 이동 요청 → 홈으로 제한", exitExternal.status === 307 && exitExternal.headers.get("location") === "/", `status ${exitExternal.status}`);
 check("미리보기 진입·종료·차단 응답은 private + no-store", [preview, legacyDraft, exitPreview, exitExternal].every((response) => {
     const directives = (response.headers.get("cache-control") ?? "").toLowerCase().split(",").map((part) => part.trim());
@@ -118,7 +137,7 @@ const unsafeManageCache = manageCacheControls.filter(({ value }) => {
 check("관리 HTML·로그인 이동 응답은 private + no-store", manageCacheControls.length > 0 && unsafeManageCache.length === 0, unsafeManageCache.map(({ path }) => path).join(", "));
 
 // 4. 보안 헤더
-const home = await fetch(base + "/");
+const { response: home } = await request("/");
 check("보안 헤더(X-Frame-Options)", !!home.headers.get("x-frame-options"));
 check("보안 헤더(Content-Security-Policy)", !!home.headers.get("content-security-policy"));
 

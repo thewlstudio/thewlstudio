@@ -53,7 +53,78 @@ beforeEach(() => {
         return new Response('<h1>홈페이지</h1>', { headers: { 'X-Frame-Options': 'SAMEORIGIN', 'Content-Security-Policy': "default-src 'self'" } });
     }));
 });
-afterEach(() => { process.argv = previousArgv; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { process.argv = previousArgv; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+describe('스모크 요청의 전송 실패와 수신 기한', () => {
+    it.each(['headers', 'body'])('%s 수신이 멈춰도 요청 시작 후 15초에 중단하고 타이머를 정리한다', async (phase) => {
+        vi.useFakeTimers();
+        let signal: AbortSignal | null | undefined;
+        let rejectPending: ((reason: Error) => void) | undefined;
+        let started!: () => void;
+        const didStart = new Promise<void>((resolve) => { started = resolve; });
+        const pending = new Promise<never>((_, reject) => { rejectPending = reject; });
+        vi.mocked(fetch).mockImplementationOnce(async (_, options) => {
+            signal = options?.signal;
+            signal?.addEventListener('abort', () => rejectPending?.(new Error('aborted')), { once: true });
+            started();
+            if (phase === 'headers') return pending;
+            const response = new Response('partial');
+            vi.spyOn(response, 'text').mockReturnValue(pending);
+            return response;
+        });
+        let outcome: { ok: boolean; error?: Error } | undefined;
+        const completion = import('../../scripts/smoke.mjs').then(
+            () => { outcome = { ok: true }; },
+            (error) => { outcome = { ok: false, error }; },
+        );
+        try {
+            await didStart;
+            await vi.advanceTimersByTimeAsync(14_999);
+            expect(outcome).toBeUndefined();
+            await vi.advanceTimersByTimeAsync(1);
+            expect(signal?.aborted).toBe(true);
+            expect(outcome).toMatchObject({ ok: false, error: { message: expect.stringContaining('15초') } });
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            rejectPending?.(new Error('test cleanup'));
+            await completion;
+        }
+    });
+
+    it.each(['/', '/manage/preview'])('%s 본문 수신 실패를 빈 문자열이나 정상 헤더로 숨기지 않는다', async (path) => {
+        const original = vi.mocked(fetch).getMockImplementation()!;
+        vi.mocked(fetch).mockImplementation(async (input, options) => {
+            const response = await original(input, options);
+            if (new URL(String(input)).pathname === path) vi.spyOn(response, 'text').mockRejectedValue(new Error('private transport details'));
+            return response;
+        });
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow(`응답 본문 읽기 실패: ${path}`);
+    });
+
+    it('마지막 보안 헤더 요청도 본문 수신이 끊기면 실패한다', async () => {
+        const original = vi.mocked(fetch).getMockImplementation()!;
+        let homeRequests = 0;
+        vi.mocked(fetch).mockImplementation(async (input, options) => {
+            const response = await original(input, options);
+            if (new URL(String(input)).pathname === '/' && ++homeRequests === 2) vi.spyOn(response, 'text').mockRejectedValue(new Error('broken body'));
+            return response;
+        });
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow('응답 본문 읽기 실패: /');
+    });
+
+    it('연결 실패에는 요청 경로를 안내하고 내부 오류 내용을 그대로 노출하지 않는다', async () => {
+        vi.mocked(fetch).mockRejectedValueOnce(new Error('private transport details'));
+        await expect(import('../../scripts/smoke.mjs')).rejects.toThrow(/^요청 실패: \/$/);
+    });
+
+    it('정상 실행은 모든 요청의 이동 추적을 막고 수신 타이머를 남기지 않는다', async () => {
+        vi.useFakeTimers();
+        await import('../../scripts/smoke.mjs');
+        expect(vi.mocked(fetch).mock.calls.every(([, options]) => options?.redirect === 'manual' && options.signal instanceof AbortSignal && !options.signal.aborted)).toBe(true);
+        expect(vi.getTimerCount()).toBe(0);
+        expect(process.exit).not.toHaveBeenCalled();
+    });
+});
 
 describe('실행 가능한 스모크 검사의 상세 페이지 회귀', () => {
     it.each(['', '<main>로딩 중</main>', '<main><h1>강사 관리</h1><p>새 강사와 비공개 정보</p></main>'])('알려진 강사 이름이 없는 일반 200 응답도 로그인 이동으로 오인하지 않는다: #%#', async (body) => {
